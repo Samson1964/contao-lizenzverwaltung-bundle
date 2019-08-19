@@ -1,0 +1,30 @@
+<div class="<?= $this->class ?> block"<?= $this->cssID ?><?php if ($this->style): ?> style="<?= $this->style ?>"<?php endif; ?>> 
+
+	<?php if($this->headline): ?>
+		<<?= $this->hl ?>><?= $this->headline ?></<?= $this->hl ?>>
+	<?php endif; ?> 
+
+	<table class="all_records" style="">
+		<thead>
+			<tr>
+				<th class="head col_first">Nachname</th>
+				<th class="head">Vorname</th>
+				<th class="head">Landesverband</th>
+				<?php if($this->lizenzview): ?><th class="head">Lizenz</th><?php endif; ?>
+				<th class="head col_last">Lizenz<br>gültig bis</th>
+			</tr>
+			<?php foreach($this->trainer as $trainer): ?>
+				<tr>
+					<td class="body col_0 col_first"><?= $trainer['nachname'] ?></td>
+					<td class="body col_1"><?= $trainer['vorname'] ?></td>
+					<td class="body col_2"><?= $trainer['verband'] ?></td>
+					<?php if($this->lizenzview): ?><td class="body col_3"><?= $trainer['lizenz'] ?></td><?php endif; ?>
+					<td class="body col_4 col_last"><?= $trainer['gueltigkeit'] ?></td>
+				</tr>
+			<?php endforeach; ?>
+		</thead>
+		<tbody>
+		</tbody>
+	</table>
+
+</div>

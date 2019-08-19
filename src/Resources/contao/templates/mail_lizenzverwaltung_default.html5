@@ -1,0 +1,27 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=<?= $this->charset ?>">
+	<meta name="Generator" content="Contao Open Source CMS">
+	<title><?= $this->title ?></title>
+</head>
+<body>
+	<?= $this->css ?>
+	<?php if($this->geschlecht == 'w'): ?>
+		<p>Sehr geehrte Frau <?= $this->vorname ?> <?= $this->name ?>,</p>
+	<?php else: ?>
+		<p>Sehr geehrter Herr <?= $this->vorname ?> <?= $this->name ?>,</p>
+	<?php endif; ?>
+	
+	<p>anbei erhalten Sie Ihre Lizenzurkunde als Trainer <b><?= $this->lizenz ?></b> im Format PDF.</p>
+	
+	<?= $this->content ?>
+	
+	<p>Mit freundlichen Grüßen<br>
+	Deutscher Schachbund<br>
+	Lizenzmanagement<br>
+	Judith Ulrich</p>
+	
+	<p>Trainerlisten auf schachbund.de: <a href="http://www.schachbund.de/trainerlisten.html" target="_blank">www.schachbund.de/trainerlisten.html</a></p>
+</body>
+</html>

@@ -1,0 +1,94 @@
+/* Allgemein */
+
+.dosb_button {
+	background: #eee;
+	background-image: url(../images/dosb-logo.png);
+	background-image: url(../images/dosb-logo.png) linear-gradient(to top, #ccc 0px, #eee 60%) repeat scroll 0 0;
+	background-size: 21px;
+	background-position: 5px center;
+	background-repeat: no-repeat;
+	border: 1px solid #aaa;
+	border-radius: 3px;
+	color: #555;
+	cursor: pointer;
+	text-shadow: 1px 1px 0 #eee;
+	padding: 2px 4px 2px 30px;
+	margin-bottom: 10px;
+}
+
+.dosb_button:focus,
+.dosb_button:hover {
+	box-shadow: 0 0 3px #aaa;
+}
+
+.dosb_button_mini {
+	background: #eee linear-gradient(to top, #ccc 0px, #eee 60%) repeat scroll 0 0;
+	border: 1px solid #aaa;
+	border-radius: 3px;
+	color: #555;
+	cursor: pointer;
+	line-height: 1;
+	text-shadow: 1px 1px 0 #eee;
+	padding: 2px 4px 2px 4px;
+}
+
+.dosb_button_mini:focus,
+.dosb_button_mini:hover {
+	box-shadow: 0 0 3px #aaa;
+}
+
+.wait
+{
+	color: #ACACAC;
+}
+
+.dosb_export_status {
+	margin-top: 5px;
+}
+
+/* E-Mail */
+
+.tl_trainerlizenzen_send {
+    margin-top: 24px;
+}
+
+.tl_trainerlizenzen_send .prev_header {
+  border-color: #ccc #ccc -moz-use-text-color;
+  border-image: none;
+  border-style: solid solid none;
+  border-width: 1px 1px 0;
+  margin: 0;
+  width: 100%;
+}
+
+.tl_trainerlizenzen_send .prev_header .row_0 td {
+    background-color: #f0f0f0;
+    padding: 8px 12px 2px;
+}
+
+.tl_trainerlizenzen_send .prev_header .row_1 td {
+    background-color: #f0f0f0;
+    padding: 2px 12px;
+}
+
+
+.tl_trainerlizenzen_send .prev_header .row_2 td {
+    background-color: #f0f0f0;
+    padding: 2px 12px 9px;
+}
+
+.tl_trainerlizenzen_send .prev_header .col_0 {
+    font-weight: bold;
+    padding-right: 18px;
+    white-space: nowrap;
+    width: 1%;
+}
+
+.tl_trainerlizenzen_send .preview_html {
+  border-color: #ccc;
+  border-image: none;
+  border-style: solid;
+  border-width: 1px;
+  overflow: auto;
+  padding: 24px 18px;
+}

@@ -146,7 +146,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung'] = array
 	'palettes' => array
 	(
 		'__selector__'                => array('addEnclosure'),
-		'default'                     => '{name_legend},vorname,name,titel,geburtstag,geschlecht;{adresse_legend},strasse,plz,ort,email,telefon;{hinweise_legend:hide},addEnclosure,bemerkung;{published_legend},published'
+		'default'                     => '{name_legend},vorname,name,titel,geburtstag,geschlecht;{adresse_legend},strasse,plz,ort,email,telefon;{hinweise_legend:hide},addEnclosure,bemerkung,migrationInfo;{published_legend},published'
 	),
 
 	// Subpalettes
@@ -383,6 +383,17 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung'] = array
 		'bemerkung' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['bemerkung'],
+			'inputType'               => 'textarea',
+			'exclude'                 => true,
+			'search'                  => true,
+			'sorting'                 => false,
+			'filter'                  => false,
+			'eval'                    => array('rte' => 'tinyMCE', 'cols' => 80,'rows' => 5, 'style' => 'height: 80px'),
+			'sql'                     => "text NULL"
+		),
+		'migrationInfo' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['migrationInfo'],
 			'inputType'               => 'textarea',
 			'exclude'                 => true,
 			'search'                  => true,

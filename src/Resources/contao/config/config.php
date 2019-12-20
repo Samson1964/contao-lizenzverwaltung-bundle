@@ -20,10 +20,10 @@ define('LIMS_USERNAME', $GLOBALS['TL_CONFIG']['lims_username']);
 define('LIMS_PASSWORD', $GLOBALS['TL_CONFIG']['lims_password']);
 define('LIMS_LINK', $GLOBALS['TL_CONFIG']['lims_link']);
 
-$GLOBALS['BE_MOD']['content']['trainerlizenzen'] = array
+$GLOBALS['BE_MOD']['content']['lizenzverwaltung'] = array
 (
 	'tables'            => array('tl_lizenzverwaltung', 'tl_lizenzverwaltung_items', 'tl_lizenzverwaltung_referenten', 'tl_lizenzverwaltung_mails'),
-	'icon'              => 'bundles/contaotrainerlizenzen/images/icon.png',
+	'icon'              => 'bundles/contaolizenzverwaltung/images/icon.png',
 	'export'            => array('trainerlizenzExport', 'exportTrainer'),
 	'exportXLS'         => array('trainerlizenzExport', 'exportXLSTrainer'),
 	'import'            => array('Samson\Trainerlizenzen\trainerlizenzImport', 'importTrainer'), 
@@ -40,4 +40,4 @@ $GLOBALS['TL_HOOKS']['simpleAjax'][] = array('ajaxRequest', 'compile');
 /**
  * Frontend-Module
  */
-$GLOBALS['FE_MOD']['application']['trainerlizenzen'] = '\Schachbulle\ContaoTrainerlizenzenBundle\Classes\Trainerliste';
+$GLOBALS['FE_MOD']['application']['trainerlizenzen'] = '\Schachbulle\ContaoLizenzverwaltungBundle\Classes\Trainerliste';

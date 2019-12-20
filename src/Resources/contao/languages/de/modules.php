@@ -9,11 +9,9 @@
 /**
  * Backend-Modul Übersetzungen
  */
-$GLOBALS["TL_LANG"]["MOD"]["trainerlizenzen"][0] = "Trainerlizenzen";
-$GLOBALS["TL_LANG"]["MOD"]["trainerlizenzen"][1] = "DSB-Trainerlizenzen";
+$GLOBALS["TL_LANG"]["MOD"]["lizenzverwaltung"] = array('Lizenzverwaltung', 'Lizenzen verwalten');
 
 /**
  * Frontendmodule
  */
-$GLOBALS['TL_LANG']['FMD']['dsb'] = 'Deutscher Schachbund'; 
-$GLOBALS['TL_LANG']['FMD']['trainerlizenzen'] = array('Liste der aktiven Trainer', 'Nur aktive Trainer mit einer bestimmten Lizenz ausgeben.');
+$GLOBALS['TL_LANG']['FMD']['lizenzverwaltung'] = array('Liste der aktiven Trainer', 'Nur aktive Trainer mit einer bestimmten Lizenz ausgeben.');

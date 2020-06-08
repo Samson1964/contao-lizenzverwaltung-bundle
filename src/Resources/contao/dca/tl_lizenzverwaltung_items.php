@@ -264,7 +264,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'flag'                    => 11,
 			'filter'                  => true,
 			'sql'                     => "varchar(3) NOT NULL default ''",
-			'options'                 => Schachbulle\ContaoTrainerlizenzenBundle\Classes\Helper::getVerbaende(),
+			'options'                 => Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerbaende(),
 			'eval'                    => array
 			(
 				'mandatory'           => true,
@@ -299,7 +299,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'search'                  => true,
 			'sorting'                 => true,
 			'filter'                  => true,
-			'options'                 => Schachbulle\ContaoTrainerlizenzenBundle\Classes\Helper::getLizenzen(),
+			'options'                 => Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getLizenzen(),
 			'eval'                    => array
 			(
 				'chosen'              => true,
@@ -1058,7 +1058,7 @@ class tl_lizenzverwaltung_items extends \Backend
 		// GÜLTIGKEIT DER LIZENZ
 		// ----------------------------------------------------------------
 		// Letztes Verlängerungsdatum ermitteln
-		$verlaengerung = \Schachbulle\ContaoTrainerlizenzenBundle\Classes\Helper::getVerlaengerung($dc->activeRecord->erwerb, $dc->activeRecord->verlaengerungen);
+		$verlaengerung = \Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerlaengerung($dc->activeRecord->erwerb, $dc->activeRecord->verlaengerungen);
 
 		// Zulässiges Gültigkeitsdatum feststellen
 		switch(substr($dc->activeRecord->lizenz,0,1))

@@ -1,5 +1,9 @@
 # Lizenzverwaltung Changelog
 
+## Version 1.0.4 (2020-06-08)
+
+* Fix: Klassen-Verweis tl_lizenzverwaltung_items.php repariert
+
 ## Version 1.0.3 (2020-06-08)
 
 * Fix: Klassen-Verweis tl_module.php repariert

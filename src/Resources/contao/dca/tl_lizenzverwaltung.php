@@ -770,7 +770,7 @@ class tl_lizenzverwaltung extends \Backend
 		// GÜLTIGKEIT DER LIZENZ
 		// ----------------------------------------------------------------
 		// Letztes Verlängerungsdatum ermitteln
-		$verlaengerung = \Samson\Trainerlizenzen\Helper::getVerlaengerung($dc->activeRecord->erwerb, $dc->activeRecord->verlaengerungen);
+		$verlaengerung = \Schachbulle\ContaoLizenzverwaltungBundle\Helper::getVerlaengerung($dc->activeRecord->erwerb, $dc->activeRecord->verlaengerungen);
 
 		// Zulässiges Gültigkeitsdatum feststellen
 		switch(substr($dc->activeRecord->lizenz,0,1))

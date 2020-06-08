@@ -55,7 +55,7 @@ class DOSBLizenzen extends \Backend
 			$host = $this->host.'request';
 			
 			// Letztes Verlängerungsdatum ermitteln
-			$verlaengerung = \Samson\Trainerlizenzen\Helper::getVerlaengerung($result->erwerb, $result->verlaengerungen);
+			$verlaengerung = \Schachbulle\ContaoLizenzverwaltungBundle\Helper::getVerlaengerung($result->erwerb, $result->verlaengerungen);
 			//if(!$verlaengerung) $verlaengerung = $result->erwerb;
 			
 			// Datenpaket aufbereiten

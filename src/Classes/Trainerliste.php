@@ -51,7 +51,7 @@ class Trainerliste extends \Module
 	protected function compile()
 	{
 		
-		$Verband = \Samson\Trainerlizenzen\Helper::getVerbaende(); // Verbände holen
+		$Verband = \Schachbulle\ContaoLizenzverwaltungBundle\Helper::getVerbaende(); // Verbände holen
 		$heute = time();
 	
 		// Zu zeigende Lizenzen in SQL-String verpacken

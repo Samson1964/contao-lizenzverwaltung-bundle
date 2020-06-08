@@ -174,7 +174,7 @@ class TrainerlizenzExport extends \Backend
 		$records = \Database::getInstance()->prepare('SELECT * FROM tl_trainerlizenzen'.$sql)
 										   ->execute();
 
-		$verbandsname = \Samson\Trainerlizenzen\Helper::getVerbaende(); // Verbandskurzzeichen und -namen laden
+		$verbandsname = \Schachbulle\ContaoLizenzverwaltungBundle\Helper::getVerbaende(); // Verbandskurzzeichen und -namen laden
 
 		// Datensätze umwandeln
 		$arrExport = array();
@@ -221,7 +221,7 @@ class TrainerlizenzExport extends \Backend
 				$arrExport[$x]['plz'] = $records->plz;
 				$arrExport[$x]['ort'] = utf8_decode($records->ort);
 				$arrExport[$x]['erwerb'] = $this->getDate($records->erwerb);
-				$arrExport[$x]['verlaengerungen'] = $this->getDate(\Samson\Trainerlizenzen\Helper::getVerlaengerung($records->erwerb, $records->verlaengerungen));
+				$arrExport[$x]['verlaengerungen'] = $this->getDate(\Schachbulle\ContaoLizenzverwaltungBundle\Helper::getVerlaengerung($records->erwerb, $records->verlaengerungen));
 				$arrExport[$x]['codex'] = $records->codex;
 				$arrExport[$x]['codex_date'] = $this->getDate($records->codex_date);
 				$arrExport[$x]['help'] = $records->help;

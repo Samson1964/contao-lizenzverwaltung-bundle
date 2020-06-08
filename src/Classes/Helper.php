@@ -51,7 +51,7 @@ class Helper extends \Frontend
 	{
 		if (self::$instance === null)
 		{
-			self::$instance = new \Samson\Trainerlizenzen\Helper();
+			self::$instance = new \Schachbulle\ContaoLizenzverwaltungBundle\Helper();
 		}
 	
 		return self::$instance;

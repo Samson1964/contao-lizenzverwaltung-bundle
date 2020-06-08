@@ -1,5 +1,9 @@
 # Lizenzverwaltung Changelog
 
+## Version 1.0.2 (2020-06-08)
+
+* Fix: Klassen-Verweise repariert
+
 ## Version 1.0.1 (2019-12-20)
 
 - Fix: Kompatibilität mit Contao 4 alle Versionen hergestellt

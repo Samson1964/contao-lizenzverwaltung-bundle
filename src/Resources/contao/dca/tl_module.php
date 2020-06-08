@@ -20,7 +20,7 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['trainerlizenzen_typ'] = array
 (
 	'label'                   => &$GLOBALS['TL_LANG']['tl_module']['trainerlizenzen_typ'],
 	'inputType'               => 'checkboxWizard',
-	'options'                 => \Schachbulle\ContaoTrainerlizenzenBundle\Classes\Helper::getLizenzen(),
+	'options'                 => \Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getLizenzen(),
 	'eval'                    => array
 	(
 		'tl_class'            => 'w50 clr',

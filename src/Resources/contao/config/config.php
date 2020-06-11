@@ -26,12 +26,12 @@ $GLOBALS['BE_MOD']['content']['lizenzverwaltung'] = array
 	'icon'              => 'bundles/contaolizenzverwaltung/images/icon.png',
 	'export'            => array('trainerlizenzExport', 'exportTrainer'),
 	'exportXLS'         => array('trainerlizenzExport', 'exportXLSTrainer'),
-	'import'            => array('Samson\Trainerlizenzen\trainerlizenzImport', 'importTrainer'), 
-	'getLizenz'         => array('Samson\Trainerlizenzen\DOSBLizenzen', 'getLizenz'),
-	'getLizenzPDF'      => array('Samson\Trainerlizenzen\DOSBLizenzen', 'getLizenzPDF'),
-	'getLizenzPDFCard'  => array('Samson\Trainerlizenzen\DOSBLizenzen', 'getLizenzPDFCard'),
-	'exportDOSB'        => array('Samson\Trainerlizenzen\DOSBLizenzen', 'exportDOSB'),
-	'send'              => array('Samson\Trainerlizenzen\Mailer', 'send'), 
+	'import'            => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\trainerlizenzImport', 'importTrainer'), 
+	'getLizenz'         => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\DOSBLizenzen', 'getLizenz'),
+	'getLizenzPDF'      => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\DOSBLizenzen', 'getLizenzPDF'),
+	'getLizenzPDFCard'  => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\DOSBLizenzen', 'getLizenzPDFCard'),
+	'exportDOSB'        => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\DOSBLizenzen', 'exportDOSB'),
+	'send'              => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\Mailer', 'send'), 
 );
 
 // SimpleAjax Hook

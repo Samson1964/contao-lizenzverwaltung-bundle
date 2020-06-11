@@ -11,7 +11,7 @@
  * @copyright Frank Hoppe 2014 - 2017
  */
 
-$GLOBALS['TL_CSS'][] = 'system/modules/trainerlizenzen/assets/css/default.css';
+$GLOBALS['TL_CSS'][] = 'bundles/contaolizenzverwaltung/css/default.css';
 
 /**
  * Table tl_lizenzverwaltung
@@ -23,6 +23,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 	(
 		'dataContainer'               => 'Table',
 		'ptable'                      => 'tl_lizenzverwaltung',
+		'ctable'                      => array('tl_lizenzverwaltung_mails'),
 		'enableVersioning'            => true,
 		'sql' => array
 		(
@@ -40,9 +41,10 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 		'sorting' => array
 		(
 			'mode'                    => 4,
-			'fields'                  => array(),
+			'fields'                  => array('tstamp'),
 			'headerFields'            => array('name', 'vorname', 'geburtstag', 'email', 'strasse', 'plz', 'ort'),
 			'panelLayout'             => 'filter;sort,search,limit',
+			'disableGrouping'         => false,
 			'child_record_callback'   => array('tl_lizenzverwaltung_items', 'listLizenzen') 
 		),
 		'global_operations' => array
@@ -63,6 +65,13 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 				'href'                => 'act=edit',
 				'icon'                => 'edit.gif'
 			),
+			'emailbox' => array
+			(
+				'label'               => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['emailbox'],
+				'href'                => 'table=tl_lizenzverwaltung_mails',
+				'icon'                => 'bundles/contaolizenzverwaltung/images/email.png',
+				'button_callback'     => array('tl_lizenzverwaltung_items', 'toggleEmail')
+			), 
 			'copy' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['copy'],
@@ -111,7 +120,6 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 	(
 		'id' => array
 		(
-			'search'                  => true,
 			'sql'                     => "int(10) unsigned NOT NULL auto_increment"
 		),
 		'pid' => array
@@ -123,6 +131,8 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 		'tstamp' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['tstamp'],
+			'sorting'                 => true,
+			'flag'                    => 6,
 			'sql'                     => "int(10) unsigned NOT NULL default '0'"
 		),
 		// Gibt Warnungen und Hinweise aus
@@ -137,10 +147,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['license_number_dosb'],
 			'input_field_callback'    => array('tl_lizenzverwaltung_items', 'getLizenznummer'),
 			'exclude'                 => true,
-			'search'                  => true,
-			'sorting'                 => true,
 			'flag'                    => 12,
-			'filter'                  => false,
 			'sql'                     => "varchar(255) NOT NULL default ''",
 		),
 		// DOSB-Lizenznummer, z.B. 3535 (korreliert mit der obigen Lizenz) 
@@ -161,14 +168,12 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 		'dosb_code' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['dosb_code'],
-			'filter'                  => true,
 			'sql'                     => "int(3) unsigned NOT NULL default '0'"
 		),
 		// Antwort der letzten Lizenzerstellung/-verlängerung beim DOSB
 		'dosb_antwort' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['dosb_antwort'],
-			'filter'                  => true,
 			'sql'                     => "varchar(255) NOT NULL default ''",
 		),
 		'button_license' => array
@@ -248,7 +253,6 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['marker'],
 			'inputType'               => 'checkbox',
 			'default'                 => false,
-			'filter'                  => true,
 			'exclude'                 => true,
 			'eval'                    => array('tl_class' => 'w50','isBoolean' => true),
 			'sql'                     => "char(1) NOT NULL default ''"
@@ -259,10 +263,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['verband'],
 			'inputType'               => 'select',
 			'exclude'                 => true,
-			'search'                  => true,
-			'sorting'                 => true,
 			'flag'                    => 11,
-			'filter'                  => true,
 			'sql'                     => "varchar(3) NOT NULL default ''",
 			'options'                 => Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerbaende(),
 			'eval'                    => array
@@ -279,9 +280,6 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'inputType'               => 'text',
 			'default'                 => 'B.38',
 			'exclude'                 => true,
-			'search'                  => true,
-			'sorting'                 => true,
-			'filter'                  => false,
 			'sql'                     => "varchar(255) NOT NULL default ''",
 			'eval'                    => array
 			(
@@ -296,9 +294,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['lizenz'],
 			'inputType'               => 'select',
 			'exclude'                 => true,
-			'search'                  => true,
 			'sorting'                 => true,
-			'filter'                  => true,
 			'options'                 => Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getLizenzen(),
 			'eval'                    => array
 			(
@@ -315,11 +311,8 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['erwerb'],
 			'inputType'               => 'text',
 			'exclude'                 => true,
-			'search'                  => true,
-			'sorting'                 => true,
 			'flag'                    => 8,
 			'explanation'             => 'trainerlizenzen_erwerb', 
-			'filter'                  => true,
 			'eval'                    => array
 			(
 				'rgxp'                => 'date',
@@ -330,167 +323,14 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			),
 			'sql'                     => "varchar(11) NOT NULL default ''"
 		),
-		// Datum der 1. Lizenzverlängerung
-		'verlaengerung1' => array
-		(
-			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['verlaengerung1'],
-			'inputType'               => 'text',
-			'exclude'                 => true,
-			'search'                  => false,
-			'sorting'                 => false,
-			'flag'                    => 8,
-			'filter'                  => false,
-			'eval'                    => array
-			(
-				'rgxp'                => 'date',
-				'datepicker'          => true,
-				'tl_class'            => 'w50 wizard',
-				'doNotCopy'           => true
-			),
-			'sql'                     => "varchar(11) NOT NULL default ''"
-		),
-		// Datum der 2. Lizenzverlängerung
-		'verlaengerung2' => array
-		(
-			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['verlaengerung2'],
-			'inputType'               => 'text',
-			'exclude'                 => true,
-			'search'                  => false,
-			'sorting'                 => false,
-			'flag'                    => 8,
-			'filter'                  => false,
-			'eval'                    => array
-			(
-				'rgxp'                => 'date',
-				'datepicker'          => true,
-				'tl_class'            => 'w50 wizard',
-				'doNotCopy'           => true
-			),
-			'sql'                     => "varchar(11) NOT NULL default ''"
-		),
-		// Datum der 3. Lizenzverlängerung
-		'verlaengerung3' => array
-		(
-			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['verlaengerung3'],
-			'inputType'               => 'text',
-			'exclude'                 => true,
-			'search'                  => false,
-			'sorting'                 => false,
-			'flag'                    => 8,
-			'filter'                  => false,
-			'eval'                    => array
-			(
-				'rgxp'                => 'date',
-				'datepicker'          => true,
-				'tl_class'            => 'w50 wizard',
-				'doNotCopy'           => true
-			),
-			'sql'                     => "varchar(11) NOT NULL default ''"
-		),
-		// Datum der 4. Lizenzverlängerung
-		'verlaengerung4' => array
-		(
-			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['verlaengerung4'],
-			'inputType'               => 'text',
-			'exclude'                 => true,
-			'search'                  => false,
-			'sorting'                 => false,
-			'flag'                    => 8,
-			'filter'                  => false,
-			'eval'                    => array
-			(
-				'rgxp'                => 'date',
-				'datepicker'          => true,
-				'tl_class'            => 'w50 wizard',
-				'doNotCopy'           => true
-			),
-			'sql'                     => "varchar(11) NOT NULL default ''"
-		),
-		// Datum der 5. Lizenzverlängerung
-		'verlaengerung5' => array
-		(
-			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['verlaengerung5'],
-			'inputType'               => 'text',
-			'exclude'                 => true,
-			'search'                  => false,
-			'sorting'                 => false,
-			'flag'                    => 8,
-			'filter'                  => false,
-			'eval'                    => array
-			(
-				'rgxp'                => 'date',
-				'datepicker'          => true,
-				'tl_class'            => 'w50 wizard',
-				'doNotCopy'           => true
-			),
-			'sql'                     => "varchar(11) NOT NULL default ''"
-		),
-		// Datum der 6. Lizenzverlängerung
-		'verlaengerung6' => array
-		(
-			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['verlaengerung6'],
-			'inputType'               => 'text',
-			'exclude'                 => true,
-			'search'                  => false,
-			'sorting'                 => false,
-			'flag'                    => 8,
-			'filter'                  => false,
-			'eval'                    => array
-			(
-				'rgxp'                => 'date',
-				'datepicker'          => true,
-				'tl_class'            => 'w50 wizard',
-				'doNotCopy'           => true
-			),
-			'sql'                     => "varchar(11) NOT NULL default ''"
-		),
-		// Datum der 7. Lizenzverlängerung
-		'verlaengerung7' => array
-		(
-			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['verlaengerung7'],
-			'inputType'               => 'text',
-			'exclude'                 => true,
-			'search'                  => false,
-			'sorting'                 => false,
-			'flag'                    => 8,
-			'filter'                  => false,
-			'eval'                    => array
-			(
-				'rgxp'                => 'date',
-				'datepicker'          => true,
-				'tl_class'            => 'w50 wizard',
-				'doNotCopy'           => true
-			),
-			'sql'                     => "varchar(11) NOT NULL default ''"
-		),
-		// Datum der 8. Lizenzverlängerung
-		'verlaengerung8' => array
-		(
-			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['verlaengerung8'],
-			'inputType'               => 'text',
-			'exclude'                 => true,
-			'search'                  => false,
-			'sorting'                 => false,
-			'flag'                    => 8,
-			'filter'                  => false,
-			'eval'                    => array
-			(
-				'rgxp'                => 'date',
-				'datepicker'          => true,
-				'tl_class'            => 'w50 wizard',
-				'doNotCopy'           => true
-			),
-			'sql'                     => "varchar(11) NOT NULL default ''"
-		),
 		'verlaengerungen' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['verlaengerungen'],
 			'exclude'                 => true,
-			'search'                  => false,
 			'inputType'               => 'multiColumnWizard',
 			'eval'                    => array
 			(
-				'tl_class'            => 'clr',
+				'tl_class'            => 'w50',
 				'columnFields'        => array
 				(
 					'datum' => array
@@ -500,10 +340,11 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 						'inputType'               => 'text',
 						'eval'                    => array
 						(
-							'tl_class'            => 'w50 wizard',
+							'tl_class'            => 'wizard',
 							'rgxp'                => 'date',
 							'datepicker'          => true,
-							'maxlength'           => 10
+							'maxlength'           => 10,
+							'style'               => 'width:92%'
 						),
 					),
 				)
@@ -516,10 +357,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['gueltigkeit'],
 			'inputType'               => 'text',
 			'exclude'                 => true,
-			'search'                  => true,
-			'sorting'                 => true,
 			'flag'                    => 8,
-			'filter'                  => true,
 			'eval'                    => array
 			(
 				'rgxp'                => 'date',
@@ -536,7 +374,6 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'inputType'               => 'checkbox',
 			'default'                 => true,
 			'explanation'             => 'trainerlizenzen_kodex', 
-			'filter'                  => true,
 			'exclude'                 => true,
 			'eval'                    => array
 			(
@@ -554,10 +391,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['codex_date'],
 			'inputType'               => 'text',
 			'exclude'                 => true,
-			'search'                  => true,
-			'sorting'                 => true,
 			'flag'                    => 8,
-			'filter'                  => true,
 			'eval'                    => array
 			(
 				'rgxp'                => 'date',
@@ -573,7 +407,6 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['help'],
 			'inputType'               => 'checkbox',
 			'default'                 => true,
-			'filter'                  => true,
 			'exclude'                 => true,
 			'explanation'             => 'trainerlizenzen_kodex', 
 			'eval'                    => array
@@ -592,10 +425,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['help_date'],
 			'inputType'               => 'text',
 			'exclude'                 => true,
-			'search'                  => true,
-			'sorting'                 => true,
 			'flag'                    => 8,
-			'filter'                  => true,
 			'eval'                    => array
 			(
 				'rgxp'                => 'date',
@@ -611,10 +441,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['letzteAenderung'],
 			'inputType'               => 'text',
 			'exclude'                 => true,
-			'search'                  => true,
-			'sorting'                 => true,
 			'flag'                    => 8,
-			'filter'                  => true,
 			'eval'                    => array
 			(
 				'rgxp'                => 'date',
@@ -670,10 +497,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['bemerkung'],
 			'inputType'               => 'textarea',
 			'exclude'                 => true,
-			'search'                  => true,
-			'sorting'                 => false,
-			'filter'                  => false,
-			'eval'                    => array('rte' => 'tinyMCE', 'cols' => 80,'rows' => 5, 'style' => 'height: 80px'),
+			'eval'                    => array('rte' => 'tinyMCE', 'cols' => 80,'rows' => 10),
 			'sql'                     => "text NULL"
 		),
 		'published' => array
@@ -681,7 +505,6 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['published'],
 			'inputType'               => 'checkbox',
 			'default'                 => true,
-			'filter'                  => true,
 			'exclude'                 => true,
 			'eval'                    => array('tl_class' => 'w50','isBoolean' => true),
 			'sql'                     => "char(1) NOT NULL default ''"
@@ -698,22 +521,25 @@ class tl_lizenzverwaltung_items extends \Backend
 	{
 		$this->import('BackendUser', 'User');
 
-		$href .= '&amp;table=tl_lizenzverwaltung_items&amp;id='.$row['id'];
+		$href .= '&amp;id='.$row['id'];
 
-		if($row['email'] && $this->verbandsmail[$row['verband']])
+		$verband_email = \Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerbandMail($row['verband']);
+		$person_email = \Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getPersonMail($row['pid']);
+
+		if($person_email && $verband_email)
 		{
-			$icon = 'system/modules/trainerlizenzen/assets/images/email.png';
+			$icon = 'bundles/contaolizenzverwaltung/images/email.png';
 		}
-		elseif($row['email'] || $this->verbandsmail[$row['verband']])
+		elseif($person_email || $verband_email)
 		{
-			$icon = 'system/modules/trainerlizenzen/assets/images/email_gelb.png';
+			$icon = 'bundles/contaolizenzverwaltung/images/email_gelb.png';
 		}
 		else
 		{
-			$icon = 'system/modules/trainerlizenzen/assets/images/email_grau.png';
+			$icon = 'bundles/contaolizenzverwaltung/images/email_grau.png';
 		}
 
-		return '<a href="'.$this->addToUrl($href).'" title="'.specialchars($title).'"'.$attributes.'>'.$this->generateImage($icon, $label).'</a> ';
+		return '<a href="'.$this->addToUrl($href).'" title="'.specialchars($title).'"'.$attributes.'>'.\Image::getHtml($icon, $label).'</a> ';
 	}
 
 	public function toggleIcon($row, $href, $label, $title, $icon, $attributes)
@@ -820,16 +646,8 @@ class tl_lizenzverwaltung_items extends \Backend
 
 	public function getLizenzbutton(DataContainer $dc)
 	{
-		// Zurücklink generieren, ab C4 ist das ein symbolischer Link zu "contao"
-		if (version_compare(VERSION, '4.0', '>='))
-		{
-			$link = \System::getContainer()->get('router')->generate('contao_backend');
-		}
-		else
-		{
-			$link = 'contao/main.php';
-		}
-		$link .= '?do=trainerlizenzen&amp;key=getLizenz&amp;id=' . $dc->activeRecord->id . '&amp;rt=' . REQUEST_TOKEN;
+		// Link generieren
+		$link = str_replace('&amp;act=edit', '', \Controller::addToUrl('key=getLizenz&rt='.REQUEST_TOKEN)); // key hinzufügen | edit löschen
 
 		// Letzter Lizenzabruf und Rückgabecode
 		if($dc->activeRecord->dosb_tstamp)
@@ -837,7 +655,7 @@ class tl_lizenzverwaltung_items extends \Backend
 			$antwort = 'Letzter Abruf: '.date('d.m.Y H:i:s', $dc->activeRecord->dosb_tstamp).' ('.$dc->activeRecord->dosb_code.' '.$dc->activeRecord->dosb_antwort.')';
 		}
 		else $antwort = '';
-		
+
 		$string = '
 <div class="w50 widget" style="height:45px;">
 	<a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_license'][0].'</a>
@@ -929,17 +747,8 @@ class tl_lizenzverwaltung_items extends \Backend
 	 */
 	public function getLizenzPDF(DataContainer $dc)
 	{
-
-		// Zurücklink generieren, ab C4 ist das ein symbolischer Link zu "contao"
-		if (version_compare(VERSION, '4.0', '>='))
-		{
-			$link = \System::getContainer()->get('router')->generate('contao_backend');
-		}
-		else
-		{
-			$link = 'contao/main.php';
-		}
-		$link .= '?do=trainerlizenzen&amp;key=getLizenzPDF&amp;id=' . $dc->activeRecord->id . '&amp;rt=' . REQUEST_TOKEN;
+		// Link generieren
+		$link = str_replace('&amp;act=edit', '', \Controller::addToUrl('key=getLizenzPDF&rt='.REQUEST_TOKEN)); // key hinzufügen | edit löschen
 		
 		// Letzter Lizenzabruf und Rückgabecode
 		if($dc->activeRecord->dosb_pdf_tstamp)
@@ -969,17 +778,8 @@ class tl_lizenzverwaltung_items extends \Backend
 	 */
 	public function getLizenzPDFCard(DataContainer $dc)
 	{
-
-		// Zurücklink generieren, ab C4 ist das ein symbolischer Link zu "contao"
-		if (version_compare(VERSION, '4.0', '>='))
-		{
-			$link = \System::getContainer()->get('router')->generate('contao_backend');
-		}
-		else
-		{
-			$link = 'contao/main.php';
-		}
-		$link .= '?do=trainerlizenzen&amp;key=getLizenzPDFCard&amp;id=' . $dc->activeRecord->id . '&amp;rt=' . REQUEST_TOKEN;
+		// Link generieren
+		$link = str_replace('&amp;act=edit', '', \Controller::addToUrl('key=getLizenzPDFCard&rt='.REQUEST_TOKEN)); // key hinzufügen | edit löschen
 
 		// Letzter Lizenzabruf und Rückgabecode
 		if($dc->activeRecord->dosb_pdfcard_tstamp)
@@ -1019,7 +819,7 @@ class tl_lizenzverwaltung_items extends \Backend
 		{
 			$link = 'contao/main.php';
 		}
-		$link .= '?do=trainerlizenzen&amp;key=getLizenz&amp;id=' . $dc->activeRecord->id . '&amp;rt=' . REQUEST_TOKEN;
+		$link .= '?do=lizenzverwaltung&amp;table=tl_lizenzverwaltung_items&amp;key=getLizenz&amp;id=' . $dc->activeRecord->id . '&amp;rt=' . REQUEST_TOKEN;
 
 		// Letzter Lizenzabruf und Rückgabecode
 		if($dc->activeRecord->dosb_tstamp)
@@ -1044,10 +844,17 @@ class tl_lizenzverwaltung_items extends \Backend
 	 *
 	 * @return string
 	 */
-	public function listLizenzen($arrRow)
+	public function listLizenzen($row)
 	{
-		return '
-<div class="cte_type ' . (($arrRow['sent_state'] && $arrRow['sent_date']) ? 'published' : 'unpublished') . '"><strong>' . $arrRow['subject'] . '</strong> - ' . (($arrRow['sent_state'] && $arrRow['sent_date']) ? 'Versendet am '.Date::parse(Config::get('datimFormat'), $arrRow['sent_date']) : 'Nicht versendet'). '</div>'; 
+		$temp = '<b>'.$row['lizenz'].'</b> ';
+		$temp .= date('d.m.Y', $row['gueltigkeit']).' ';
+		$temp .= '- '.$GLOBALS['TL_LANG']['lizenzverwaltung']['verbaende'][$row['verband']].' ';
+		$temp .= '(DOSB-Lizenz <i>'.$row['license_number_dosb'].'</i> ';
+		$temp .= 'abgerufen am '.date('d.m.Y H:i', $row['dosb_tstamp']).')';
+		return $temp;
+		
+//		return '
+//<div class="cte_type ' . (($arrRow['sent_state'] && $arrRow['sent_date']) ? 'published' : 'unpublished') . '"><strong>' . $arrRow['subject'] . '</strong> - ' . (($arrRow['sent_state'] && $arrRow['sent_date']) ? 'Versendet am '.Date::parse(Config::get('datimFormat'), $arrRow['sent_date']) : 'Nicht versendet'). '</div>'; 
 
 	}
 	
@@ -1098,7 +905,12 @@ class tl_lizenzverwaltung_items extends \Backend
 		// ----------------------------------------------------------------
 		// E-MAIL
 		// ----------------------------------------------------------------
-		if(!$dc->activeRecord->email && $dc->activeRecord->tstamp)
+
+		// Lizenz- und Personen-Datensatz einlesen
+		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
+		                                  ->execute($dc->activeRecord->id);
+
+		if(!$result->email && $dc->activeRecord->tstamp)
 		{
 			// Fehlende E-Mail-Adresse bei nicht neuem Datensatz
 			Message::addError('E-Mail-Adresse des Trainers fehlt! Ein automatischer Lizenzversand an ihn ist nicht möglich.'); 
@@ -1136,8 +948,8 @@ class tl_lizenzverwaltung_items extends \Backend
 		$year = date('Y', $value);
 		$quartal = $quartals[date("n", $value)]; // n = Monat 1-12
 
-		//log_message(date('d.m.Y', $value), 'trainerlizenzen_quartal.log');
-		//log_message($quartal, 'trainerlizenzen_quartal.log');
+		//log_message(date('d.m.Y', $value), 'lizenzverwaltung_quartal.log');
+		//log_message($quartal, 'lizenzverwaltung_quartal.log');
 		
 		switch($quartal)
 		{
@@ -1221,7 +1033,7 @@ class tl_lizenzverwaltung_items extends \Backend
 		{
 			$link = 'contao/main.php';
 		}
-		$link .= '?do=trainerlizenzen&amp;key=getLizenz&amp;id=' . $dc->activeRecord->id . '&amp;rt=' . REQUEST_TOKEN;
+		$link .= '?do=lizenzverwaltung&amp;table=tl_lizenzverwaltung_items&amp;key=getLizenz&amp;id=' . $dc->activeRecord->id . '&amp;rt=' . REQUEST_TOKEN;
 
 		// Letzter Lizenzabruf und Rückgabecode
 		if($dc->activeRecord->enclosure)
@@ -1307,12 +1119,12 @@ class tl_lizenzverwaltung_items extends \Backend
 		{
 			case '1': // Alle Trainer mit noch gültigen Lizenzen
 				$objPlayers = \Database::getInstance()->prepare("SELECT id FROM tl_lizenzverwaltung WHERE gueltigkeit >= ? AND published = ?")
-													  ->execute(time(), 1);
+				                                      ->execute(time(), 1);
 				$arrPlayers = is_array($arrPlayers) ? array_intersect($arrPlayers, $objPlayers->fetchEach('id')) : $objPlayers->fetchEach('id');
 				break;
 			case '2': // Alle Trainer mit noch ungesendeten E-Mails
 				$objPlayers = \Database::getInstance()->prepare("SELECT pid FROM tl_lizenzverwaltung_items WHERE sent_state = ? AND published = ?")
-													  ->execute('', 1);
+				                                      ->execute('', 1);
 				$arrPlayers = is_array($arrPlayers) ? array_intersect($arrPlayers, $objPlayers->fetchEach('pid')) : $objPlayers->fetchEach('pid');
 				break;
 	
@@ -1325,7 +1137,7 @@ class tl_lizenzverwaltung_items extends \Backend
 		}
 	
 		$log = print_r($arrPlayers, true);
-		log_message($log, 'trainerlizenzen.log');
+		log_message($log, 'lizenzverwaltung.log');
 	
 		$GLOBALS['TL_DCA']['tl_lizenzverwaltung_items']['list']['sorting']['root'] = $arrPlayers; 
 	

@@ -19,7 +19,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_mails'] = array
 	'config' => array
 	(
 		'dataContainer'               => 'Table',
-		'ptable'                      => 'tl_lizenzverwaltung',
+		'ptable'                      => 'tl_lizenzverwaltung_items',
 		'enableVersioning'            => true,
 		'sql' => array
 		(
@@ -38,9 +38,9 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_mails'] = array
 		(
 			'mode'                    => 4,
 			'fields'                  => array('sent_state ASC', 'sent_date DESC'),
-			'headerFields'            => array('name', 'vorname', 'geburtstag', 'lizenz', 'gueltigkeit', 'verband'),
+			'headerFields'            => array('lizenz', 'erwerb', 'gueltigkeit', 'verband', 'license_number_dosb'),
 			'panelLayout'             => 'filter;sort,search,limit',
-			'child_record_callback'   => array('tl_lizenzverwaltung_mails', 'listEmails') 
+			'child_record_callback'   => array('tl_lizenzverwaltung_mails', 'listEmails')
 		),
 		'global_operations' => array
 		(
@@ -89,7 +89,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_mails'] = array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_mails']['send'],
 				'href'                => 'key=send',
-				'icon'                => 'system/modules/trainerlizenzen/assets/images/email_senden.png'
+				'icon'                => 'bundles/contaolizenzverwaltung/images/email_senden.png'
 			)
 		)
 	),
@@ -131,7 +131,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_mails'] = array
 				'submitOnChange'      => true
 			),
 			'sql'                     => "varchar(64) NOT NULL default ''"
-		),  
+		),
 		'preview' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_mails']['preview'],
@@ -158,7 +158,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_mails'] = array
 			'inputType'               => 'textarea',
 			'eval'                    => array
 			(
-				'rte'                 => 'tinyMCE', 
+				'rte'                 => 'tinyMCE',
 				'helpwizard'          => true,
 				'tl_class'            => 'long clr',
 			),
@@ -230,7 +230,8 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_mails'] = array
 		'sent_date' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_mails']['sent_date'],
-			'flag'                    => 7,
+			'sorting'                 => true,
+			'flag'                    => 6,
 			'eval'                    => array
 			(
 				'rgxp'                => 'date',
@@ -280,8 +281,9 @@ class tl_lizenzverwaltung_mails extends Backend
 	{
 		$objTemplate = new \BackendTemplate($arrRow['template']);
 		// Trainer-Datensatz einlesen
-		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung WHERE id = ?")
-										  ->execute($arrRow['pid']);
+		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items WHERE id = ?")
+		                                  ->execute($arrRow['pid']);
+
 		$objTemplate->setData($result->row()); // Trainer-Daten in Template-Objekt eintragen
 		$objTemplate->subject = $arrRow['subject'];
 		$objTemplate->content = $arrRow['content'];
@@ -291,15 +293,24 @@ class tl_lizenzverwaltung_mails extends Backend
 <div class="cte_type ' . (($arrRow['sent_state'] && $arrRow['sent_date']) ? 'published' : 'unpublished') . '"><strong>' . $arrRow['subject'] . '</strong> - ' . (($arrRow['sent_state'] && $arrRow['sent_date']) ? 'Versendet am '.Date::parse(Config::get('datimFormat'), $arrRow['sent_date']) : 'Nicht versendet'). '</div>
 <div class="limit_height' . (!Config::get('doNotCollapse') ? ' h128' : '') . '">' . (!$arrRow['sendText'] ? '
 ' . StringUtil::insertTagToSrc($content) . '<hr>' : '' ) . '
-</div>' . "\n"; 
+</div>' . "\n";
 
 	}
 
 
 	public function getTemplates($dc)
 	{
-		return $this->getTemplateGroup('mail_trainerlizenzen_', $dc->activeRecord->id);
-	}  
+		if(version_compare(VERSION.BUILD, '2.9.0', '>=') && version_compare(VERSION.BUILD, '4.8.0', '<'))
+		{
+			// Den 2. Parameter gibt es nur ab Contao 2.9 bis 4.7
+			return $this->getTemplateGroup('mail_lizenzverwaltung_', $dc->activeRecord->id);
+		}
+		else
+		{
+			// Ohne 2. Parameter bis Contao 2.8 und ab Contao 4.8
+			return $this->getTemplateGroup('mail_lizenzverwaltung_');
+		}
+	}
 
 	public function getPreview($dc)
 	{
@@ -307,9 +318,10 @@ class tl_lizenzverwaltung_mails extends Backend
 		if($dc->activeRecord->template)
 		{
 			$objTemplate = new \BackendTemplate($dc->activeRecord->template);
-			// Trainer-Datensatz einlesen
-			$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung WHERE id = ?")
-											  ->execute($dc->activeRecord->pid);
+			// Lizenz- und Personen-Datensatz einlesen
+			$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
+			                                  ->execute($dc->activeRecord->pid);
+
 			$objTemplate->setData($result->row()); // Trainer-Daten in Template-Objekt eintragen
 			$objTemplate->subject = $dc->activeRecord->subject;
 			$objTemplate->content = $dc->activeRecord->content;
@@ -321,14 +333,14 @@ class tl_lizenzverwaltung_mails extends Backend
 		{
 			$content = 'Keine Vorlage ausgewählt';
 		}
-		
+
 		$string = '
 <div class="long clr widget">
 	<h3><label>'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_mails']['preview'][0].'</label></h3>
 	'.$content.'
-</div>'; 
-		
+</div>';
+
 		return $string;
-	}  
+	}
 
 }

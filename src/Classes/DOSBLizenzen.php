@@ -15,8 +15,8 @@ class DOSBLizenzen extends \Backend
 	var $username;
 	var $password;
 	var $training_course_id;
-	
-	function __construct() 
+
+	function __construct()
 	{
 		$this->organization = '1093';
 		$this->host = LIMS_HOST;
@@ -41,23 +41,23 @@ class DOSBLizenzen extends \Backend
 
 	public function getLizenz()
 	{
-		// Datensatz des zu lizensierenden Trainers
+		// Datensatz-ID der Lizenz
 		$id = \Input::get('id');
-		
-		// Datensatz einlesen
-		$result = \Database::getInstance()->prepare("SELECT * FROM tl_trainerlizenzen WHERE id = ?")
-										  ->execute($id);
+
+		// Lizenz- und Personen-Datensatz einlesen
+		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
+		                                  ->execute($id);
 
 		// Auswerten
 		if($result->numRows)
 		{
 			// Anfügen der Methode für das Erstellen/Aktualisieren einer Lizenz
 			$host = $this->host.'request';
-			
+
 			// Letztes Verlängerungsdatum ermitteln
-			$verlaengerung = \Schachbulle\ContaoLizenzverwaltungBundle\Helper::getVerlaengerung($result->erwerb, $result->verlaengerungen);
+			$verlaengerung = \Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerlaengerung($result->erwerb, $result->verlaengerungen);
 			//if(!$verlaengerung) $verlaengerung = $result->erwerb;
-			
+
 			// Datenpaket aufbereiten
 			$data = array
 			(
@@ -80,7 +80,7 @@ class DOSBLizenzen extends \Backend
 				'first_aid_date'     => $result->help_date, // Datum der Erste-Hilfe-Ausbildung
 			);
 			// Restliche Werte ergänzen
-			if($result->license_number_dosb) 
+			if($result->license_number_dosb)
 			{
 				// Existierende Lizenznummer
 				$data['license_number_dosb'] = $result->license_number_dosb; // Aktive DOSB-Lizenznummer
@@ -100,7 +100,7 @@ class DOSBLizenzen extends \Backend
 
 		$additionalHeaders = '';
 		$process = curl_init($host);
-		
+
 		//hier ist auch noch application/xml möglich
 		curl_setopt($process, CURLOPT_HTTPHEADER, array
 		(
@@ -117,13 +117,13 @@ class DOSBLizenzen extends \Backend
 		curl_setopt($process, CURLOPT_SSL_VERIFYPEER, FALSE);
 		//request ausführen
 		$response = curl_exec($process);
-		
+
 		$errors = NULL;
-		if (curl_errno($process)) 
+		if (curl_errno($process))
 		{
 			$errors=  'Curl error: ' . curl_error($process);
 		}
-		
+
 		$header_size = curl_getinfo($process, CURLINFO_HEADER_SIZE);
 		$httpCode = curl_getinfo($process, CURLINFO_HTTP_CODE); // HTTP-Code der Abfrage
 		$header = substr($response, 0, $header_size);
@@ -136,7 +136,7 @@ class DOSBLizenzen extends \Backend
 		else
 		{
 			$data = json_decode($body);
-			
+
 			if(is_object($data) && $httpCode == 200)
 			{
 				// Datensatz aktualisieren
@@ -144,9 +144,9 @@ class DOSBLizenzen extends \Backend
 					'license_number_dosb' => $data->license_number_dosb,
 					'lid'                 => $data->lid,
 				);
-				$result = \Database::getInstance()->prepare("UPDATE tl_trainerlizenzen %s WHERE id=?")
+				$result = \Database::getInstance()->prepare("UPDATE tl_lizenzverwaltung_items %s WHERE id=?")
 				                                  ->set($set)
-				                                  ->execute($id); 
+				                                  ->execute($id);
 				$httpText = 'OK';
 			}
 			else
@@ -159,39 +159,17 @@ class DOSBLizenzen extends \Backend
 				'dosb_code'           => $httpCode,
 				'dosb_antwort'        => $httpText,
 			);
-			$result = \Database::getInstance()->prepare("UPDATE tl_trainerlizenzen %s WHERE id=?")
+			$result = \Database::getInstance()->prepare("UPDATE tl_lizenzverwaltung_items %s WHERE id=?")
 			                                  ->set($set)
-			                                  ->execute($id); 
+			                                  ->execute($id);
 		}
-		
+
 		$log .= "Response Body: $body\n";
 		$log .= "CURL Errors: $errors";
-		log_message($log, 'trainerlizenzen.log');
+		log_message($log, 'lizenzverwaltung.log');
 
-		//echo '<h1>Reponse header</h1>';
-		//echo '<pre>';
-		//print $header;
-		//echo '</pre>';
-		//echo '<h1>Reponse body</h1>';
-		//echo '<pre>';
-		//print_r($body);
-		//echo '</pre>';
-		//echo '<h1>CURL Errors</h1>';
-		//echo '<pre>';
-		//print $errors;
-		//echo '</pre>';
-
-		// Zurücklink generieren, ab C4 ist das ein symbolischer Link zu "contao"
-		if (version_compare(VERSION, '4.0', '>='))
-		{
-			$backlink = \System::getContainer()->get('router')->generate('contao_backend');
-		}
-		else
-		{
-			$backlink = 'main.php';
-		}
-		$backlink .= '?do=trainerlizenzen&act=edit&id='.$id.'&rt='.REQUEST_TOKEN;
-		header('Location:'.$backlink);
+		// Zurück zur Seite
+		\Controller::redirect(str_replace('&key=getLizenz', '&act=edit', \Environment::get('request')));
 
 	}
 
@@ -203,19 +181,19 @@ class DOSBLizenzen extends \Backend
 	{
 		// Datensatz-ID des Trainers
 		$id = \Input::get('id');
-		
-		// Datensatz einlesen
-		$result = \Database::getInstance()->prepare("SELECT * FROM tl_trainerlizenzen WHERE id = ?")
-										  ->execute($id);
+
+		// Lizenz- und Personen-Datensatz einlesen
+		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
+		                                  ->execute($id);
 
 		// Auswerten
 		if($result->numRows)
 		{
 			// Anfügen der Methode für das Abrufen einer Lizenz als PDF
 			$host = $this->host.'download/'.urlencode($result->license_number_dosb);
-			
+
 			$process = curl_init($host);
-			
+
 			//hier ist auch noch application/xml möglich
 			curl_setopt($process, CURLOPT_HTTPHEADER, array(
 			  'Accept: application/json'
@@ -227,23 +205,23 @@ class DOSBLizenzen extends \Backend
 			curl_setopt($process, CURLOPT_RETURNTRANSFER, TRUE);
 			//nur für test zwecke
 			curl_setopt($process, CURLOPT_SSL_VERIFYPEER, FALSE);
-			
+
 			//Request ausfuehren
 			$response = curl_exec($process);
-			
+
 			$errors = NULL;
-			if(curl_errno($process)) 
+			if(curl_errno($process))
 			{
 				$errors =  'Curl error: ' . curl_error($process);
 			}
-			
+
 			$header_size = curl_getinfo($process, CURLINFO_HEADER_SIZE);
 			$httpCode = curl_getinfo($process, CURLINFO_HTTP_CODE); // HTTP-Code der Abfrage
 			$header = substr($response, 0, $header_size);
 			$body = substr($response, $header_size);//json_decode(substr($response, $header_size));
 
 			if($httpCode == 200 && !$errors)
-			{			
+			{
 				// Schreiben der Daten in eine PDF
 				@mkdir(TRAINERLIZENZEN_PFAD, '0777');
 				$filename = TRAINERLIZENZEN_PFAD.'/'.$result->license_number_dosb.'.pdf';
@@ -254,16 +232,16 @@ class DOSBLizenzen extends \Backend
 			{
 				$httpText = substr($body, 2, strlen($body) - 4);
 			}
-			
+
 			// Abrufinformationen ergänzen
 			$set = array(
 				'dosb_pdf_tstamp'         => time(),
 				'dosb_pdf_code'           => $httpCode,
 				'dosb_pdf_antwort'        => $httpText,
 			);
-			$result = \Database::getInstance()->prepare("UPDATE tl_trainerlizenzen %s WHERE id=?")
+			$result = \Database::getInstance()->prepare("UPDATE tl_lizenzverwaltung_items %s WHERE id=?")
 			                                  ->set($set)
-			                                  ->execute($id); 
+			                                  ->execute($id);
 
 		}
 
@@ -272,19 +250,9 @@ class DOSBLizenzen extends \Backend
 		$log .= "Response Body: $httpCode $httpText\n";
 		$log .= "CURL Errors: $errors";
 		log_message($log, 'trainerlizenzen.log');
-		
-		// Zurücklink generieren, ab C4 ist das ein symbolischer Link zu "contao"
-		if (version_compare(VERSION, '4.0', '>='))
-		{
-			$backlink = \System::getContainer()->get('router')->generate('contao_backend');
-		}
-		else
-		{
-			$backlink = 'main.php';
-		}
-		$backlink .= '?do=trainerlizenzen&act=edit&id='.$id.'&rt='.REQUEST_TOKEN;
-		header('Location:'.$backlink);
 
+		// Zurück zur Seite
+		\Controller::redirect(str_replace('&key=getLizenzPDF', '&act=edit', \Environment::get('request')));
 	}
 
 	/**
@@ -295,10 +263,10 @@ class DOSBLizenzen extends \Backend
 	{
 		// Datensatz-ID des Trainers
 		$id = \Input::get('id');
-		
-		// Datensatz einlesen
-		$result = \Database::getInstance()->prepare("SELECT * FROM tl_trainerlizenzen WHERE id = ?")
-										  ->execute($id);
+
+		// Lizenz- und Personen-Datensatz einlesen
+		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
+		                                  ->execute($id);
 
 		// Auswerten
 		if($result->numRows)
@@ -309,7 +277,7 @@ class DOSBLizenzen extends \Backend
 			$options = array('format' => 'card'); //format = card, dina4, signet
 
 			$process = curl_init($host);
-			
+
 			//hier ist auch noch application/xml möglich
 			curl_setopt($process, CURLOPT_HTTPHEADER, array(
 			  'Accept: application/json'
@@ -322,23 +290,23 @@ class DOSBLizenzen extends \Backend
 			curl_setopt($process, CURLOPT_POSTFIELDS, $options);
 			//nur für test zwecke
 			curl_setopt($process, CURLOPT_SSL_VERIFYPEER, FALSE);
-			
+
 			//Request ausfuehren
 			$response = curl_exec($process);
-			
+
 			$errors = NULL;
-			if(curl_errno($process)) 
+			if(curl_errno($process))
 			{
 				$errors =  'Curl error: ' . curl_error($process);
 			}
-			
+
 			$header_size = curl_getinfo($process, CURLINFO_HEADER_SIZE);
 			$httpCode = curl_getinfo($process, CURLINFO_HTTP_CODE); // HTTP-Code der Abfrage
 			$header = substr($response, 0, $header_size);
 			$body = substr($response, $header_size);//json_decode(substr($response, $header_size));
 
 			if($httpCode == 200 && !$errors)
-			{			
+			{
 				// Schreiben der Daten in eine PDF
 				@mkdir(TRAINERLIZENZEN_PFAD, '0777');
 				$filename = TRAINERLIZENZEN_PFAD.'/'.$result->license_number_dosb.'-card.pdf';
@@ -349,16 +317,16 @@ class DOSBLizenzen extends \Backend
 			{
 				$httpText = substr($body, 2, strlen($body) - 4);
 			}
-			
+
 			// Abrufinformationen ergänzen
 			$set = array(
 				'dosb_pdfcard_tstamp'         => time(),
 				'dosb_pdfcard_code'           => $httpCode,
 				'dosb_pdfcard_antwort'        => $httpText,
 			);
-			$result = \Database::getInstance()->prepare("UPDATE tl_trainerlizenzen %s WHERE id=?")
+			$result = \Database::getInstance()->prepare("UPDATE tl_lizenzverwaltung_items %s WHERE id=?")
 			                                  ->set($set)
-			                                  ->execute($id); 
+			                                  ->execute($id);
 
 		}
 
@@ -367,18 +335,9 @@ class DOSBLizenzen extends \Backend
 		$log .= "Response Body: $httpCode $httpText\n";
 		$log .= "CURL Errors: $errors";
 		log_message($log, 'trainerlizenzen.log');
-		
-		// Zurücklink generieren, ab C4 ist das ein symbolischer Link zu "contao"
-		if (version_compare(VERSION, '4.0', '>='))
-		{
-			$backlink = \System::getContainer()->get('router')->generate('contao_backend');
-		}
-		else
-		{
-			$backlink = 'main.php';
-		}
-		$backlink .= '?do=trainerlizenzen&act=edit&id='.$id.'&rt='.REQUEST_TOKEN;
-		header('Location:'.$backlink);
+
+		// Zurück zur Seite
+		\Controller::redirect(str_replace('&key=getLizenzPDFCard', '&act=edit', \Environment::get('request')));
 
 	}
 
@@ -399,7 +358,7 @@ class DOSBLizenzen extends \Backend
 			//// Auswerten
 			//if($result->numRows)
 			//{
-			//	while($result->next()) 
+			//	while($result->next())
 			//	{
 			//		$strBuffer .= '<span id="trainer_'.$result->id.'" class="wait">ID '.$result->id.' '.$result->vorname.' '.$result->name.' - Lizenz gültig bis '.\Samson\Helper::getDate($result->gueltigkeit).'</span><br>';
 			//	}
@@ -415,72 +374,66 @@ class DOSBLizenzen extends \Backend
 
 			// jQuery einbinden
 			$GLOBALS['TL_JAVASCRIPT'][] = 'http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js';
-			
+
 			// Export starten
 			// Datensätze einlesen, bei der die Lizenz noch aktiv ist (größer/gleich aktuelles Datum)
-			$result = \Database::getInstance()->prepare("SELECT * FROM tl_trainerlizenzen WHERE gueltigkeit >= ? AND published = ? AND (letzteAenderung > dosb_tstamp OR dosb_code <> 200) ORDER BY id")
-										      ->execute(time(), 1);
+			//$result = \Database::getInstance()->prepare("SELECT * FROM tl_trainerlizenzen WHERE gueltigkeit >= ? AND published = ? AND (letzteAenderung > dosb_tstamp OR dosb_code <> 200) ORDER BY id")
+			//                                  ->execute(time(), 1);
+			$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.gueltigkeit >= ? AND tl_lizenzverwaltung_items.published = ? AND (tl_lizenzverwaltung_items.letzteAenderung > tl_lizenzverwaltung_items.dosb_tstamp OR tl_lizenzverwaltung_items.dosb_code <> 200) ORDER BY tl_lizenzverwaltung.id")
+			                                  ->execute(time(), 1);
 
 			// Auswerten
 			$ids = array();
 			if($result->numRows)
 			{
-				while($result->next()) 
+				while($result->next())
 				{
 					//$content .= '<span id="trainer_'.$result->id.'" class="wait">ID '.$result->id.' '.$result->vorname.' '.$result->name.' - Lizenz gültig bis '.\Samson\Helper::getDate($result->gueltigkeit).'</span><br>';
 					//$ids[] = $result->id;
 				}
 			}
-			
+
 			$loops = bcdiv($result->numRows, 25, 0); // 25 Datensätze je Durchlauf
 			$loops = bcmod($result->numRows, 25) ? $loops + 1 : $loops; // 1 Loop addieren, wenn nicht durch 25 teilbar
-			
-			$content .= '<div id="dosb_export_status">[<i>'.date('d.m.Y H:i:s').'</i>] <b>'.$result->numRows.' Datensätze sind zu exportieren</b><br></div>'; 
+
+			$content .= '<div id="dosb_export_status">[<i>'.date('d.m.Y H:i:s').'</i>] <b>'.$result->numRows.' Datensätze sind zu exportieren</b><br></div>';
 
 			$content .= '<script>'."\n";
 			$content .= 'var step;'."\n";
-			//$content .= 'var ids = new Array('.implode(', ', $ids).');'."\n";			
+			//$content .= 'var ids = new Array('.implode(', ', $ids).');'."\n";
 			//$content .= 'var idsLength = ids.length;'."\n";
 			//$content .= 'for(var i = 0; i < idsLength; i++) {'."\n";
 			//$content .= "  $.get('SimpleAjax.php?acid=trainerlizenzen&id='+ids[i], function (data)"."\n";
 			//$content .= '  {'."\n";
 			//$content .= '     $( "p" ).addClass( "selected" );'."\n";
 			//$content .= "     $(\"#trainer_'+ids[i]+'\").addClass(\"tl_green\");"."\n";
-			//$content .= '  })'."\n";   
+			//$content .= '  })'."\n";
 			//$content .= '}'."\n";
 			$content .= 'for(step = 1; step <= '.$loops.'; step++) {';
-			$content .= "  $.get('SimpleAjax.php?acid=trainerlizenzen&loops=".$loops."&step='+step, function (data)";
+			$content .= "  $.get('SimpleAjax.php?acid=lizenzverwaltung&loops=".$loops."&step='+step, function (data)";
 			$content .= '  {';
-			$content .= '    $("#dosb_export_status").prepend(data);';  
+			$content .= '    $("#dosb_export_status").prepend(data);';
 			$content .= '    $(".item").fadeIn("slow")';
-			$content .= '  })}';   
+			$content .= '  })}';
 			$content .= '</script>'."\n";
-			
+
 			// Sitzung anlegen/initialisieren
-			//$session = Session::getInstance(); 
-			$_SESSION['trainerlizenzen_counter'] = 0;
+			//$session = Session::getInstance();
+			$_SESSION['lizenzverwaltung_counter'] = 0;
 
 		}
 		else
 		{
-			// Sicherheitsabfrage
-			// Zurücklink generieren, ab C4 ist das ein symbolischer Link zu "contao"
-			if (version_compare(VERSION, '4.0', '>='))
-			{
-				$startlink = \System::getContainer()->get('router')->generate('contao_backend');
-			}
-			else
-			{
-				$startlink = 'contao/main.php';
-			}
-			$startlink .= '?do=trainerlizenzen&key=exportDOSB&start=1&rt='.REQUEST_TOKEN;
+			// Link generieren
+			$startlink = \Controller::addToUrl('start=1&rt='.REQUEST_TOKEN); // start und Token hinzufügen
+
 			$content .= '<div>';
 			$content .= '<h2 class="sub_headline">Aktive Lizenzen zum DOSB exportieren</h2>';
 			$content .= '<div class="tl_submit_container">';
 			$content .= '<a href="'.$startlink.'" class="dosb_button_mini">Export starten</a>';
 			$content .= '</div>';
 			$content .= '</div>';
-		}	
+		}
 		return $content;
 	}
 
@@ -497,5 +450,5 @@ class DOSBLizenzen extends \Backend
 		$tag = 0 + ltrim(substr($value, 6, 2),0);
 		return mktime(0, 0, 0, $monat, $tag, $jahr);
 	}
-	
+
 }

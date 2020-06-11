@@ -3,16 +3,16 @@
 /**
  * palettes
  */
-$GLOBALS['TL_DCA']['tl_settings']['palettes']['default'] .= ';{trainerlizenzen_legend:hide},trainerlizenzen_absender,lims_host,lims_link,lims_username,lims_password';
+$GLOBALS['TL_DCA']['tl_settings']['palettes']['default'] .= ';{lizenzverwaltung_legend:hide},lizenzverwaltung_absender,lims_host,lims_link,lims_username,lims_password';
 
 /**
  * fields
  */
 
 // Absendername und E-Mail die bei Mails verwendet wird
-$GLOBALS['TL_DCA']['tl_settings']['fields']['trainerlizenzen_absender'] = array
+$GLOBALS['TL_DCA']['tl_settings']['fields']['lizenzverwaltung_absender'] = array
 (
-	'label'         => &$GLOBALS['TL_LANG']['tl_settings']['trainerlizenzen_absender'],
+	'label'         => &$GLOBALS['TL_LANG']['tl_settings']['lizenzverwaltung_absender'],
 	'inputType'     => 'text',
 	'eval'          => array('tl_class'=>'w50','preserveTags'=>true)
 );
@@ -44,5 +44,3 @@ $GLOBALS['TL_DCA']['tl_settings']['fields']['lims_link'] = array
 	'inputType'     => 'text',
 	'eval'          => array('tl_class'=>'w50')
 );
-
-?>

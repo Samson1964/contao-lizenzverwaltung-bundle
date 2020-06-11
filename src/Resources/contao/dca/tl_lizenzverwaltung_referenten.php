@@ -42,9 +42,9 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_referenten'] = array
 		(
 			'referenten' => array
 			(
-				'label'               => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['lizenzen'],
+				'label'               => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['personen'],
 				'href'                => 'table=tl_lizenzverwaltung',
-				'icon'                => 'system/modules/trainerlizenzen/assets/images/icon.png',
+				'icon'                => 'bundles/contaolizenzverwaltung/images/personen.png',
 				'attributes'          => 'onclick="Backend.getScrollOffset();"'
 			),
 			'all' => array
@@ -105,13 +105,13 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_referenten'] = array
 		'id' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['id'],
-			'sorting'                 => true,
-			'search'                  => true,
 			'sql'                     => "int(10) unsigned NOT NULL auto_increment"
 		),
 		'tstamp' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['tstamp'],
+			'sorting'                 => true,
+			'flag'                    => 6,
 			'sql'                     => "int(10) unsigned NOT NULL default '0'"
 		),
 		// Verband
@@ -120,47 +120,25 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_referenten'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['verband'],
 			'inputType'               => 'select',
 			'exclude'                 => true,
-			'search'                  => true,
 			'sorting'                 => true,
 			'flag'                    => 11,
 			'filter'                  => true,
-			'sql'                     => "varchar(3) NOT NULL default ''",
-			'options'                 => array
-			(
-				'-'                   => '-',
-				'S'                   => 'Deutscher Schachbund',
-				'1'                   => 'Baden',
-				'2'                   => 'Bayern',
-				'3'                   => 'Berlin',
-				'D'                   => 'Brandenburg',
-				'B'                   => 'Bremen',
-				'4'                   => 'Hamburg',
-				'5'                   => 'Hessen',
-				'E'                   => 'Mecklenburg-Vorpommern',
-				'7'                   => 'Niedersachsen',
-				'6'                   => 'Nordrhein-Westfalen',
-				'8'                   => 'Rheinland-Pfalz',
-				'9'                   => 'Saarland',
-				'F'                   => 'Sachsen',
-				'H'                   => 'Sachsen-Anhalt',
-				'A'                   => 'Schleswig-Holstein',
-				'G'                   => 'Thüringen',
-				'C'                   => 'Württemberg'
-			),
+			'sql'                     => "varchar(1) NOT NULL default ''",
+			'options'                 => \Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerbaende(),
 			'eval'                    => array
 			(
 				'mandatory'           => true,
 				'chosen'              => true,
-				'tl_class'            => 'w50'
+				'tl_class'            => 'w50',
+				'includeBlankOption'  => true
 			)
 		),
-		// Verband
+		// Funktion
 		'funktion' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['funktion'],
 			'inputType'               => 'select',
 			'exclude'                 => true,
-			'search'                  => true,
 			'sorting'                 => true,
 			'flag'                    => 11,
 			'filter'                  => true,
@@ -197,7 +175,6 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_referenten'] = array
 			'exclude'                 => true,
 			'sorting'                 => true,
 			'flag'                    => 1,
-			'filter'                  => true,
 			'search'                  => true,
 			'eval'                    => array
 			(
@@ -228,9 +205,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_referenten'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['titel'],
 			'inputType'               => 'text',
 			'exclude'                 => true,
-			'sorting'                 => true,
 			'flag'                    => 1,
-			'search'                  => false,
 			'eval'                    => array('mandatory'=>false, 'maxlength'=>64, 'tl_class'=>'w50 clr'),
 			'sql'                     => "varchar(64) NOT NULL default ''"
 		),
@@ -263,7 +238,6 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_referenten'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['strasse'],
 			'inputType'               => 'text',
 			'exclude'                 => true,
-			'sorting'                 => true,
 			'flag'                    => 1,
 			'search'                  => true,
 			'eval'                    => array
@@ -279,7 +253,6 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_referenten'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['telefon1'],
 			'inputType'               => 'text',
 			'exclude'                 => true,
-			'sorting'                 => true,
 			'flag'                    => 1,
 			'search'                  => true,
 			'eval'                    => array('mandatory'=>false, 'maxlength'=>64, 'tl_class'=>'w50'),
@@ -290,7 +263,6 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_referenten'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['telefon2'],
 			'inputType'               => 'text',
 			'exclude'                 => true,
-			'sorting'                 => true,
 			'flag'                    => 1,
 			'search'                  => true,
 			'eval'                    => array('mandatory'=>false, 'maxlength'=>64, 'tl_class'=>'w50'),
@@ -301,7 +273,6 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_referenten'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['telefax1'],
 			'inputType'               => 'text',
 			'exclude'                 => true,
-			'sorting'                 => true,
 			'flag'                    => 1,
 			'search'                  => true,
 			'eval'                    => array('mandatory'=>false, 'maxlength'=>64, 'tl_class'=>'w50'),
@@ -312,7 +283,6 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_referenten'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['telefax2'],
 			'inputType'               => 'text',
 			'exclude'                 => true,
-			'sorting'                 => true,
 			'flag'                    => 1,
 			'search'                  => true,
 			'eval'                    => array('mandatory'=>false, 'maxlength'=>64, 'tl_class'=>'w50'),
@@ -340,7 +310,6 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_referenten'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['info'],
 			'inputType'               => 'textarea',
 			'exclude'                 => true,
-			'sorting'                 => true,
 			'flag'                    => 1,
 			'search'                  => true,
 			'eval'                    => array('mandatory'=>false, 'tl_class'=>'long'),

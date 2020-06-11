@@ -6,9 +6,9 @@
  *
  * @link http://www.contao.org
  * @license http://www.gnu.org/licenses/lgpl-3.0.html LGPL
- * 
- * Modul Trainerlizenzen - Helper 
- * 
+ *
+ * Modul Trainerlizenzen - Helper
+ *
  * PHP version 5
  * @copyright  Frank Hoppe 2014 - 2017
  * @author     Frank Hoppe
@@ -51,9 +51,9 @@ class Helper extends \Frontend
 	{
 		if (self::$instance === null)
 		{
-			self::$instance = new \Schachbulle\ContaoLizenzverwaltungBundle\Helper();
+			self::$instance = new \Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper();
 		}
-	
+
 		return self::$instance;
 	}
 
@@ -78,14 +78,14 @@ class Helper extends \Frontend
 			}
 		}
 		return $return ? $return : $erwerb;
-		
+
 	}
 
-	public function getVerbaende() 
+	public function getVerbaende()
 	{
 		return array
 		(
-			'-'                   => '-',
+			'S'                   => 'Deutscher Schachbund',
 			'1'                   => 'Baden',
 			'2'                   => 'Bayern',
 			'3'                   => 'Berlin',
@@ -106,7 +106,7 @@ class Helper extends \Frontend
 		);
 	}
 
-	public function getLizenzen() 
+	public function getLizenzen()
 	{
 		return array
 		(
@@ -145,7 +145,7 @@ class Helper extends \Frontend
 	 *         'jahrgang' => SORT_DESC,
 	 *         'nachname' => array(SORT_ASC, SORT_STRING)
 	 *     )
-	 * );	 
+	 * );
 	 *
 	 * http://www.karlvalentin.de/660/mehrdimensionale-arrays-in-php-bequem-sortieren.html
 	 */
@@ -153,37 +153,95 @@ class Helper extends \Frontend
 	{
 		$sortFields = array();
 		$args       = array();
-		
-		foreach ($arr as $key => $row) 
+
+		foreach ($arr as $key => $row)
 		{
-			foreach ($fields as $field => $order) 
+			foreach ($fields as $field => $order)
 			{
 				$sortFields[$field][$key] = $row[$field];
 			}
 		}
-		
-		foreach ($fields as $field => $order) 
+
+		foreach ($fields as $field => $order)
 		{
 			$args[] = $sortFields[$field];
-			
-			if (is_array($order)) 
+
+			if (is_array($order))
 			{
-				foreach ($order as $pt) 
+				foreach ($order as $pt)
 				{
 					$args[$pt];
 				}
-			} 
-			else 
+			}
+			else
 			{
 				$args[] = $order;
 			}
 		}
-		
+
 		$args[] = &$arr;
-		
+
 		call_user_func_array('array_multisort', $args);
-		
+
 		return $arr;
 	}
+
+	/**
+	 * Funktion getVerbandsmails
+	 * =========================
+	 * Liest die Mailadressen der Verbände ein oder gibt die Mailadresse eines Verbands zurück
+	 */
+	public function getVerbandsmails()
+	{
+		static $verbandsmails;
+
+		if(!$verbandsmails)
+		{
+			// Referenten einlesen
+			$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_referenten WHERE published = ?")
+			                                  ->execute(1);
+			// Auswerten
+			if($result->numRows)
+			{
+				while($result->next())
+				{
+					$verbandsmails[$result->verband] = $result->email;
+				}
+			}
+		}
+
+		return $verbandsmails;
+	}
+
+	/**
+	 * Funktion getVerbandsmail
+	 * =========================
+	 */
+	public function getVerbandMail($verband)
+	{
+		$verbandsliste = self::getVerbandsmails();
+
+		return $verbandsliste[$verband];
+	}
+
+	/**
+	 * Funktion getPersonMail
+	 * =========================
+	 * Liest die Mailadressen der Verbände ein oder gibt die Mailadresse eines Verbands zurück
+	 */
+	public function getPersonMail($id)
+	{
+		// Person einlesen
+		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung WHERE id = ?")
+		                                  ->execute($id);
+		// Auswerten
+		if($result->numRows)
+		{
+			return $result->email;
+		}
+
+		return false;
+	}
+
 
 }

@@ -4,7 +4,7 @@ namespace Schachbulle\ContaoLizenzverwaltungBundle\Classes;
 
 if (!defined('TL_ROOT')) die('You cannot access this file directly!');
 
-$GLOBALS['TL_CSS'][] = 'system/modules/trainerlizenzen/assets/css/default.css';
+$GLOBALS['TL_CSS'][] = 'bundles/contaolizenzverwaltung/css/default.css';
 
 /**
  * Class Mailer
@@ -23,16 +23,16 @@ class Mailer extends \Backend
 </style>';
 		
 		// E-Mail-Datensatz einlesen
-		$mail = \Database::getInstance()->prepare("SELECT * FROM tl_trainerlizenzen_mails WHERE id = ?")
+		$mail = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_mails WHERE id = ?")
 		                                ->execute($dc->id);
 		// Trainer-Datensatz einlesen
-		$trainer = \Database::getInstance()->prepare("SELECT * FROM tl_trainerlizenzen WHERE id = ?")
+		$trainer = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung WHERE id = ?")
 		                                   ->execute($mail->pid);
 		// Referenten-Datensätze einlesen
-		$referenten = \Database::getInstance()->prepare("SELECT * FROM tl_trainerlizenzen_referenten WHERE verband = ? AND published = ?")
+		$referenten = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_referenten WHERE verband = ? AND published = ?")
 		                                      ->execute($trainer->verband, 1);
 		// Datensätze mit DSB-Referenten einlesen
-		$dsbreferenten = \Database::getInstance()->prepare("SELECT * FROM tl_trainerlizenzen_referenten WHERE verband = ? AND published = ?")
+		$dsbreferenten = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_referenten WHERE verband = ? AND published = ?")
 		                                         ->execute('S', 1);
 
 		$preview = $this->getPreview($dc->id, $mail->pid, $mail->template); // HTML-Vorschau erstellen
@@ -43,7 +43,7 @@ class Mailer extends \Backend
 		$lizenzfilenameA4 = false;
 		if($trainer->license_number_dosb)
 		{
-			$lizenzfilenameA4 = TRAINERLIZENZEN_PFAD.'/'.$trainer->license_number_dosb.'.pdf';
+			$lizenzfilenameA4 = LIZENZVERWALTUNG_PFAD.'/'.$trainer->license_number_dosb.'.pdf';
 			if(!$mail->insertLizenz || !file_exists($lizenzfilenameA4))
 			{
 				$lizenzfilenameA4 = false;
@@ -54,7 +54,7 @@ class Mailer extends \Backend
 		$lizenzfilenameCard = false;
 		if($trainer->license_number_dosb)
 		{
-			$lizenzfilenameCard = TRAINERLIZENZEN_PFAD.'/'.$trainer->license_number_dosb.'-card.pdf';
+			$lizenzfilenameCard = LIZENZVERWALTUNG_PFAD.'/'.$trainer->license_number_dosb.'-card.pdf';
 			if(!$mail->insertLizenzCard || !file_exists($lizenzfilenameCard))
 			{
 				$lizenzfilenameCard = false;
@@ -62,17 +62,17 @@ class Mailer extends \Backend
 		}
 
 		// E-Mail versenden
-		if(\Input::get('token') != '' && \Input::get('token') == $this->Session->get('tl_trainerlizenzen_send'))
+		if(\Input::get('token') != '' && \Input::get('token') == $this->Session->get('tl_lizenzverwaltung_send'))
 		{
 			
-			$this->Session->set('tl_trainerlizenzen_send', null); 
+			$this->Session->set('tl_lizenzverwaltung_send', null); 
 			$objEmail = new \Email();
 			
 			if($lizenzfilenameA4) $objEmail->attachFile($lizenzfilenameA4); // Lizenz-PDF DIN A4 anhängen
 			if($lizenzfilenameCard) $objEmail->attachFile($lizenzfilenameCard); // Lizenz-PDF Karte anhängen
 			
 			// Absender "Name <email>" in ein Array $arrFrom aufteilen
-			preg_match('~(?:([^<]*?)\s*)?<(.*)>~', TRAINERLIZENZEN_ABSENDER, $arrFrom);
+			preg_match('~(?:([^<]*?)\s*)?<(.*)>~', LIZENZVERWALTUNG_ABSENDER, $arrFrom);
 			
 			// Empfänger-Adressen in ein Array packen
 			$to = explode(',', html_entity_decode(\Input::get('an')));
@@ -82,7 +82,7 @@ class Mailer extends \Backend
 			$objEmail->from = $arrFrom[2];
 			$objEmail->fromName = $arrFrom[1];
 			$objEmail->subject = $mail->subject;
-			$objEmail->logFile = 'trainerlizenzen_email.log';
+			$objEmail->logFile = 'lizenzverwaltung_email.log';
 			$objEmail->html = $preview_css; 
 			if($cc[0]) $objEmail->sendCc($cc); 
 			if($bcc[0]) $objEmail->sendBcc($bcc); 
@@ -96,7 +96,7 @@ class Mailer extends \Backend
 					'sent_state' => 1,
 					'sent_text'  => $preview_body
 				);
-				$trainer = \Database::getInstance()->prepare("UPDATE tl_trainerlizenzen_mails %s WHERE id = ?")
+				$trainer = \Database::getInstance()->prepare("UPDATE tl_lizenzverwaltung_mails %s WHERE id = ?")
 				                                   ->set($set)
 				                                   ->execute($dc->id);
 				// Email-Versand bestätigen und weiterleiten
@@ -131,7 +131,7 @@ class Mailer extends \Backend
 		// 3. Kopie an Verantwortliche in DSB-GS und andere DSB-Referenten
 		if($mail->copyDSB)
 		{
-			$email_bcc = htmlentities(TRAINERLIZENZEN_ABSENDER);
+			$email_bcc = htmlentities(LIZENZVERWALTUNG_ABSENDER);
 			if($dsbreferenten->numRows > 0)
 			{
 				while($dsbreferenten->next())
@@ -142,15 +142,15 @@ class Mailer extends \Backend
 		}
 
 		$strToken = md5(uniqid(mt_rand(), true));
-		$this->Session->set('tl_trainerlizenzen_send', $strToken); 
+		$this->Session->set('tl_lizenzverwaltung_send', $strToken); 
 
 		return
 		'<div id="tl_buttons">
 <a href="'.$this->getReferer(true).'" class="header_back" title="'.specialchars($GLOBALS['TL_LANG']['MSC']['backBTTitle']).'" accesskey="b">'.$GLOBALS['TL_LANG']['MSC']['backBT'].'</a>
 </div>
 '.\Message::generate().'
-<form action="'.TL_SCRIPT.'" id="tl_trainerlizenzen_send" class="tl_form" method="get">
-<div class="tl_formbody_edit tl_trainerlizenzen_send">
+<form action="'.TL_SCRIPT.'" id="tl_lizenzverwaltung_send" class="tl_form" method="get">
+<div class="tl_formbody_edit tl_lizenzverwaltung_send">
 <input type="hidden" name="do" value="' . \Input::get('do') . '">
 <input type="hidden" name="table" value="' . \Input::get('table') . '">
 <input type="hidden" name="key" value="' . \Input::get('key') . '">
@@ -159,7 +159,7 @@ class Mailer extends \Backend
 <table class="prev_header">
   <tr class="row_0">
     <td class="col_0">Absender</td>
-    <td class="col_1">' . htmlentities(TRAINERLIZENZEN_ABSENDER) . '</td>
+    <td class="col_1">' . htmlentities(LIZENZVERWALTUNG_ABSENDER) . '</td>
   </tr>
   <tr class="row_1">
     <td class="col_0">Betreff</td>
@@ -211,11 +211,11 @@ class Mailer extends \Backend
 	{
 		$objTemplate = new \BackendTemplate($template);
 		// Mail-Datensatz einlesen
-		$mail = \Database::getInstance()->prepare("SELECT * FROM tl_trainerlizenzen_mails WHERE id = ?")
-										->execute($mail_id);
+		$mail = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_mails WHERE id = ?")
+		                                ->execute($mail_id);
 		// Trainer-Datensatz einlesen
-		$trainer = \Database::getInstance()->prepare("SELECT * FROM tl_trainerlizenzen WHERE id = ?")
-										   ->execute($trainer_id);
+		$trainer = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung WHERE id = ?")
+		                                   ->execute($trainer_id);
 		$objTemplate->setData($trainer->row()); // Trainer-Daten in Template-Objekt eintragen
 		$objTemplate->title = $mail->subject;
 		$objTemplate->charset = \Config::get('characterSet');

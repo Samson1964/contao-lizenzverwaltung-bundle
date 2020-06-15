@@ -106,19 +106,26 @@ class Helper extends \Frontend
 		);
 	}
 
+	public function getVerband($verband)
+	{
+		$verbaende = self::getVerbaende();
+		return $verbaende[$verband];
+	}
+
 	public function getLizenzen()
 	{
 		return array
 		(
 			'-'                   => '-',
-			'A'                   => 'A',
-			'B'                   => 'B',
-			'C'                   => 'C',
-			'C-B'                 => 'C-B',
+			'A'                   => 'A-Trainer Leistungssport',
+			'B'                   => 'B-Trainer Leistungssport',
+			'C'                   => 'C-Trainer Leistungssport',
+			'C-B'                 => 'C-Trainer Breitensport',
 			'C-Sonderlizenz'      => 'C-Sonderlizenz',
 			'F'                   => 'F',
 			'F/C'                 => 'F/C',
-			'J'                   => 'J'
+			'J'                   => 'J',
+			'AB-Z'                => 'Ausbilder-Zertifikat'
 		);
 	}
 

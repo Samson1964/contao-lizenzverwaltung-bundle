@@ -32,6 +32,7 @@ class DOSBLizenzen extends \Backend
 			'F'              => 512, // fiktiv, nicht angelegt beim DOSB
 			'F/C'            => 512, // fiktiv, nicht angelegt beim DOSB
 			'J'              => 512, // fiktiv, nicht angelegt beim DOSB
+			'AB-Z'           => 49337, // Ausbilder-Zertifikat
 		);
 	}
 
@@ -223,8 +224,8 @@ class DOSBLizenzen extends \Backend
 			if($httpCode == 200 && !$errors)
 			{
 				// Schreiben der Daten in eine PDF
-				@mkdir(TRAINERLIZENZEN_PFAD, '0777');
-				$filename = TRAINERLIZENZEN_PFAD.'/'.$result->license_number_dosb.'.pdf';
+				@mkdir(LIZENZVERWALTUNG_PFAD, '0777');
+				$filename = LIZENZVERWALTUNG_PFAD.'/'.$result->license_number_dosb.'.pdf';
 				file_put_contents($filename, $response);
 				$httpText = 'OK';
 			}
@@ -308,8 +309,8 @@ class DOSBLizenzen extends \Backend
 			if($httpCode == 200 && !$errors)
 			{
 				// Schreiben der Daten in eine PDF
-				@mkdir(TRAINERLIZENZEN_PFAD, '0777');
-				$filename = TRAINERLIZENZEN_PFAD.'/'.$result->license_number_dosb.'-card.pdf';
+				@mkdir(LIZENZVERWALTUNG_PFAD, '0777');
+				$filename = LIZENZVERWALTUNG_PFAD.'/'.$result->license_number_dosb.'-card.pdf';
 				file_put_contents($filename, $response);
 				$httpText = 'OK';
 			}
@@ -351,34 +352,11 @@ class DOSBLizenzen extends \Backend
 		$start = \Input::get('start');
 		if($start)
 		{
-			//$objTemplate = new \BackendTemplate('be_rebuild_index');
-			//// Datensätze einlesen, bei der die Lizenz noch aktiv ist (größer/gleich aktuelles Datum)
-			//$result = \Database::getInstance()->prepare("SELECT * FROM tl_trainerlizenzen WHERE gueltigkeit >= ? AND published = ? ORDER BY id")
-			//							      ->execute(date('Ymd'), 1);
-			//// Auswerten
-			//if($result->numRows)
-			//{
-			//	while($result->next())
-			//	{
-			//		$strBuffer .= '<span id="trainer_'.$result->id.'" class="wait">ID '.$result->id.' '.$result->vorname.' '.$result->name.' - Lizenz gültig bis '.\Samson\Helper::getDate($result->gueltigkeit).'</span><br>';
-			//	}
-			//}
-			//$objTemplate->content = $strBuffer;
-			//$objTemplate->note = $GLOBALS['TL_LANG']['tl_maintenance']['indexNote'];
-			//$objTemplate->loading = 'Bitte warte, während die Daten zum DOSB übertragen werden.';
-			//$objTemplate->complete = 'Der Export wurde beendet. Du kannst nun fortfahren.';
-			//$objTemplate->indexContinue = $GLOBALS['TL_LANG']['MSC']['continue'];
-			//$objTemplate->theme = \Backend::getTheme();
-			//$objTemplate->isRunning = true;
-			//return $objTemplate->parse();
-
 			// jQuery einbinden
 			$GLOBALS['TL_JAVASCRIPT'][] = 'http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js';
 
 			// Export starten
 			// Datensätze einlesen, bei der die Lizenz noch aktiv ist (größer/gleich aktuelles Datum)
-			//$result = \Database::getInstance()->prepare("SELECT * FROM tl_trainerlizenzen WHERE gueltigkeit >= ? AND published = ? AND (letzteAenderung > dosb_tstamp OR dosb_code <> 200) ORDER BY id")
-			//                                  ->execute(time(), 1);
 			$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.gueltigkeit >= ? AND tl_lizenzverwaltung_items.published = ? AND (tl_lizenzverwaltung_items.letzteAenderung > tl_lizenzverwaltung_items.dosb_tstamp OR tl_lizenzverwaltung_items.dosb_code <> 200) ORDER BY tl_lizenzverwaltung.id")
 			                                  ->execute(time(), 1);
 
@@ -400,19 +378,10 @@ class DOSBLizenzen extends \Backend
 
 			$content .= '<script>'."\n";
 			$content .= 'var step;'."\n";
-			//$content .= 'var ids = new Array('.implode(', ', $ids).');'."\n";
-			//$content .= 'var idsLength = ids.length;'."\n";
-			//$content .= 'for(var i = 0; i < idsLength; i++) {'."\n";
-			//$content .= "  $.get('SimpleAjax.php?acid=trainerlizenzen&id='+ids[i], function (data)"."\n";
-			//$content .= '  {'."\n";
-			//$content .= '     $( "p" ).addClass( "selected" );'."\n";
-			//$content .= "     $(\"#trainer_'+ids[i]+'\").addClass(\"tl_green\");"."\n";
-			//$content .= '  })'."\n";
-			//$content .= '}'."\n";
 			$content .= 'for(step = 1; step <= '.$loops.'; step++) {';
-			$content .= "  $.get('SimpleAjax.php?acid=lizenzverwaltung&loops=".$loops."&step='+step, function (data)";
+			$content .= "  $.get('bundles/contaolizenzverwaltung/ajaxRequest.php?acid=lizenzverwaltung&loops=".$loops."&step='+step, function (data)";
 			$content .= '  {';
-			$content .= '    $("#dosb_export_status").prepend(data);';
+			$content .= '    $("#dosb_export_status").append(data);';
 			$content .= '    $(".item").fadeIn("slow")';
 			$content .= '  })}';
 			$content .= '</script>'."\n";

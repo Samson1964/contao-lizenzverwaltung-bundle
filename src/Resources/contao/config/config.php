@@ -11,8 +11,9 @@
  * @copyright Frank Hoppe 2014
  */
 
-define('TRAINERLIZENZEN_ABSENDER', $GLOBALS['TL_CONFIG']['trainerlizenzen_absender']);
-define('TRAINERLIZENZEN_PFAD', TL_ROOT . '/files/trainerlizenzen');
+define('LIZENZVERWALTUNG_ABSENDER', $GLOBALS['TL_CONFIG']['lizenzverwaltung_absender']);
+define('LIZENZVERWALTUNG_PFAD', TL_ROOT . '/files/lizenzverwaltung');
+define('LIZENZVERWALTUNG_WEBPDF', '/files/lizenzverwaltung');
 
 // Zugang LiMS
 define('LIMS_HOST', $GLOBALS['TL_CONFIG']['lims_host']);
@@ -24,9 +25,8 @@ $GLOBALS['BE_MOD']['content']['lizenzverwaltung'] = array
 (
 	'tables'            => array('tl_lizenzverwaltung', 'tl_lizenzverwaltung_items', 'tl_lizenzverwaltung_referenten', 'tl_lizenzverwaltung_mails'),
 	'icon'              => 'bundles/contaolizenzverwaltung/images/icon.png',
-	'export'            => array('trainerlizenzExport', 'exportTrainer'),
-	'exportXLS'         => array('trainerlizenzExport', 'exportXLSTrainer'),
-	'import'            => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\trainerlizenzImport', 'importTrainer'), 
+	'exportXLS'         => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\TrainerlizenzExport', 'exportTrainer_XLS'),
+	'import'            => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\TrainerlizenzImport', 'importTrainer'), 
 	'getLizenz'         => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\DOSBLizenzen', 'getLizenz'),
 	'getLizenzPDF'      => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\DOSBLizenzen', 'getLizenzPDF'),
 	'getLizenzPDFCard'  => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\DOSBLizenzen', 'getLizenzPDFCard'),
@@ -40,4 +40,8 @@ $GLOBALS['TL_HOOKS']['simpleAjax'][] = array('ajaxRequest', 'compile');
 /**
  * Frontend-Module
  */
-$GLOBALS['FE_MOD']['application']['trainerlizenzen'] = '\Schachbulle\ContaoLizenzverwaltungBundle\Classes\Trainerliste';
+$GLOBALS['FE_MOD']['application']['lizenzverwaltung'] = '\Schachbulle\ContaoLizenzverwaltungBundle\Classes\Lizenzenliste';
+
+// Backend-CSS einbinden
+if(TL_MODE == "BE") $GLOBALS['TL_CSS'][] = 'bundles/contaolizenzverwaltung/css/default.css';
+

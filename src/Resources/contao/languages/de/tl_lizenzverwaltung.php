@@ -10,10 +10,11 @@
  * Backend-Modul Übersetzungen
  */
 
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['lizenzen'] = array('Lizenzen', 'Lizenzen der Person');
+
 // Zusätzliche Funktionen
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['referenten'] = array('Referenten', 'Ausbildungsreferenten der Landesverbände');
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['import'] = array('CSV-Import', 'CSV-Import');
-$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['export'] = array('CSV-Export', 'CSV-Export der Lizenzen');
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['exportXLS'] = array('Excel-Export', 'Excel-Export der Lizenzen');
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['exportDOSB'] = array('DOSB-Export', 'Aktive Lizenzen zum DOSB exportieren');
 
@@ -60,4 +61,5 @@ $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter'] = 'Spezialfilter';
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_extended'] = 'Spezialfilter';
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_active_licenses'] = 'Personen mit gültigen Lizenzen';
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_inactive_licenses'] = 'Personen mit ungültigen Lizenzen';
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_marked_licenses'] = 'Personen mit markierten Lizenzen';
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_unsentmails'] = 'Personen mit ungesendeten E-Mails';

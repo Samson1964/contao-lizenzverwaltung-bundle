@@ -25,6 +25,7 @@ $GLOBALS['TL_LANG']['tl_lizenzverwaltung_mails']['content']= array('Text', 'Text
 
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_mails']['template_legend'] = 'Vorschau';
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_mails']['template']= array('E-Mail-Template', 'Ein Templatewechsel ändert automatisch die Vorschau');
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung_mails']['signatur']= array('Signatur', 'Standardsignatur verwenden');
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_mails']['preview']= array('Vorschau', 'Vorschau mit diesem Template');
 
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_mails']['mail_legend'] = 'E-Mail-Optionen';

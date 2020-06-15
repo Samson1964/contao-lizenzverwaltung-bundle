@@ -42,6 +42,10 @@
 	color: #ACACAC;
 }
 
+.dosb_margin {
+	margin-left: 10px;
+}
+
 .dosb_export_status {
 	margin-top: 5px;
 }
@@ -91,4 +95,12 @@
   border-width: 1px;
   overflow: auto;
   padding: 24px 18px;
+}
+
+.tl_preview {
+	border: 1px solid #D4D4D4;
+	border-radius: 5px;
+	padding: 10px;
+	background-color: #F9F9F9;
+	margin-top: 10px;
 }

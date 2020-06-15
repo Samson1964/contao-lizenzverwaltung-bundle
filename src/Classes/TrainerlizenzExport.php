@@ -12,140 +12,165 @@ class TrainerlizenzExport extends \Backend
 {
 
 	/**
-	 * Return a form to choose a CSV file and import it
+	 * Funktion exportTrainer_XLS
 	 * @param object
 	 * @return string
 	 */
 
-	public function exportTrainer(DataContainer $dc)
-	{
-		if ($this->Input->get('key') != 'export')
-		{
-			return '';
-		}
-
-		$arrExport = $this->getRecords($dc); // Lizenzen auslesen
-
-		$exportFile =  'DSB-Trainerlizenzen-Export' . date("Ymd-Hi");
-		
-		header('Content-Type: application/csv');
-		header('Content-Transfer-Encoding: binary');
-		header('Content-Disposition: attachment; filename="' . $exportFile .'.csv"');
-		header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-		header('Pragma: public');
-		header('Expires: 0');
-
-		$output = '';
-		foreach ($arrExport as $export) 
-		{
-			$output .= '"' . join('";"', $export).'"' . "\n";
-		}
-
-		echo $output;
-		exit;
-	}
-
-	public function exportXLSTrainer(DataContainer $dc)
+	public function exportTrainer_XLS(\DataContainer $dc)
 	{
 		if ($this->Input->get('key') != 'exportXLS')
 		{
 			return '';
 		}
 
-		$arrExport = $this->getRecords($dc); // Lizenzen auslesen
-		
-		// Excel-Export
-		if (file_exists(TL_ROOT . "/system/modules/xls_export/vendor/xls_export.php")) 
-		{
-			include(TL_ROOT . "/system/modules/xls_export/vendor/xls_export.php");
-			$xls = new \xlsexport();
-			$sheet = 'Trainerlizenzen';
-			$xls->addworksheet($sheet);
+		$arrExport = self::getRecords($dc); // Lizenzen auslesen
 
-			// Spaltenbreite setzen
-			for ($c = 1; $c <= 27; $c++)
-			{
-				switch($c)
-				{
-					case 20: // Veröffentlicht
-						$breite = 4000;
-						break;
-					case 10: // PLZ
-					case 21: // Titel
-					case 24: // ID
-					case 8: // Geschlecht
-						$breite = 1500;
-						break;
-					case 5: // Lizenz
-					case 14: // Codex
-					case 16: // Erste Hilfe
-						$breite = 2000;
-						break;
-					case 6: // Gültig bis
-					case 7: // Geburtsdatum
-					case 12: // Erwerb
-						$breite = 3500;
-						break;
-					case 13: // Letzte Verlängerung
-					case 15: // Codex Datum
-					case 17: // Erste Hilfe Datum
-					case 1: // Vorname
-					case 2: // Name
-					case 4: // Lizenznummer
-					case 19: // Bemerkung
-					case 18: // Letzte Änderung
-						$breite = 4000;
-						break;
-					case 11: // Ort
-					case 25: // Zeitstempel
-						$breite = 4500;
-						break;
-					case 3: // DOSB-Lizenznummer
-					case 9: // Straße
-					case 22: // Emailadresse
-					case 23: // Verband
-						$breite = 5000;
-						break;
-					default:
-						$breite = 4000;
-				}
-				$xls->setcolwidth ($sheet,$c-1,$breite);
-			}
-			
-			// Daten schreiben
-			$row = 0;
-			foreach($arrExport as $data)
-			{
-				$col = 0;
-				foreach($data as $key => $value) 
-				{
-					if($row == 0)
-					{
-						$xls->setcell(array("sheetname" => $sheet,"row" => $row, "col" => $col, 'fontweight' => XLSFONT_BOLD, 'hallign' => XLSXF_HALLIGN_CENTER, "data" => $value));
-					}
-					else
-					{
-						$xls->setcell(array("sheetname" => $sheet,"row" => $row, "col" => $col, 'hallign' => XLSXF_HALLIGN_LEFT, "data" => $value));
-					}
-					$col++;
-				}
-				$row++; // Zeilenzähler modifizieren
-			}
-			$xls->sendFile($sheet . '_' . date("Ymd-Hi") . ".xls");
-		} 
-		else 
+		// Neues Excel-Objekt erstellen
+		$spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+
+		// Dokument-Eigenschaften setzen
+		$spreadsheet->getProperties()->setCreator('ContaoLizenzverwaltungBundle')
+		            ->setLastModifiedBy('ContaoLizenzverwaltungBundle')
+		            ->setTitle('Lizenzen Deutscher Schachbund')
+		            ->setSubject('Lizenzen Deutscher Schachbund')
+		            ->setDescription('Export der Lizenzen im Deutschen Schachbund')
+		            ->setKeywords('export lizenzen dsb schachbund')
+		            ->setCategory('Export Lizenzen DSB');
+
+		// Tabellenblätter definieren
+		$sheets = array('Lizenzen');
+		$styleArray = [
+		    'font' => [
+		        'bold' => true,
+		    ],
+		    'alignment' => [
+		        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+		    ],
+		    'borders' => [
+		        'bottom' => [
+		            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+		        ],
+		    ],
+		    'fill' => [
+		        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_GRADIENT_LINEAR,
+		        'rotation' => 90,
+		        'startColor' => [
+		            'argb' => 'FFA0A0A0',
+		        ],
+		        'endColor' => [
+		            'argb' => 'FFFFFFFF',
+		        ],
+		    ],
+		];
+		$styleArray2 = [
+		    'alignment' => [
+		        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
+		    ],
+		];
+
+		// Preise-Tabelle anlegen und füllen
+		$spreadsheet->createSheet();
+		$spreadsheet->setActiveSheetIndex(0);
+		foreach(range('A','Y') as $columnID)
 		{
-			echo "<html><head><title>Need extension xls_export</title></head><body>"
-			    ."Please install the extension 'xls_export' 3.x.<br /><br />"
-			    ."Bitte die Erweiterung 'xls_export' 3.x installieren.<br /><br />"
-			    ."Installer l'extension 'xls_export' 3.x s'il vous plaît."
-			    ."</body></html>";
+			$spreadsheet->getActiveSheet()->getColumnDimension($columnID)->setAutoSize(true);
 		}
+		$spreadsheet->getActiveSheet()->getStyle('A1:X1')->applyFromArray($styleArray);
+		$spreadsheet->getActiveSheet()->getStyle('A2:X1000')->applyFromArray($styleArray2);
+		$spreadsheet->getActiveSheet()->setTitle('Lizenzen')
+		            ->setCellValue('A1', 'Name')
+		            ->setCellValue('B1', 'Vorname')
+		            ->setCellValue('C1', 'Titel')
+		            ->setCellValue('D1', 'Geburtsdatum')
+		            ->setCellValue('E1', 'Geschlecht')
+		            ->setCellValue('F1', 'PLZ')
+		            ->setCellValue('G1', 'Ort')
+		            ->setCellValue('H1', 'Straße')
+		            ->setCellValue('I1', 'E-Mail')
+		            ->setCellValue('J1', 'Verband')
+		            ->setCellValue('K1', 'DOSB-Lizenz')
+		            ->setCellValue('L1', 'DSB-Lizenz')
+		            ->setCellValue('M1', 'Lizenz-Art')
+		            ->setCellValue('N1', 'Gültig bis')
+		            ->setCellValue('O1', 'Lizenz-Erwerb')
+		            ->setCellValue('P1', 'Letzte Verlängerung')
+		            ->setCellValue('Q1', 'Codex')
+		            ->setCellValue('R1', 'Codex-Datum')
+		            ->setCellValue('S1', 'Erste Hilfe')
+		            ->setCellValue('T1', 'Erste-Hilfe-Datum')
+		            ->setCellValue('U1', 'Letzte Änderung')
+		            ->setCellValue('V1', 'Bemerkung')
+		            ->setCellValue('W1', 'Veröffentlicht')
+		            ->setCellValue('X1', 'Zeitstempel');
+
+		// Daten schreiben
+		$zeile = 2;
+		foreach($arrExport as $item)
+		{
+			$spreadsheet->getActiveSheet()
+			            ->setCellValue('A'.$zeile, $item['name'])
+			            ->setCellValue('B'.$zeile, $item['vorname'])
+			            ->setCellValue('C'.$zeile, $item['titel'])
+			            ->setCellValue('D'.$zeile, $item['geburtstag'])
+			            ->setCellValue('E'.$zeile, $item['geschlecht'])
+			            ->setCellValue('F'.$zeile, $item['plz'])
+			            ->setCellValue('G'.$zeile, $item['ort'])
+			            ->setCellValue('H'.$zeile, $item['strasse'])
+			            ->setCellValue('I'.$zeile, $item['email'])
+			            ->setCellValue('J'.$zeile, $item['verband'])
+			            ->setCellValue('K'.$zeile, $item['lizenznummer_dosb'])
+			            ->setCellValue('L'.$zeile, $item['lizenznummer'])
+			            ->setCellValue('M'.$zeile, $item['lizenz'])
+			            ->setCellValue('N'.$zeile, $item['gueltigkeit'])
+			            ->setCellValue('O'.$zeile, $item['erwerb'])
+			            ->setCellValue('P'.$zeile, $item['verlaengerungen'])
+			            ->setCellValue('Q'.$zeile, $item['codex'])
+			            ->setCellValue('R'.$zeile, $item['codex_date'])
+			            ->setCellValue('S'.$zeile, $item['help'])
+			            ->setCellValue('T'.$zeile, $item['help_date'])
+			            ->setCellValue('U'.$zeile, $item['letzteAenderung'])
+			            ->setCellValue('V'.$zeile, $item['bemerkung'])
+			            ->setCellValue('W'.$zeile, $item['published'])
+			            ->setCellValue('X'.$zeile, $item['tstamp']);
+			$zeile++;
+		}
+
+		$spreadsheet->setActiveSheetIndex(0);
+		$spreadsheet->getActiveSheet()->freezePane('A1'); // Keine Ahnung, ob damit die Zelle aktiviert wird, um eine Markierung aufzuheben
+
+		// Überflüssiges Tabellenblatt 'Worksheet 1' löschen
+		$sheetIndex = $spreadsheet->getIndex(
+		    $spreadsheet->getSheetByName('Worksheet 1')
+		);
+		$spreadsheet->removeSheetByIndex($sheetIndex);		
+
+		$dateiname = 'Lizenzen_'.date('Ymd-Hi').'.xls';
+
+		$writer = new \PhpOffice\PhpSpreadsheet\Writer\Xls($spreadsheet);
+		//$writer->save('bundles/contaolizenzverwaltung/'.$dateiname); // Auf Server speichern
+
+		// Redirect output to a client’s web browser (Xls)
+		header('Content-Type: application/vnd.ms-excel');
+		header('Content-Disposition: attachment;filename="'.$dateiname.'"');
+		header('Cache-Control: max-age=0');
+		// If you're serving to IE 9, then the following may be needed
+		header('Cache-Control: max-age=1');
+
+		// If you're serving to IE over SSL, then the following may be needed
+		header('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
+		header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT'); // always modified
+		header('Cache-Control: cache, must-revalidate'); // HTTP/1.1
+		header('Pragma: public'); // HTTP/1.0
+
+		$writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xls');
+		$writer->save('php://output'); // An Browser schicken
+
 	}
 
-	public function getRecords(DataContainer $dc)
+	public function getRecords(\DataContainer $dc)
 	{
-		// Liest die Datensätze der Trainerlizenzen in ein Array
+		// Liest die Datensätze der Lizenzverwaltung in ein Array
 
 		// Suchbegriff in aktueller Ansicht laden
 		$search = $dc->Session->get('search');
@@ -156,6 +181,9 @@ class TrainerlizenzExport extends \Backend
 
 		// Filter in aktueller Ansicht laden
 		$filter = $dc->Session->get('filter');
+		echo "<pre>";
+		print_r($filter);
+		echo "</pre>";
 		$filter = $filter[$dc->table]; // Das Array enthält limit (Wert meistens = 0,30) und alle Feldnamen mit den Werten
 		foreach($filter as $key => $value)
 		{
@@ -165,76 +193,52 @@ class TrainerlizenzExport extends \Backend
 				$sql .= " ".$key." = '".$value."'";
 			}
 		}
-		($sql) ? $sql .= " AND published = '1' ORDER BY name,vorname ASC" : $sql = " WHERE published = '1' ORDER BY name,vorname ASC";
+		($sql) ? $sql .= " AND tl_lizenzverwaltung_items.published = '1' ORDER BY name,vorname ASC" : $sql = " WHERE tl_lizenzverwaltung_items.published = '1' ORDER BY name,vorname ASC";
 
 		//echo "|$sql|";
 		//exit;
-		log_message('Excel-Export mit: SELECT * FROM tl_trainerlizenzen'.$sql, 'trainerlizenzen.log');
+		$sql = "SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id".$sql;
+		
+		log_message('Excel-Export mit: '.$sql, 'lizenzverwaltung.log');
 		// Datensätze laden
-		$records = \Database::getInstance()->prepare('SELECT * FROM tl_trainerlizenzen'.$sql)
-										   ->execute();
+		$records = \Database::getInstance()->prepare($sql)
+		                                   ->execute();
 
-		$verbandsname = \Schachbulle\ContaoLizenzverwaltungBundle\Helper::getVerbaende(); // Verbandskurzzeichen und -namen laden
+		$verbandsname = \Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerbaende(); // Verbandskurzzeichen und -namen laden
 
 		// Datensätze umwandeln
 		$arrExport = array();
-		// Kopfzeile anlegen
-		$arrExport[0]['vorname'] = 'Vorname';
-		$arrExport[0]['name'] = 'Name';
-		$arrExport[0]['lizenznummer_dosb'] = 'DOSB-Lizenz';
-		$arrExport[0]['lizenznummer'] = 'Lizenznummer';
-		$arrExport[0]['lizenz'] = 'Lizenz';
-		$arrExport[0]['gueltigkeit'] = utf8_decode('Gültig bis');
-		$arrExport[0]['geburtstag'] = 'Geburtsdatum';
-		$arrExport[0]['geschlecht'] = 'Geschlecht';
-		$arrExport[0]['strasse'] = 'Strasse';
-		$arrExport[0]['plz'] = 'PLZ';
-		$arrExport[0]['ort'] = 'Ort';
-		$arrExport[0]['erwerb'] = 'Lizenzerwerb';
-		$arrExport[0]['verlaengerungen'] = utf8_decode('Letzte Verlängerung');
-		$arrExport[0]['codex'] = 'Codex';
-		$arrExport[0]['codex_date'] = 'Codex-Datum';
-		$arrExport[0]['help'] = 'Erste Hilfe';
-		$arrExport[0]['help_date'] = 'Erste-Hilfe-Datum';
-		$arrExport[0]['letzteAenderung'] = utf8_decode('Letzte Änderung');
-		$arrExport[0]['bemerkung'] = 'Bemerkung';
-		$arrExport[0]['published'] = utf8_decode('Veröffentlicht');
-		$arrExport[0]['titel'] = 'Titel';
-		$arrExport[0]['email'] = 'Emailadresse';
-		$arrExport[0]['verband'] = 'Verband';
-		$arrExport[0]['id'] = 'ID';
-		$arrExport[0]['tstamp'] = 'Zeitstempel';
-		$x = 1;
 		if($records->numRows)
 		{
 			while($records->next()) 
 			{
-				$arrExport[$x]['vorname'] = utf8_decode($records->vorname);
-				$arrExport[$x]['name'] = utf8_decode($records->name);
-				$arrExport[$x]['lizenznummer_dosb'] = utf8_decode($records->license_number_dosb);
-				$arrExport[$x]['lizenznummer'] = utf8_decode($records->lizenznummer);
-				$arrExport[$x]['lizenz'] = $records->lizenz;
-				$arrExport[$x]['gueltigkeit'] = $this->getDate($records->gueltigkeit);
-				$arrExport[$x]['geburtstag'] = $this->getDate($records->geburtstag);
-				$arrExport[$x]['geschlecht'] = $records->geschlecht;
-				$arrExport[$x]['strasse'] = utf8_decode($records->strasse);
-				$arrExport[$x]['plz'] = $records->plz;
-				$arrExport[$x]['ort'] = utf8_decode($records->ort);
-				$arrExport[$x]['erwerb'] = $this->getDate($records->erwerb);
-				$arrExport[$x]['verlaengerungen'] = $this->getDate(\Schachbulle\ContaoLizenzverwaltungBundle\Helper::getVerlaengerung($records->erwerb, $records->verlaengerungen));
-				$arrExport[$x]['codex'] = $records->codex;
-				$arrExport[$x]['codex_date'] = $this->getDate($records->codex_date);
-				$arrExport[$x]['help'] = $records->help;
-				$arrExport[$x]['help_date'] = $this->getDate($records->help_date);
-				$arrExport[$x]['letzteAenderung'] = $this->getDate($records->letzteAenderung);
-				$arrExport[$x]['bemerkung'] = strip_tags(utf8_decode($records->bemerkung));
-				$arrExport[$x]['published'] = $records->published;
-				$arrExport[$x]['titel'] = $records->titel;
-				$arrExport[$x]['email'] = $records->email;
-				$arrExport[$x]['verband'] = utf8_decode($verbandsname[$records->verband]);
-				$arrExport[$x]['id'] = $records->id;
-				$arrExport[$x]['tstamp'] = date("d.m.Y H:i:s",$records->tstamp);
-				$x++;
+				$arrExport[] = array
+				(
+					'vorname'           => $records->vorname,
+					'name'              => $records->name,
+					'lizenznummer_dosb' => $records->license_number_dosb,
+					'lizenznummer'      => $records->lizenznummer,
+					'lizenz'            => $records->lizenz,
+					'gueltigkeit'       => $this->getDate($records->gueltigkeit),
+					'geburtstag'        => $this->getDate($records->geburtstag),
+					'geschlecht'        => $records->geschlecht,
+					'strasse'           => $records->strasse,
+					'plz'               => $records->plz,
+					'ort'               => $records->ort,
+					'erwerb'            => $this->getDate($records->erwerb),
+					'verlaengerungen'   => $this->getDate(\Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerlaengerung($records->erwerb, $records->verlaengerungen)),
+					'codex'             => $records->codex,
+					'codex_date'        => $this->getDate($records->codex_date),
+					'help'              => $records->help,
+					'help_date'         => $this->getDate($records->help_date),
+					'letzteAenderung'   => $this->getDate($records->letzteAenderung),
+					'bemerkung'         => strip_tags($records->bemerkung),
+					'published'         => $records->published,
+					'titel'             => $records->titel,
+					'email'             => $records->email,
+					'verband'           => $verbandsname[$records->verband],
+					'tstamp'            => date("d.m.Y H:i:s",$records->tstamp)
+				);
 			}
 		}
 		return $arrExport;

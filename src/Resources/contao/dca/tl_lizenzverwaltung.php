@@ -11,8 +11,6 @@
  * @copyright Frank Hoppe 2014 - 2017
  */
 
-$GLOBALS['TL_CSS'][] = 'bundles/contaolizenzverwaltung/css/default.css';
-
 /**
  * Table tl_lizenzverwaltung
  */
@@ -51,8 +49,9 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung'] = array
 		),
 		'label' => array
 		(
-			'fields'                  => array('name', 'vorname', 'email', 'plz', 'ort', 'strasse'),
+			'fields'                  => array('name', 'vorname', 'geburtstag', 'email', 'plz', 'ort', 'lizenzen'),
 			'showColumns'             => true,
+			'label_callback'          => array('tl_lizenzverwaltung', 'viewLizenzen'),
 		),
 		'global_operations' => array
 		(
@@ -68,13 +67,6 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung'] = array
 				'label'               => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['exportDOSB'],
 				'href'                => 'key=exportDOSB',
 				'icon'                => 'bundles/contaolizenzverwaltung/images/export.png',
-				'attributes'          => 'onclick="Backend.getScrollOffset();"'
-			),
-			'export' => array
-			(
-				'label'               => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['export'],
-				'href'                => 'key=export',
-				'icon'                => 'bundles/contaolizenzverwaltung/images/exportCSV.gif',
 				'attributes'          => 'onclick="Backend.getScrollOffset();"'
 			),
 			'exportXLS' => array
@@ -261,7 +253,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung'] = array
 			'search'                  => true,
 			'sorting'                 => false,
 			'filter'                  => false,
-			'explanation'             => 'trainerlizenzen_strasse',
+			'explanation'             => 'lizenzverwaltung_strasse',
 			'sql'                     => "varchar(255) NOT NULL default ''",
 			'eval'                    => array
 			(
@@ -279,7 +271,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung'] = array
 			'search'                  => true,
 			'sorting'                 => true,
 			'filter'                  => false,
-			'explanation'             => 'trainerlizenzen_plz',
+			'explanation'             => 'lizenzverwaltung_plz',
 			'sql'                     => "varchar(32) NOT NULL default ''",
 			'eval'                    => array
 			(
@@ -300,7 +292,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung'] = array
 			'sorting'                 => true,
 			'filter'                  => false,
 			'sql'                     => "varchar(255) NOT NULL default ''",
-			'explanation'             => 'trainerlizenzen_strasse',
+			'explanation'             => 'lizenzverwaltung_strasse',
 			'eval'                    => array
 			(
 				'mandatory'           => true,
@@ -395,6 +387,10 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung'] = array
 			'eval'                    => array('tl_class' => 'w50','isBoolean' => true),
 			'sql'                     => "char(1) NOT NULL default ''"
 		),
+		'lizenzen' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['lizenzen'],
+		),
 	),
 );
 
@@ -483,7 +479,8 @@ class tl_lizenzverwaltung extends \Backend
 				(
 					'1' => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_active_licenses'],
 					'2' => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_inactive_licenses'],
-					'3' => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_unsentmails'],
+					'3' => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_marked_licenses'],
+					'4' => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_unsentmails'],
 				)
 			),
 		);
@@ -502,10 +499,10 @@ class tl_lizenzverwaltung extends \Backend
             // Generate options
             foreach ($arrFilter['options'] as $k => $v)
             {
-                $strOptions .= '  <option value="' . $k . '"' . (($session['filter']['tl_registerFilter'][$arrFilter['name']] === (string) $k) ? ' selected' : '') . '>' . $v . '</option>' . "\n";
+                $strOptions .= '  <option value="' . $k . '"' . (($session['filter']['tl_lizenzverwaltungFilter'][$arrFilter['name']] === (string) $k) ? ' selected' : '') . '>' . $v . '</option>' . "\n";
             }
 
-            $strBuffer .= '<select name="' . $arrFilter['name'] . '" id="' . $arrFilter['name'] . '" class="tl_select' . (isset($session['filter']['tl_registerFilter'][$arrFilter['name']]) ? ' active' : '') . '">
+            $strBuffer .= '<select name="' . $arrFilter['name'] . '" id="' . $arrFilter['name'] . '" class="tl_select' . (isset($session['filter']['tl_lizenzverwaltungFilter'][$arrFilter['name']]) ? ' active' : '') . '">
 ' . $strOptions . '
 </select>' . "\n";
         }
@@ -519,34 +516,36 @@ class tl_lizenzverwaltung extends \Backend
 
 		$session = \Session::getInstance()->getData();
 
-		// Store filter values in the session
-		foreach ($_POST as $k => $v)
+		// Filterwerte in der Sitzung speichern
+		foreach($_POST as $k => $v)
 		{
-			if (substr($k, 0, 4) != 'tli_')
+			if(substr($k, 0, 4) != 'tli_')
 			{
 				continue;
 			}
 
-			// Reset the filter
-			if ($k == \Input::post($k))
+			// Filter zurücksetzen
+			if($k == \Input::post($k))
 			{
-				unset($session['filter']['tl_registerFilter'][$k]);
-			} // Apply the filter
-			else {
-				$session['filter']['tl_registerFilter'][$k] = \Input::post($k);
+				unset($session['filter']['tl_lizenzverwaltungFilter'][$k]);
+			}
+			// Filter zuweisen
+			else
+			{
+				$session['filter']['tl_lizenzverwaltungFilter'][$k] = \Input::post($k);
 			}
 		}
 
 		$this->Session->setData($session);
 
-		if (\Input::get('id') > 0 || !isset($session['filter']['tl_registerFilter']))
+		if(\Input::get('id') > 0 || !isset($session['filter']['tl_lizenzverwaltungFilter']))
 		{
 			return;
 		}
 
 		$arrPlayers = null;
 
-		switch ($session['filter']['tl_registerFilter']['tli_filter'])
+		switch($session['filter']['tl_lizenzverwaltungFilter']['tli_filter'])
 		{
 			case '1': // Alle Personen mit gültigen Lizenzen
 				$objPlayers = \Database::getInstance()->prepare("SELECT tl_lizenzverwaltung.id FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.gueltigkeit >= ? AND tl_lizenzverwaltung_items.published = ?")
@@ -560,7 +559,13 @@ class tl_lizenzverwaltung extends \Backend
 				$arrPlayers = is_array($arrPlayers) ? array_intersect($arrPlayers, $objPlayers->fetchEach('id')) : $objPlayers->fetchEach('id');
 				break;
 
-			case '3': // Alle Personen mit ungesendeten E-Mails
+			case '3': // Alle Personen mit markierten Lizenzen
+				$objPlayers = \Database::getInstance()->prepare("SELECT tl_lizenzverwaltung.id FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.marker = ?")
+				                                      ->execute(1);
+				$arrPlayers = is_array($arrPlayers) ? array_intersect($arrPlayers, $objPlayers->fetchEach('id')) : $objPlayers->fetchEach('id');
+				break;
+
+			case '4': // Alle Personen mit ungesendeten E-Mails
 				$objPlayers = \Database::getInstance()->prepare("SELECT tl_lizenzverwaltung.id FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung.id = tl_lizenzverwaltung_items.pid LEFT JOIN tl_lizenzverwaltung_mails ON tl_lizenzverwaltung_items.id = tl_lizenzverwaltung_mails.pid WHERE tl_lizenzverwaltung_mails.sent_state = ? AND tl_lizenzverwaltung_items.published = ?")
 				                                      ->execute('', 1);
 				$arrPlayers = is_array($arrPlayers) ? array_intersect($arrPlayers, $objPlayers->fetchEach('id')) : $objPlayers->fetchEach('id');
@@ -570,7 +575,7 @@ class tl_lizenzverwaltung extends \Backend
 
 		}
 
-		if (is_array($arrPlayers) && empty($arrPlayers))
+		if(is_array($arrPlayers) && empty($arrPlayers))
 		{
 			$arrPlayers = array(0);
 		}
@@ -580,6 +585,110 @@ class tl_lizenzverwaltung extends \Backend
 
 		$GLOBALS['TL_DCA']['tl_lizenzverwaltung']['list']['sorting']['root'] = $arrPlayers;
 
+	}
+
+	public function viewEnclosureInfo(DataContainer $dc)
+	{
+		// Zurücklink generieren, ab C4 ist das ein symbolischer Link zu "contao"
+		if (version_compare(VERSION, '4.0', '>='))
+		{
+			$link = \System::getContainer()->get('router')->generate('contao_backend');
+		}
+		else
+		{
+			$link = 'contao/main.php';
+		}
+		$link .= '?do=trainerlizenzen&amp;key=getLizenz&amp;id=' . $dc->activeRecord->id . '&amp;rt=' . REQUEST_TOKEN;
+
+		// Letzter Lizenzabruf und Rückgabecode
+		if($dc->activeRecord->enclosure)
+		{
+			$info = unserialize($dc->activeRecord->enclosure);
+			if(is_array($info))
+			{
+				$content = '<ul>';
+				foreach($info as $item)
+				{
+					$content .= '<li style="clear:both;">';
+					// Suche nach UUID
+					$objFile = \FilesModel::findByUuid($item); // FilesModel Objekt
+					$arrMeta = $objFile ? deserialize($objFile->meta) : array(); // Metadaten extrahieren
+					// Dateityp feststellen und Vorschauausgabe vorbereiten
+					switch($objFile->extension)
+					{
+						case 'jpg':
+						case 'png':
+						case 'gif':
+							$lightbox = "onclick=\"Backend.openModalIframe({'width':735,'height':405,'title':'Großansicht','url':".$objFile->path."})\"";
+							$content .= '<a href="'.$objFile->path.'" '.$lightbox.'><img src="'.\Image::get($objFile->path, 80, 80, 'crop').'" style="float:left; margin-right:5px; margin-bottom:5px;"></a> ';
+							break;
+						default:
+							$content .= '';
+					}
+					$content .= $objFile->path.'<br>';
+					$content .= '<i>'.$arrMeta['de']['title'].'</i>';
+					$content .= '</li>';
+					//$antwort .= print_r($objFile, true);
+				}
+				$content .= '<li style="clear:both;"></li>';
+				$content .= '</ul>';
+				$antwort .= $content;
+			}
+		}
+		else $antwort = '';
+		
+		$string = '
+<div class="clr widget">
+	<h3><label for="ctrl_enclosureInfo">'.$GLOBALS['TL_LANG']['tl_trainerlizenzen']['enclosureInfo'][0].'</label></h3>
+	'.$antwort.'
+	<p class="tl_help tl_tip" title="" style="margin-top:3px;">'.$GLOBALS['TL_LANG']['tl_trainerlizenzen']['enclosureInfo'][1].'</p>
+</div>'; 
+		
+		return $string;
+	}
+
+	/**
+	 * Zeigt zu einem Datensatz die eingetragenen Lizenzen an
+	 *
+	 * @param array                $row
+	 * @param string               $label
+	 * @param Contao\DataContainer $dc
+	 * @param array                $args        Index 6 ist das Feld lizenzen
+	 *
+	 * @return array
+	 */
+	public function viewLizenzen($row, $label, Contao\DataContainer $dc, $args)
+	{
+
+		// Lizenzen der Person laden
+		$objLizenzen = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items WHERE pid = ?")
+		                                       ->execute($row['id']);
+
+		$lizenzen = array();
+		if($objLizenzen->numRows)
+		{
+			while($objLizenzen->next())
+			{
+				$gueltig = date('d.m.Y', $objLizenzen->gueltigkeit);
+				if($objLizenzen->gueltigkeit < time())
+				{
+					// abgelaufene Lizenz
+					$str = '<span style="color: red;" title="abgelaufen am '.$gueltig.'">';
+				}
+				else
+				{
+					// gültige Lizenz
+					$str = '<span style="color: green;" title="gültig bis '.$gueltig.'">';
+				}
+				$marker = $objLizenzen->marker ? '<img src="bundles/contaolizenzverwaltung/images/marker.png" title="Lizenz ist markiert">' : '';
+				$lizenzen[] = $str.$objLizenzen->lizenz.$marker.'</span>';
+			}
+			$args[6] = implode(', ', $lizenzen);
+		}
+		else $args[6] = '-'; // Keine Lizenzen gefunden
+
+		// Datensatz komplett zurückgeben
+		return $args;
 	}
 
 }

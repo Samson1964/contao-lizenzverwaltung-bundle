@@ -97,7 +97,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_mails'] = array
 	// Palettes
 	'palettes' => array
 	(
-		'default'                     => '{text_legend},subject,content;{template_legend},template,preview;{mail_legend},insertLizenz,insertLizenzCard,copyVerband,copyDSB,send'
+		'default'                     => '{text_legend},subject,content;{template_legend},template,signatur,preview;{mail_legend},insertLizenz,insertLizenzCard,copyVerband,copyDSB,send'
 	),
 
 	// Fields
@@ -131,6 +131,22 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_mails'] = array
 				'submitOnChange'      => true
 			),
 			'sql'                     => "varchar(64) NOT NULL default ''"
+		),
+		// Signatur
+		'signatur' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_mails']['signatur'],
+			'inputType'               => 'checkbox',
+			'exclude'                 => true,
+			'default'                 => 1,
+			'eval'                    => array
+			(
+				'mandatory'           => false,
+				'tl_class'            => 'w50',
+				'isBoolean'           => true,
+				'submitOnChange'      => true
+			),
+			'sql'                     => "char(1) NOT NULL default ''"
 		),
 		'preview' => array
 		(
@@ -280,19 +296,21 @@ class tl_lizenzverwaltung_mails extends Backend
 	public function listEmails($arrRow)
 	{
 		$objTemplate = new \BackendTemplate($arrRow['template']);
-		// Trainer-Datensatz einlesen
-		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items WHERE id = ?")
+
+		// Lizenz- und Personen-Datensatz einlesen
+		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
 		                                  ->execute($arrRow['pid']);
 
 		$objTemplate->setData($result->row()); // Trainer-Daten in Template-Objekt eintragen
 		$objTemplate->subject = $arrRow['subject'];
+		if($arrRow['signatur']) $objTemplate->signatur = $GLOBALS['TL_CONFIG']['lizenzverwaltung_mailsignatur'];
 		$objTemplate->content = $arrRow['content'];
 		$arrRow['sent_text'] ? $content = $arrRow['sent_text'] : $content = $objTemplate->parse();
 
 		return '
 <div class="cte_type ' . (($arrRow['sent_state'] && $arrRow['sent_date']) ? 'published' : 'unpublished') . '"><strong>' . $arrRow['subject'] . '</strong> - ' . (($arrRow['sent_state'] && $arrRow['sent_date']) ? 'Versendet am '.Date::parse(Config::get('datimFormat'), $arrRow['sent_date']) : 'Nicht versendet'). '</div>
 <div class="limit_height' . (!Config::get('doNotCollapse') ? ' h128' : '') . '">' . (!$arrRow['sendText'] ? '
-' . StringUtil::insertTagToSrc($content) . '<hr>' : '' ) . '
+' . \StringUtil::insertTagToSrc($content) . '<hr>' : '' ) . '
 </div>' . "\n";
 
 	}
@@ -312,18 +330,19 @@ class tl_lizenzverwaltung_mails extends Backend
 		}
 	}
 
-	public function getPreview($dc)
+	public function getPreview(\DataContainer $dc)
 	{
-		// Lizenzstatus
+		// Templatestatus
 		if($dc->activeRecord->template)
 		{
 			$objTemplate = new \BackendTemplate($dc->activeRecord->template);
 			// Lizenz- und Personen-Datensatz einlesen
 			$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
 			                                  ->execute($dc->activeRecord->pid);
-
+			//print_r($result->row());
 			$objTemplate->setData($result->row()); // Trainer-Daten in Template-Objekt eintragen
 			$objTemplate->subject = $dc->activeRecord->subject;
+			if($dc->activeRecord->signatur) $objTemplate->signatur = $GLOBALS['TL_CONFIG']['lizenzverwaltung_mailsignatur'];
 			$objTemplate->content = $dc->activeRecord->content;
 			preg_match('/<body>(.*)<\/body>/s', $objTemplate->parse(), $matches); // Body extrahieren
 			$content = \StringUtil::restoreBasicEntities($matches[1]); // [nbsp] und Co. ersetzen

@@ -13,14 +13,14 @@
 
 namespace Schachbulle\ContaoLizenzverwaltungBundle\Classes;
 
-class Trainerliste extends \Module
+class Lizenzenliste extends \Module
 {
 
 	/**
 	 * Template
 	 * @var string
 	 */
-	protected $strTemplate = 'mod_trainerliste';
+	protected $strTemplate = 'mod_lizenzenliste';
 	
 	/**
 	 * Display a wildcard in the back end
@@ -32,7 +32,7 @@ class Trainerliste extends \Module
 		{
 			$objTemplate = new \BackendTemplate('be_dewis');
 
-			$objTemplate->wildcard = '### LISTE DER TRAINERLIZENZEN ###';
+			$objTemplate->wildcard = '### LISTE DER LIZENZEN ###';
 			$objTemplate->title = $this->name;
 			$objTemplate->id = $this->id;
 
@@ -64,7 +64,7 @@ class Trainerliste extends \Module
 
 		// Trainer-Datensatz einlesen
 		$result = \Database::getInstance()->prepare("SELECT * FROM tl_trainerlizenzen WHERE ($sql) AND gueltigkeit >= ? AND published = ? ORDER BY name ASC, vorname ASC")
-										   ->execute($heute, 1);
+		                                  ->execute($heute, 1);
 
 		$trainerArr = array();
 		if($result->numRows)

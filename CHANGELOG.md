@@ -1,5 +1,21 @@
 # Lizenzverwaltung Changelog
 
+## Version 1.2.1 (2020-06-15)
+
+* Abhängigkeit phpoffice/phpexcel ersetzt durch phpoffice/phpspreadsheet
+* exportTrainer_XLS erneuert
+* exportTrainer_CSV entfernt
+* Ausbilder-Zertifikat hinzugefügt
+* tl_lizenzverwaltung: Sprachvariablen, Sortierung, Filter, Suche verbessert
+* Ausgabe der Lizenzen in Auflistung der Personen
+* tl_lizenzverwaltung_items: Auflistung der Lizenzen farblich markiert
+* Mailer.php korrigiert
+* Add: Signatur für E-Mails, statt Template verwenden
+* Speicherpfad für die Lizenzdateien korrigiert
+* Markierungsoption in Lizenzen umprogrammiert
+* ajaxRequest.php eingebunden und überarbeitet
+* Versionsnummer nur auf 1.2.1 weil 1.1.0 versehentlich übersprungen wurde
+
 ## Version 1.2.0 (2020-06-11)
 
 * Fix: Sprachdaten tl_settings.php

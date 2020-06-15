@@ -34,7 +34,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_referenten'] = array
 		'label' => array
 		(
 			// Das Feld aktiv wird vom label_callback überschrieben
-			'fields'                  => array('nachname','vorname','verband','funktion'),
+			'fields'                  => array('nachname','vorname','email','verband','funktion'),
 			'showColumns'             => true,
 			'format'                  => '%s',
 		),
@@ -143,28 +143,12 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_referenten'] = array
 			'flag'                    => 11,
 			'filter'                  => true,
 			'sql'                     => "varchar(4) NOT NULL default ''",
-			'options'                 => array
-			(
-				'-'                   => '-',
-				'ausb'                => 'Ausbildungs-Referent',
-				'gefu'                => 'Geschäftsführer',
-				'prae'                => 'Präsident',
-				'vize'                => 'Vizepräsident',
-				'kass'                => 'Schatzmeister',
-				'scri'                => 'Schriftführer',
-				'spie'                => 'Spielleiter',
-				'jugd'                => 'Jugend-Referent',
-				'wert'                => 'Wertungs-Referent',
-				'dver'                => 'DV-Referent',
-				'prss'                => 'Presse-Referent',
-				'brei'                => 'Breitensport-Referent',
-				'seni'                => 'Senioren-Referent',
-				'frau'                => 'Frauen-Referent',
-			),
+			'options'                 => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['funktionen'],
 			'eval'                    => array
 			(
 				'mandatory'           => false,
 				'chosen'              => true,
+				'includeBlankOption'  => true,
 				'tl_class'            => 'w50'
 			)
 		),

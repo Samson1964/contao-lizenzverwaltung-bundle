@@ -55,4 +55,23 @@ $GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['sent_date']= array('Versa
 
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['publish_legend'] = 'Aktivieren';
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['published']= array('Aktiv', 'Aktivieren oder deaktivieren Sie hier den Datensatz.');
+
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['funktionen'] = array
+(
+	'ausb'                => 'Ausbildungsreferent',
+	'gefu'                => 'Geschäftsführer',
+	'prae'                => 'Präsident',
+	'vize'                => 'Vizepräsident',
+	'kass'                => 'Schatzmeister',
+	'scri'                => 'Schriftführer',
+	'spie'                => 'Spielleiter',
+	'jugd'                => 'Jugendreferent',
+	'wert'                => 'Wertungsreferent',
+	'dver'                => 'DV-Referent',
+	'prss'                => 'Pressereferent',
+	'brei'                => 'Breitensportreferent',
+	'seni'                => 'Seniorenreferent',
+	'frau'                => 'Frauenreferent',
+	'sons'                => '- Sonstige Funktion -',
+);
 

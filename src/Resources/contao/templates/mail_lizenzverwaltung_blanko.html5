@@ -14,12 +14,16 @@
 	<?php endif; ?>
 	
 	<?= $this->content ?>
+
+	<?php if($this->signatur): ?>
+		<?= $this->signatur ?>
+	<?php else: ?>
+		<p>Mit freundlichen Grüßen<br>
+		Deutscher Schachbund<br>
+		Lizenzmanagement<br>
+		Judith Zabel</p>
 	
-	<p>Mit freundlichen Grüßen<br>
-	Deutscher Schachbund<br>
-	Lizenzmanagement<br>
-	Judith Ulrich</p>
-	
-	<p>Trainerlisten auf schachbund.de: <a href="http://www.schachbund.de/trainerlisten.html" target="_blank">www.schachbund.de/trainerlisten.html</a></p>
+		<p>Trainerlisten auf schachbund.de: <a href="https://www.schachbund.de/trainerlisten.html" target="_blank">www.schachbund.de/trainerlisten.html</a></p>
+	<?php endif; ?>
 </body>
 </html>

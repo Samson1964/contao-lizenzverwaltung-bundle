@@ -11,8 +11,6 @@
  * @copyright Frank Hoppe 2014 - 2017
  */
 
-$GLOBALS['TL_CSS'][] = 'bundles/contaolizenzverwaltung/css/default.css';
-
 /**
  * Table tl_lizenzverwaltung
  */
@@ -149,7 +147,66 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'exclude'                 => true,
 			'flag'                    => 12,
 			'sql'                     => "varchar(255) NOT NULL default ''",
+			'eval'                    => array
+			(
+				'tl_class'            => 'w50'
+			)
 		),
+		// Lizenz erstellen/verlängern-Button und Infotext
+		'button_license' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_license'],
+			'exclude'                 => true,
+			'input_field_callback'    => array('tl_lizenzverwaltung_items', 'getLizenzbutton'),
+			'eval'                    => array
+			(
+				'tl_class'            => 'w50'
+			)
+		), 
+		// PDF-Link Format DIN A4
+		'view_pdf' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['view_pdf'],
+			'input_field_callback'    => array('tl_lizenzverwaltung_items', 'viewPDF'),
+			'exclude'                 => true,
+			'eval'                    => array
+			(
+				'tl_class'            => 'w50'
+			)
+		),
+		// Button zur PDF-Anforderung DIN A4 und Infotext
+		'button_pdf' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_pdf'],
+			'exclude'                 => true,
+			'input_field_callback'    => array('tl_lizenzverwaltung_items', 'getLizenzPDF'),
+			'eval'                    => array
+			(
+				'tl_class'            => 'w50'
+			)
+		), 
+		// PDF-Link Format Card
+		'view_pdfcard' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['view_pdfcard'],
+			'input_field_callback'    => array('tl_lizenzverwaltung_items', 'viewPDFCard'),
+			'exclude'                 => true,
+			'eval'                    => array
+			(
+				'tl_class'            => 'w50'
+			)
+		),
+		// Button zur PDF-Anforderung Format Card und Infotext
+		'button_pdfcard' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_pdfcard'],
+			'exclude'                 => true,
+			'input_field_callback'    => array('tl_lizenzverwaltung_items', 'getLizenzPDFCard'),
+			'eval'                    => array
+			(
+				'tl_class'            => 'w50'
+			)
+		), 
 		// DOSB-Lizenznummer, z.B. 3535 (korreliert mit der obigen Lizenz) 
 		'lid' => array
 		(
@@ -176,26 +233,6 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['dosb_antwort'],
 			'sql'                     => "varchar(255) NOT NULL default ''",
 		),
-		'button_license' => array
-		(
-			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_license'],
-			'exclude'                 => true,
-			'input_field_callback'    => array('tl_lizenzverwaltung_items', 'getLizenzbutton')
-		), 
-		// PDF-Link Format DIN A4
-		'view_pdf' => array
-		(
-			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['view_pdf'],
-			'input_field_callback'    => array('tl_lizenzverwaltung_items', 'getLizenzPDFView'),
-			'exclude'                 => true,
-		),
-		// Button zur PDF-Anforderung DIN A4
-		'button_pdf' => array
-		(
-			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_pdf'],
-			'exclude'                 => true,
-			'input_field_callback'    => array('tl_lizenzverwaltung_items', 'getLizenzPDF')
-		), 
 		// Unixzeit des letzten PDF-Abrufs beim DOSB
 		'dosb_pdf_tstamp' => array
 		(
@@ -215,20 +252,6 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['dosb_pdf_antwort'],
 			'sql'                     => "varchar(255) NOT NULL default ''",
 		),
-		// PDF-Link Format Card
-		'view_pdfcard' => array
-		(
-			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['view_pdfcard'],
-			'input_field_callback'    => array('tl_lizenzverwaltung_items', 'getLizenzPDFCardView'),
-			'exclude'                 => true,
-		),
-		// Button zur PDF-Anforderung Format Card
-		'button_pdfcard' => array
-		(
-			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_pdfcard'],
-			'exclude'                 => true,
-			'input_field_callback'    => array('tl_lizenzverwaltung_items', 'getLizenzPDFCard')
-		), 
 		// Unixzeit des letzten PDF-Abrufs beim DOSB
 		'dosb_pdfcard_tstamp' => array
 		(
@@ -312,7 +335,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'inputType'               => 'text',
 			'exclude'                 => true,
 			'flag'                    => 8,
-			'explanation'             => 'trainerlizenzen_erwerb', 
+			'explanation'             => 'lizenzverwaltung_erwerb', 
 			'eval'                    => array
 			(
 				'rgxp'                => 'date',
@@ -373,7 +396,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['codex'],
 			'inputType'               => 'checkbox',
 			'default'                 => true,
-			'explanation'             => 'trainerlizenzen_kodex', 
+			'explanation'             => 'lizenzverwaltung_codex', 
 			'exclude'                 => true,
 			'eval'                    => array
 			(
@@ -408,7 +431,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'inputType'               => 'checkbox',
 			'default'                 => true,
 			'exclude'                 => true,
-			'explanation'             => 'trainerlizenzen_kodex', 
+			'explanation'             => 'lizenzverwaltung_codex', 
 			'eval'                    => array
 			(
 				'mandatory'           => false,
@@ -637,9 +660,9 @@ class tl_lizenzverwaltung_items extends \Backend
 		}
 		
 		$string = '
-<div class="w50 widget" style="height:45px;">
-	'.$status.'
-</div>'; 
+		<div class="w50 dosb_margin">
+		<div class="tl_text" style="border:0">'.$status.'</div>
+		</div>';
 		
 		return $string;
 	}
@@ -653,91 +676,22 @@ class tl_lizenzverwaltung_items extends \Backend
 		if($dc->activeRecord->dosb_tstamp)
 		{
 			$antwort = 'Letzter Abruf: '.date('d.m.Y H:i:s', $dc->activeRecord->dosb_tstamp).' ('.$dc->activeRecord->dosb_code.' '.$dc->activeRecord->dosb_antwort.')';
+			return '
+			<div class="w50 dosb_margin">
+			<div class="tl_text" style="border:0;"><a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_license'][0].'</a></div>
+			<p class="tl_help tl_tip" title="" style="margin-left:7px;">'.$antwort.'</p>
+			</div>';
 		}
-		else $antwort = '';
+		else
+		{
+			return '
+			<div class="w50 dosb_margin">
+			<div class="tl_text" style="border:0;"><a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_license'][0].'</a></div>
+			</div>';
+		}
 
-		$string = '
-<div class="w50 widget" style="height:45px;">
-	<a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_license'][0].'</a>
-	<p class="tl_help tl_tip" title="" style="margin-top:3px;">'.$antwort.'</p>
-</div>'; 
-		
-		return $string;
 	}
 	
-	/**
-	 * Link zum PDF im DIN-A4-Format anzeigen
-	 * @param DataContainer $dc
-	 *
-	 * @return string HTML-Code
-	 */
-	public function getLizenzPDFView(DataContainer $dc)
-	{
-		// Links zum PDF generieren
-		$pdf_server = TL_ROOT.'/files/trainerlizenzen/'.$dc->activeRecord->license_number_dosb.'.pdf';
-		$pdf_download = 'files/trainerlizenzen/'.$dc->activeRecord->license_number_dosb.'.pdf';
-		
-		// Lizenzstatus
-		if($dc->activeRecord->license_number_dosb && file_exists($pdf_server))
-		{
-			$pdf_datum = date('d.m.Y H:i:s', filemtime($pdf_server));
-			$status = '<a href="'.$pdf_download.'" target="_blank" title="Zeigt die auf dem DSB-Server gespeicherte Lizenzurkunde an." class="dosb_button_mini">PDF DIN A4 anzeigen</a> PDF-Datum: '.$pdf_datum;
-			//$email = '&nbsp;<a href="" title="Verschickt die Lizenzurkunde mit der Standard-Mailvorlage an den Trainer, den Landesverband und den DSB" class="dosb_button_mini">PDF verschicken</a>';
-			$email = '';
-		}
-		else
-		{
-			$status = 'Kein PDF DIN A4 vorhanden';
-			$email = '';
-		}
-		
-		if($dc->activeRecord->license_number_dosb)
-		{
-		$string = '
-<div class="w50 widget" style="height:45px;">
-	'.$status.$email.'
-</div> '; 
-			return $string;
-		}
-		else return '';
-	}
-
-	/**
-	 * Link zum PDF im Karten-Format anzeigen
-	 * @param DataContainer $dc
-	 *
-	 * @return string HTML-Code
-	 */
-	public function getLizenzPDFCardView(DataContainer $dc)
-	{
-		// Links zum PDF generieren
-		$pdf_server = TL_ROOT.'/files/trainerlizenzen/'.$dc->activeRecord->license_number_dosb.'-card.pdf';
-		$pdf_download = 'files/trainerlizenzen/'.$dc->activeRecord->license_number_dosb.'-card.pdf';
-
-		// Lizenzstatus
-		if($dc->activeRecord->license_number_dosb && file_exists($pdf_server))
-		{
-			$pdf_datum = date('d.m.Y H:i:s', filemtime($pdf_server));
-			$status = '<a href="'.$pdf_download.'" target="_blank" title="Zeigt die auf dem DSB-Server gespeicherte Lizenzurkunde im Format Card an." class="dosb_button_mini">PDF Karte anzeigen</a> PDF-Datum: '.$pdf_datum;
-			//$email = '&nbsp;<a href="" title="Verschickt die Lizenzurkunde mit der Standard-Mailvorlage an den Trainer, den Landesverband und den DSB" class="dosb_button_mini">PDF verschicken</a>';
-			$email = '';
-		}
-		else
-		{
-			$status = 'Kein PDF Card vorhanden';
-			$email = '';
-		}
-		
-		if($dc->activeRecord->license_number_dosb)
-		{
-		$string = '
-<div class="w50 widget" style="height:45px;">
-	'.$status.$email.'
-</div> '; 
-			return $string;
-		}
-		else return '';
-	}
 
 	/**
 	 * Button zum PDF-Abruf im DIN-A4-Format anzeigen
@@ -759,14 +713,14 @@ class tl_lizenzverwaltung_items extends \Backend
 
 		if($dc->activeRecord->license_number_dosb)
 		{
-		$string = '
-<div class="w50 widget" style="height:45px;">
-	<a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_pdf'][0].'</a>
-	<p class="tl_help tl_tip" title="" style="margin-top:3px;">'.$antwort.'</p>
-</div>'; 
+			$string = '
+			<div class="w50 dosb_margin">
+			<div class="tl_text" style="border:0;"><a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_pdf'][0].'</a></div>
+			<p class="tl_help tl_tip" title="" style="margin-left:7px;">'.$antwort.'</p>
+			</div>';
 			return $string;
 		}
-		else return '';
+		else return '<div class="w50 dosb_margin"></div>';
 			
 	}
 
@@ -790,14 +744,14 @@ class tl_lizenzverwaltung_items extends \Backend
 
 		if($dc->activeRecord->license_number_dosb)
 		{
-		$string = '
-<div class="w50 widget" style="height:45px;">
-	<a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_pdfcard'][0].'</a>
-	<p class="tl_help tl_tip" title="" style="margin-top:3px;">'.$antwort.'</p>
-</div>'; 
+			$string = '
+			<div class="w50 dosb_margin">
+			<div class="tl_text" style="border:0;"><a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_pdfcard'][0].'</a></div>
+			<p class="tl_help tl_tip" title="" style="margin-left:7px;">'.$antwort.'</p>
+			</div>';
 			return $string;
 		}
-		else return '';
+		else return '<div class="w50 dosb_margin"></div>';
 			
 	}
 
@@ -846,11 +800,23 @@ class tl_lizenzverwaltung_items extends \Backend
 	 */
 	public function listLizenzen($row)
 	{
-		$temp = '<b>'.$row['lizenz'].'</b> ';
+		// Farbliche Hervorhebung der Gültigkeit
+		if($row['gueltigkeit'] < time()) $temp = '<span style="color: red;">';
+		else $temp = '<span style="color: green;">';
+
+		$temp .= $row['marker'] ? '<img src="bundles/contaolizenzverwaltung/images/marker.png" title="Lizenz ist markiert"> ' : '';
+		$temp .= '<b>'.$row['lizenz'].'</b> ';
 		$temp .= date('d.m.Y', $row['gueltigkeit']).' ';
-		$temp .= '- '.$GLOBALS['TL_LANG']['lizenzverwaltung']['verbaende'][$row['verband']].' ';
-		$temp .= '(DOSB-Lizenz <i>'.$row['license_number_dosb'].'</i> ';
-		$temp .= 'abgerufen am '.date('d.m.Y H:i', $row['dosb_tstamp']).')';
+		$temp .= '- '.\Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerband($row['verband']).' ';
+		if($row['license_number_dosb'])
+		{
+			$temp .= '(DOSB-Lizenz <i>'.$row['license_number_dosb'].'</i> ';
+			$temp .= 'abgerufen am '.date('d.m.Y H:i', $row['dosb_tstamp']).' - Code: '.$row['dosb_code'].' '.$row['dosb_antwort'].')</span>';
+		}
+		else
+		{
+			$temp .= '(noch nicht beim DOSB gemeldet)</span>';
+		}
 		return $temp;
 		
 //		return '
@@ -972,56 +938,6 @@ class tl_lizenzverwaltung_items extends \Backend
 		return mktime(0, 0, 0, substr($value, 4, 2), substr($value, 6, 2), substr($value, 0, 4));
 	}
 
-    public function generateAdvancedFilter(DataContainer $dc)
-    {
-    
-        if (\Input::get('id') > 0) {
-            return '';
-        }
-
-        $session = \Session::getInstance()->getData();
-
-        // Filters
-        $arrFilters = array
-        (
-            'tli_filter'   => array
-            (
-                'name'    => 'tli_filter',
-                'label'   => $GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['filter_extended'],
-                'options' => array
-				(
-					'1' => $GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['filter_activetrainers'], 
-					'2' => $GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['filter_unsentmails'], 
-				)
-            ),
-        );
-
-        $strBuffer = '
-<div class="tl_filter tli_filter tl_subpanel">
-<strong>' . $GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['filter'] . ':</strong> ' . "\n";
-
-        // Generate filters
-        foreach ($arrFilters as $arrFilter) 
-        {
-            $strOptions = '
-  <option value="' . $arrFilter['name'] . '">' . $arrFilter['label'] . '</option>
-  <option value="' . $arrFilter['name'] . '">---</option>' . "\n";
-
-            // Generate options
-            foreach ($arrFilter['options'] as $k => $v) 
-            {
-                $strOptions .= '  <option value="' . $k . '"' . (($session['filter']['tl_registerFilter'][$arrFilter['name']] === (string) $k) ? ' selected' : '') . '>' . $v . '</option>' . "\n";
-            }
-
-            $strBuffer .= '<select name="' . $arrFilter['name'] . '" id="' . $arrFilter['name'] . '" class="tl_select' . (isset($session['filter']['tl_registerFilter'][$arrFilter['name']]) ? ' active' : '') . '">
-' . $strOptions . '
-</select>' . "\n";
-        }
-
-        return $strBuffer . '</div>'; 
-
-    }  
-
 	public function viewEnclosureInfo(DataContainer $dc)
 	{
 		// Zurücklink generieren, ab C4 ist das ein symbolischer Link zu "contao"
@@ -1082,65 +998,75 @@ class tl_lizenzverwaltung_items extends \Backend
 		return $string;
 	}
 
-	public function applyAdvancedFilter()
+	/**
+	 * Link zum PDF im DIN-A4-Format anzeigen
+	 * @param DataContainer $dc
+	 *
+	 * @return string HTML-Code
+	 */
+	public function viewPDF(\DataContainer $dc)
 	{
-
-		$session = \Session::getInstance()->getData();
-
-		// Store filter values in the session
-		foreach ($_POST as $k => $v) 
+		// Links zum PDF generieren
+		$pdf_server = LIZENZVERWALTUNG_PFAD.'/'.$dc->activeRecord->license_number_dosb.'.pdf';
+		$pdf_download = LIZENZVERWALTUNG_WEBPDF.'/'.$dc->activeRecord->license_number_dosb.'.pdf';
+		
+		// Lizenzstatus
+		if($dc->activeRecord->license_number_dosb && file_exists($pdf_server))
 		{
-			if (substr($k, 0, 4) != 'tli_') 
-			{
-				continue;
-			}
-
-			// Reset the filter
-			if ($k == \Input::post($k)) 
-			{
-				unset($session['filter']['tl_registerFilter'][$k]);
-			} // Apply the filter
-			else {
-				$session['filter']['tl_registerFilter'][$k] = \Input::post($k);
-			}
+			$pdf_datum = date('d.m.Y H:i:s', filemtime($pdf_server));
+			$status = '<a href="'.$pdf_download.'" target="_blank" title="Zeigt die auf dem DSB-Server gespeicherte Lizenzurkunde an." class="dosb_button_mini">PDF DIN A4 anzeigen</a>';
+			$info = 'Datum: '.$pdf_datum;
 		}
-
-		$this->Session->setData($session);
-
-		if (\Input::get('id') > 0 || !isset($session['filter']['tl_registerFilter'])) 
+		else
 		{
-			return;
+			$status = 'Kein PDF DIN A4 vorhanden';
 		}
-
-		$arrPlayers = null;
-
-
-		switch ($session['filter']['tl_registerFilter']['tli_filter']) 
+		
+		if($dc->activeRecord->license_number_dosb)
 		{
-			case '1': // Alle Trainer mit noch gültigen Lizenzen
-				$objPlayers = \Database::getInstance()->prepare("SELECT id FROM tl_lizenzverwaltung WHERE gueltigkeit >= ? AND published = ?")
-				                                      ->execute(time(), 1);
-				$arrPlayers = is_array($arrPlayers) ? array_intersect($arrPlayers, $objPlayers->fetchEach('id')) : $objPlayers->fetchEach('id');
-				break;
-			case '2': // Alle Trainer mit noch ungesendeten E-Mails
-				$objPlayers = \Database::getInstance()->prepare("SELECT pid FROM tl_lizenzverwaltung_items WHERE sent_state = ? AND published = ?")
-				                                      ->execute('', 1);
-				$arrPlayers = is_array($arrPlayers) ? array_intersect($arrPlayers, $objPlayers->fetchEach('pid')) : $objPlayers->fetchEach('pid');
-				break;
-	
-			default:
+			return '
+			<div class="w50 dosb_margin">
+			<div class="tl_text" style="border:0;">'.$status.'</div>
+			<p class="tl_help tl_tip" title="" style="margin-left:7px;">'.$info.'</p>
+			</div>';
 		}
-	
-		if (is_array($arrPlayers) && empty($arrPlayers)) 
-		{
-			$arrPlayers = array(0);
-		}
-	
-		$log = print_r($arrPlayers, true);
-		log_message($log, 'lizenzverwaltung.log');
-	
-		$GLOBALS['TL_DCA']['tl_lizenzverwaltung_items']['list']['sorting']['root'] = $arrPlayers; 
-	
+		else return '<div class="w50 dosb_margin"></div>';
 	}
+
+	/**
+	 * Link zum PDF im Karten-Format anzeigen
+	 * @param DataContainer $dc
+	 *
+	 * @return string HTML-Code
+	 */
+	public function viewPDFCard(\DataContainer $dc)
+	{
+		// Links zum PDF generieren
+		$pdf_server = LIZENZVERWALTUNG_PFAD.'/'.$dc->activeRecord->license_number_dosb.'-card.pdf';
+		$pdf_download = LIZENZVERWALTUNG_WEBPDF.'/'.$dc->activeRecord->license_number_dosb.'-card.pdf';
+
+		// Lizenzstatus
+		if($dc->activeRecord->license_number_dosb && file_exists($pdf_server))
+		{
+			$pdf_datum = date('d.m.Y H:i:s', filemtime($pdf_server));
+			$status = '<a href="'.$pdf_download.'" target="_blank" title="Zeigt die auf dem DSB-Server gespeicherte Lizenzurkunde im Format Card an." class="dosb_button_mini">PDF Karte anzeigen</a>';
+			$info = 'Datum: '.$pdf_datum;
+		}
+		else
+		{
+			$status = 'Kein PDF Card vorhanden';
+		}
+		
+		if($dc->activeRecord->license_number_dosb)
+		{
+			return '
+			<div class="w50 dosb_margin">
+			<div class="tl_text" style="border:0;">'.$status.'</div>
+			<p class="tl_help tl_tip" title="" style="margin-left:7px;">'.$info.'</p>
+			</div>';
+		}
+		else return '<div class="w50 dosb_margin"></div>';
+	}
+
 
 }

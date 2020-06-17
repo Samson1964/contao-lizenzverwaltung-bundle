@@ -4,8 +4,6 @@ namespace Schachbulle\ContaoLizenzverwaltungBundle\Classes;
 
 if (!defined('TL_ROOT')) die('You cannot access this file directly!');
 
-$GLOBALS['TL_CSS'][] = 'bundles/contaolizenzverwaltung/css/default.css';
-
 /**
  * Class Mailer
   */
@@ -25,8 +23,8 @@ class Mailer extends \Backend
 		// E-Mail-Datensatz einlesen
 		$mail = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_mails WHERE id = ?")
 		                                ->execute($dc->id);
-		// Trainer-Datensatz einlesen
-		$trainer = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung WHERE id = ?")
+		// Lizenz und Personen-Datensatz einlesen
+		$trainer = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
 		                                   ->execute($mail->pid);
 		// Referenten-Datensätze einlesen
 		$referenten = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_referenten WHERE verband = ? AND published = ?")
@@ -38,12 +36,14 @@ class Mailer extends \Backend
 		$preview = $this->getPreview($dc->id, $mail->pid, $mail->template); // HTML-Vorschau erstellen
 		$preview_css = $this->getPreview($dc->id, $mail->pid, $mail->template, true, $css); // HTML/CSS-Version erstellen
 		$preview_body = $this->getPreview($dc->id, $mail->pid, $mail->template, false); // Body-Vorschau erstellen
-		
+
+		$lizenzordner = \FilesModel::findByUuid($GLOBALS['TL_CONFIG']['lizenzverwaltung_lizenzordner']);
+
 		// Lizenz-PDF DIN A4 vorhanden?
 		$lizenzfilenameA4 = false;
 		if($trainer->license_number_dosb)
 		{
-			$lizenzfilenameA4 = LIZENZVERWALTUNG_PFAD.'/'.$trainer->license_number_dosb.'.pdf';
+			$lizenzfilenameA4 = TL_ROOT.'/'.$lizenzordner->path.'/'.$trainer->license_number_dosb.'.pdf';
 			if(!$mail->insertLizenz || !file_exists($lizenzfilenameA4))
 			{
 				$lizenzfilenameA4 = false;
@@ -54,7 +54,7 @@ class Mailer extends \Backend
 		$lizenzfilenameCard = false;
 		if($trainer->license_number_dosb)
 		{
-			$lizenzfilenameCard = LIZENZVERWALTUNG_PFAD.'/'.$trainer->license_number_dosb.'-card.pdf';
+			$lizenzfilenameCard = TL_ROOT.'/'.$lizenzordner->path.'/'.$trainer->license_number_dosb.'-card.pdf';
 			if(!$mail->insertLizenzCard || !file_exists($lizenzfilenameCard))
 			{
 				$lizenzfilenameCard = false;
@@ -156,21 +156,23 @@ class Mailer extends \Backend
 <input type="hidden" name="key" value="' . \Input::get('key') . '">
 <input type="hidden" name="id" value="' . \Input::get('id') . '">
 <input type="hidden" name="token" value="' . $strToken . '">
+<div class="tl_preview">
 <table class="prev_header">
   <tr class="row_0">
-    <td class="col_0">Absender</td>
+    <td class="col_0"><b>Absender:</b></td>
     <td class="col_1">' . htmlentities(LIZENZVERWALTUNG_ABSENDER) . '</td>
   </tr>
   <tr class="row_1">
-    <td class="col_0">Betreff</td>
+    <td class="col_0"><b>Betreff:</b></td>
     <td class="col_1">' . $mail->subject . '</td>
   </tr>
   <tr class="row_2">
-    <td class="col_0">E-Mail-Template</td>
+    <td class="col_0"><b>E-Mail-Template:</b></td>
     <td class="col_1">' . $mail->template . '</td>
   </tr>
 </table>
-<div class="preview_html">' .$preview_body. '</div>
+</div>
+<div class="tl_preview">' .$preview_body. '</div>
 
 <div class="tl_tbox">
 <div class="long widget">

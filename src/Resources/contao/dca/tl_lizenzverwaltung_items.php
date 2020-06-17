@@ -713,12 +713,21 @@ class tl_lizenzverwaltung_items extends \Backend
 
 		if($dc->activeRecord->license_number_dosb)
 		{
-			$string = '
-			<div class="w50 dosb_margin">
-			<div class="tl_text" style="border:0;"><a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_pdf'][0].'</a></div>
-			<p class="tl_help tl_tip" title="" style="margin-left:7px;">'.$antwort.'</p>
-			</div>';
-			return $string;
+			if($antwort)
+			{
+				return '
+				<div class="w50 dosb_margin">
+				<div class="tl_text" style="border:0;"><a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_pdf'][0].'</a></div>
+				<p class="tl_help tl_tip" title="" style="margin-left:7px;">'.$antwort.'</p>
+				</div>';
+			}
+			else
+			{
+				return '
+				<div class="w50 dosb_margin">
+				<div class="tl_text" style="border:0;"><a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_pdf'][0].'</a></div>
+				</div>';
+			}
 		}
 		else return '<div class="w50 dosb_margin"></div>';
 			
@@ -744,12 +753,21 @@ class tl_lizenzverwaltung_items extends \Backend
 
 		if($dc->activeRecord->license_number_dosb)
 		{
-			$string = '
-			<div class="w50 dosb_margin">
-			<div class="tl_text" style="border:0;"><a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_pdfcard'][0].'</a></div>
-			<p class="tl_help tl_tip" title="" style="margin-left:7px;">'.$antwort.'</p>
-			</div>';
-			return $string;
+			if($antwort)
+			{
+				return '
+				<div class="w50 dosb_margin">
+				<div class="tl_text" style="border:0;"><a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_pdfcard'][0].'</a></div>
+				<p class="tl_help tl_tip" title="" style="margin-left:7px;">'.$antwort.'</p>
+				</div>';
+			}
+			else
+			{
+				return '
+				<div class="w50 dosb_margin">
+				<div class="tl_text" style="border:0;"><a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_pdfcard'][0].'</a></div>
+				</div>';
+			}
 		}
 		else return '<div class="w50 dosb_margin"></div>';
 			
@@ -1006,9 +1024,11 @@ class tl_lizenzverwaltung_items extends \Backend
 	 */
 	public function viewPDF(\DataContainer $dc)
 	{
+		$lizenzordner = \FilesModel::findByUuid($GLOBALS['TL_CONFIG']['lizenzverwaltung_lizenzordner']);
+
 		// Links zum PDF generieren
-		$pdf_server = LIZENZVERWALTUNG_PFAD.'/'.$dc->activeRecord->license_number_dosb.'.pdf';
-		$pdf_download = LIZENZVERWALTUNG_WEBPDF.'/'.$dc->activeRecord->license_number_dosb.'.pdf';
+		$pdf_server = TL_ROOT.'/'.$lizenzordner->path.'/'.$dc->activeRecord->license_number_dosb.'.pdf';
+		$pdf_download = $lizenzordner->path.'/'.$dc->activeRecord->license_number_dosb.'.pdf';
 		
 		// Lizenzstatus
 		if($dc->activeRecord->license_number_dosb && file_exists($pdf_server))
@@ -1041,9 +1061,11 @@ class tl_lizenzverwaltung_items extends \Backend
 	 */
 	public function viewPDFCard(\DataContainer $dc)
 	{
+		$lizenzordner = \FilesModel::findByUuid($GLOBALS['TL_CONFIG']['lizenzverwaltung_lizenzordner']);
+
 		// Links zum PDF generieren
-		$pdf_server = LIZENZVERWALTUNG_PFAD.'/'.$dc->activeRecord->license_number_dosb.'-card.pdf';
-		$pdf_download = LIZENZVERWALTUNG_WEBPDF.'/'.$dc->activeRecord->license_number_dosb.'-card.pdf';
+		$pdf_server = TL_ROOT.'/'.$lizenzordner->path.'/'.$dc->activeRecord->license_number_dosb.'-card.pdf';
+		$pdf_download = $lizenzordner->path.'/'.$dc->activeRecord->license_number_dosb.'-card.pdf';
 
 		// Lizenzstatus
 		if($dc->activeRecord->license_number_dosb && file_exists($pdf_server))

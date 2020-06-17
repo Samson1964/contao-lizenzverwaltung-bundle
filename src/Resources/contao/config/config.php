@@ -12,8 +12,6 @@
  */
 
 define('LIZENZVERWALTUNG_ABSENDER', $GLOBALS['TL_CONFIG']['lizenzverwaltung_absender']);
-define('LIZENZVERWALTUNG_PFAD', TL_ROOT . '/files/lizenzverwaltung');
-define('LIZENZVERWALTUNG_WEBPDF', '/files/lizenzverwaltung');
 
 // Zugang LiMS
 define('LIMS_HOST', $GLOBALS['TL_CONFIG']['lims_host']);
@@ -30,7 +28,7 @@ $GLOBALS['BE_MOD']['content']['lizenzverwaltung'] = array
 	'getLizenz'         => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\DOSBLizenzen', 'getLizenz'),
 	'getLizenzPDF'      => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\DOSBLizenzen', 'getLizenzPDF'),
 	'getLizenzPDFCard'  => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\DOSBLizenzen', 'getLizenzPDFCard'),
-	'exportDOSB'        => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\DOSBLizenzen', 'exportDOSB'),
+	'exportDOSB'        => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\DOSBLizenzen', 'exportToDOSB'),
 	'send'              => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\Mailer', 'send'), 
 );
 
@@ -44,4 +42,3 @@ $GLOBALS['FE_MOD']['application']['lizenzverwaltung'] = '\Schachbulle\ContaoLize
 
 // Backend-CSS einbinden
 if(TL_MODE == "BE") $GLOBALS['TL_CSS'][] = 'bundles/contaolizenzverwaltung/css/default.css';
-

@@ -4,7 +4,6 @@ namespace Schachbulle\ContaoLizenzverwaltungBundle\Classes;
 
 if (!defined('TL_ROOT')) die('You cannot access this file directly!');
 
-
 /**
  * Class dsb_trainerlizenzExport
   */
@@ -181,9 +180,6 @@ class TrainerlizenzExport extends \Backend
 
 		// Filter in aktueller Ansicht laden
 		$filter = $dc->Session->get('filter');
-		echo "<pre>";
-		print_r($filter);
-		echo "</pre>";
 		$filter = $filter[$dc->table]; // Das Array enthält limit (Wert meistens = 0,30) und alle Feldnamen mit den Werten
 		foreach($filter as $key => $value)
 		{
@@ -195,8 +191,6 @@ class TrainerlizenzExport extends \Backend
 		}
 		($sql) ? $sql .= " AND tl_lizenzverwaltung_items.published = '1' ORDER BY name,vorname ASC" : $sql = " WHERE tl_lizenzverwaltung_items.published = '1' ORDER BY name,vorname ASC";
 
-		//echo "|$sql|";
-		//exit;
 		$sql = "SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id".$sql;
 		
 		log_message('Excel-Export mit: '.$sql, 'lizenzverwaltung.log');

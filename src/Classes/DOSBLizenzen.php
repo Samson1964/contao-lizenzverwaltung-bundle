@@ -187,6 +187,8 @@ class DOSBLizenzen extends \Backend
 		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
 		                                  ->execute($id);
 
+		$lizenzordner = \FilesModel::findByUuid($GLOBALS['TL_CONFIG']['lizenzverwaltung_lizenzordner']);
+
 		// Auswerten
 		if($result->numRows)
 		{
@@ -224,8 +226,7 @@ class DOSBLizenzen extends \Backend
 			if($httpCode == 200 && !$errors)
 			{
 				// Schreiben der Daten in eine PDF
-				@mkdir(LIZENZVERWALTUNG_PFAD, '0777');
-				$filename = LIZENZVERWALTUNG_PFAD.'/'.$result->license_number_dosb.'.pdf';
+				$filename = TL_ROOT.'/'.$lizenzordner->path.'/'.$result->license_number_dosb.'.pdf';
 				file_put_contents($filename, $response);
 				$httpText = 'OK';
 			}
@@ -269,6 +270,8 @@ class DOSBLizenzen extends \Backend
 		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
 		                                  ->execute($id);
 
+		$lizenzordner = \FilesModel::findByUuid($GLOBALS['TL_CONFIG']['lizenzverwaltung_lizenzordner']);
+
 		// Auswerten
 		if($result->numRows)
 		{
@@ -309,8 +312,7 @@ class DOSBLizenzen extends \Backend
 			if($httpCode == 200 && !$errors)
 			{
 				// Schreiben der Daten in eine PDF
-				@mkdir(LIZENZVERWALTUNG_PFAD, '0777');
-				$filename = LIZENZVERWALTUNG_PFAD.'/'.$result->license_number_dosb.'-card.pdf';
+				$filename = TL_ROOT.'/'.$lizenzordner->path.'/'.$result->license_number_dosb.'-card.pdf';
 				file_put_contents($filename, $response);
 				$httpText = 'OK';
 			}
@@ -343,10 +345,9 @@ class DOSBLizenzen extends \Backend
 	}
 
 	/**
-	 * Erstellen/Verlängern einer Lizenz
+	 * Exportiert alle noch nicht übertragenen Lizenzen zum DOSB
 	 */
-
-	public function exportDOSB()
+	public function exportToDOSB()
 	{
 
 		$start = \Input::get('start');
@@ -359,36 +360,48 @@ class DOSBLizenzen extends \Backend
 			// Datensätze einlesen, bei der die Lizenz noch aktiv ist (größer/gleich aktuelles Datum)
 			$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.gueltigkeit >= ? AND tl_lizenzverwaltung_items.published = ? AND (tl_lizenzverwaltung_items.letzteAenderung > tl_lizenzverwaltung_items.dosb_tstamp OR tl_lizenzverwaltung_items.dosb_code <> 200) ORDER BY tl_lizenzverwaltung.id")
 			                                  ->execute(time(), 1);
+			$arrLizenzen = NULL;
+			$arrLizenzen = is_array($arrLizenzen) ? array_intersect($arrLizenzen, $result->fetchEach('id')) : $result->fetchEach('id');
+			$records = implode(',', $arrLizenzen);
 
-			// Auswerten
-			$ids = array();
+			// Datensätze in die Ausgabe schreiben
 			if($result->numRows)
 			{
+				$content .= '<div id="dosb_export_status">[<i>'.date('d.m.Y H:i:s').'</i>] <b>'.$result->numRows.' Datensätze sind zu exportieren ...</b><br>';
+				$result->reset();
 				while($result->next())
 				{
-					//$content .= '<span id="trainer_'.$result->id.'" class="wait">ID '.$result->id.' '.$result->vorname.' '.$result->name.' - Lizenz gültig bis '.\Samson\Helper::getDate($result->gueltigkeit).'</span><br>';
-					//$ids[] = $result->id;
+					$content .= '<span class="item" id="export_'.$result->id.'"> ID '.$result->id.' '.$result->vorname.' '.$result->name.' ...</span><br>';
 				}
 			}
+			else
+			{
+				$content .= '<div id="dosb_export_status">[<i>'.date('d.m.Y H:i:s').'</i>] <b>Keine Datensätze zum Exportieren gefunden.</b><br>';
+			}
 
-			$loops = bcdiv($result->numRows, 25, 0); // 25 Datensätze je Durchlauf
-			$loops = bcmod($result->numRows, 25) ? $loops + 1 : $loops; // 1 Loop addieren, wenn nicht durch 25 teilbar
+			// Zurücklink generieren
+			$backlink = str_replace('&key=exportDOSB&start=1', '', \Environment::get('request'));
+			$content .= '<div style="margin-top:30px;"><a href="'.$backlink.'" class="dosb_button_mini">Zurück zur Lizenzverwaltung</a></div>';
 
-			$content .= '<div id="dosb_export_status">[<i>'.date('d.m.Y H:i:s').'</i>] <b>'.$result->numRows.' Datensätze sind zu exportieren</b><br></div>';
-
+			$content .= '</div>';
 			$content .= '<script>'."\n";
-			$content .= 'var step;'."\n";
-			$content .= 'for(step = 1; step <= '.$loops.'; step++) {';
-			$content .= "  $.get('bundles/contaolizenzverwaltung/ajaxRequest.php?acid=lizenzverwaltung&loops=".$loops."&step='+step, function (data)";
-			$content .= '  {';
-			$content .= '    $("#dosb_export_status").append(data);';
-			$content .= '    $(".item").fadeIn("slow")';
-			$content .= '  })}';
+			$content .= 'var records = ['.$records.'];'."\n";
+			$content .= 'for(let i=0; i<records.length; i++) {'."\n";
+			$content .= "  $.get('bundles/contaolizenzverwaltung/ajaxRequest.php?acid=lizenzverwaltung&record='+records[i], function (data)"."\n";
+			$content .= '  {'."\n";
+			$content .= '     var item = JSON.parse(data);';
+			$content .= '     $(item.css_id).prepend(item.datum);'."\n";
+			$content .= '     $(item.css_id).append(item.text);'."\n";
+			$content .= '     $(item.css_id).css("color", item.color);'."\n";
+			$content .= '     $(item.css_id).fadeIn("slow")'."\n";
+			$content .= '  })'."\n";
+			$content .= '}'."\n";
 			$content .= '</script>'."\n";
 
 			// Sitzung anlegen/initialisieren
-			//$session = Session::getInstance();
-			$_SESSION['lizenzverwaltung_counter'] = 0;
+			$session = \Session::getInstance();
+			$session->set('lizenzverwaltung_counter', 0);
+			$session->set('lizenzverwaltung_max', count($arrLizenzen));
 
 		}
 		else
@@ -396,7 +409,7 @@ class DOSBLizenzen extends \Backend
 			// Link generieren
 			$startlink = \Controller::addToUrl('start=1&rt='.REQUEST_TOKEN); // start und Token hinzufügen
 
-			$content .= '<div>';
+			$content .= '<div id="dosb_export_status">';
 			$content .= '<h2 class="sub_headline">Aktive Lizenzen zum DOSB exportieren</h2>';
 			$content .= '<div class="tl_submit_container">';
 			$content .= '<a href="'.$startlink.'" class="dosb_button_mini">Export starten</a>';

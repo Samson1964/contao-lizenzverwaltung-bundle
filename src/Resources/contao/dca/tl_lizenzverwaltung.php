@@ -457,7 +457,7 @@ class tl_lizenzverwaltung extends \Backend
 
 		// Update the database
 		$this->Database->prepare("UPDATE tl_lizenzverwaltung SET tstamp=". time() .", published='" . ($blnPublished ? '' : '1') . "' WHERE id=?")
-					   ->execute($intId);
+		               ->execute($intId);
 		$this->createNewVersion('tl_lizenzverwaltung', $intId);
 	}
 

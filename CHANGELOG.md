@@ -1,33 +1,42 @@
 # Lizenzverwaltung Changelog
 
+## Version 2.0.0 (2020-06-17)
+
+Erste Version, die offiziell die alte Trainerlizenzen-Erweiterung ablÃ¶st.
+
+* ajaxRequest.php Ã¼berarbeitet: Lizenzen werden jetzt einzeln Ã¼bertragen, damit RÃ¼ckmeldungen verbessert
+* Trainerliste.php Ã¼berarbeitet
+* Speicherpfade in System->Einstellungen hinzugefÃ¼gt
+* kleine Fehler korrigiert
+
 ## Version 1.2.1 (2020-06-15)
 
-* Abhängigkeit phpoffice/phpexcel ersetzt durch phpoffice/phpspreadsheet
+* AbhÃ¤ngigkeit phpoffice/phpexcel ersetzt durch phpoffice/phpspreadsheet
 * exportTrainer_XLS erneuert
 * exportTrainer_CSV entfernt
-* Ausbilder-Zertifikat hinzugefügt
+* Ausbilder-Zertifikat hinzugefÃ¼gt
 * tl_lizenzverwaltung: Sprachvariablen, Sortierung, Filter, Suche verbessert
 * Ausgabe der Lizenzen in Auflistung der Personen
 * tl_lizenzverwaltung_items: Auflistung der Lizenzen farblich markiert
 * Mailer.php korrigiert
-* Add: Signatur für E-Mails, statt Template verwenden
-* Speicherpfad für die Lizenzdateien korrigiert
+* Add: Signatur fÃ¼r E-Mails, statt Template verwenden
+* Speicherpfad fÃ¼r die Lizenzdateien korrigiert
 * Markierungsoption in Lizenzen umprogrammiert
-* ajaxRequest.php eingebunden und überarbeitet
-* Versionsnummer nur auf 1.2.1 weil 1.1.0 versehentlich übersprungen wurde
+* ajaxRequest.php eingebunden und Ã¼berarbeitet
+* Versionsnummer nur auf 1.2.1 statt 1.3.0 weil 1.1.0 versehentlich Ã¼bersprungen wurde
 
 ## Version 1.2.0 (2020-06-11)
 
 * Fix: Sprachdaten tl_settings.php
-* Import-Skript Fehler beseitigt und Import Mails und Referenten ergänzt
+* Import-Skript Fehler beseitigt und Import Mails und Referenten ergÃ¤nzt
 * tl_lizenzverwaltung: Sprachvariablen, Sortierung, Filter, Suche verbessert
 * tl_lizenzverwaltung_items: Sprachvariablen, Sortierung, Filter, Suche verbessert
 * Helper-Klasse: neue Funktion getVerbandsmails
 * tl_lizenzverwaltung_mails: Sprachvariablen, Sortierung, Filter, Suche verbessert
 * tl_lizenzverwaltung_referenten: Sprachvariablen, Sortierung, Filter, Suche verbessert
 * Spezialfilter korrigiert
-* Neuer Spezialfilter: Personen mit ungültigen Lizenzen
-* Ajax funktioniert seit Umstieg auf C4 wohl nicht mehr, deshalb richardhj/contao-simple-ajax hinzugefügt
+* Neuer Spezialfilter: Personen mit ungÃ¼ltigen Lizenzen
+* Ajax funktioniert seit Umstieg auf C4 wohl nicht mehr, deshalb richardhj/contao-simple-ajax hinzugefÃ¼gt
 
 ## Version 1.0.4 (2020-06-08)
 
@@ -43,7 +52,7 @@
 
 ## Version 1.0.1 (2019-12-20)
 
-- Fix: Kompatibilität mit Contao 4 alle Versionen hergestellt
-- Fix: Abhängigkeit Symfony entfernt
+- Fix: KompatibilitÃ¤t mit Contao 4 alle Versionen hergestellt
+- Fix: AbhÃ¤ngigkeit Symfony entfernt
 
 ## Version 1.0.0 (2019-08-19)

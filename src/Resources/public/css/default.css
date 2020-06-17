@@ -46,8 +46,9 @@
 	margin-left: 10px;
 }
 
-.dosb_export_status {
+#dosb_export_status {
 	margin-top: 5px;
+	padding: 5px 5px 20px 5px;
 }
 
 /* E-Mail */
@@ -102,5 +103,9 @@
 	border-radius: 5px;
 	padding: 10px;
 	background-color: #F9F9F9;
-	margin-top: 10px;
+	margin: 10px;
+}
+
+.prev_header td {
+	padding: 3px;
 }

@@ -1,5 +1,9 @@
 # Lizenzverwaltung Changelog
 
+## Version 2.0.1 (2020-06-17)
+
+* Abhängigkeit richardhj/contao-simple-ajax entfernt (Paket wird nicht verwendet)
+
 ## Version 2.0.0 (2020-06-17)
 
 Erste Version, die offiziell die alte Trainerlizenzen-Erweiterung ablöst.

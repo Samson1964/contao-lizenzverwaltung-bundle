@@ -178,7 +178,22 @@ class TrainerlizenzExport extends \Backend
 		if($search['field'] && $search['value']) $sql = " WHERE LOWER(CAST(".$search['field']." AS CHAR)) REGEXP LOWER('".$search['value']."')"; // Contao-Standard, ohne Umlaute, Suche nach "ba" findet nicht "bä"
 		else $sql = '';
 
-		// Filter in aktueller Ansicht laden
+		// Filter in aktueller Ansicht laden. Beispiel mit Spezialfilter (tli_filter):
+		//
+		// [filter] => Array
+		//       (
+		//           [tl_lizenzverwaltungFilter] => Array
+		//               (
+		//                   [tli_filter] => V2
+		//               )
+		// 
+		//           [tl_lizenzverwaltung] => Array
+		//               (
+		//                   [limit] => 0,30
+		//                   [geschlecht] => w
+		//               )
+		// 
+		//       )
 		$filter = $dc->Session->get('filter');
 		$filter = $filter[$dc->table]; // Das Array enthält limit (Wert meistens = 0,30) und alle Feldnamen mit den Werten
 		foreach($filter as $key => $value)
@@ -189,6 +204,52 @@ class TrainerlizenzExport extends \Backend
 				$sql .= " ".$key." = '".$value."'";
 			}
 		}
+
+		// Spezialfilter berücksichtigen
+		$filter = $dc->Session->get('filter');
+		$filter = $filter[$dc->table.'Filter']['tli_filter']; // Wert aus Spezialfilter
+		switch($filter)
+		{
+			case '1': // Alle Personen mit gültigen Lizenzen
+				($sql) ? $sql .= ' AND' : $sql = 'WHERE';
+				$sql .= " tl_lizenzverwaltung_items.gueltigkeit >= ".time();
+				break;
+
+			case '2': // Alle Personen mit ungültigen Lizenzen
+				($sql) ? $sql .= ' AND' : $sql = 'WHERE';
+				$sql .= " tl_lizenzverwaltung_items.gueltigkeit < ".time();
+				break;
+
+			case '3': // Alle Personen mit markierten Lizenzen
+				($sql) ? $sql .= ' AND' : $sql = 'WHERE';
+				$sql .= " tl_lizenzverwaltung_items.marker = 1";
+				break;
+
+			case 'VS': // Lizenzen Deutscher Schachbund
+			case 'V1': // Lizenzen Baden
+			case 'V2': // Lizenzen Bayern
+			case 'V3': // Lizenzen Berlin
+			case 'VD': // Lizenzen Brandenburg
+			case 'VB': // Lizenzen Bremen
+			case 'V4': // Lizenzen Hamburg
+			case 'V5': // Lizenzen Hessen
+			case 'VE': // Lizenzen Mecklenburg-Vorpommern
+			case 'V7': // Lizenzen Niedersachsen
+			case 'V6': // Lizenzen Nordrhein-Westfalen
+			case 'V8': // Lizenzen Rheinland-Pfalz
+			case 'V9': // Lizenzen Saarland
+			case 'VF': // Lizenzen Sachsen
+			case 'VH': // Lizenzen Sachsen-Anhalt
+			case 'VA': // Lizenzen Schleswig-Holstein
+			case 'VG': // Lizenzen Thüringen
+			case 'VC': // Lizenzen Württemberg'
+				($sql) ? $sql .= ' AND' : $sql = 'WHERE';
+				$sql .= " tl_lizenzverwaltung_items.verband = '".substr($filter,1,1)."'";
+				break;
+
+			default:
+		}
+
 		($sql) ? $sql .= " AND tl_lizenzverwaltung_items.published = '1' ORDER BY name,vorname ASC" : $sql = " WHERE tl_lizenzverwaltung_items.published = '1' ORDER BY name,vorname ASC";
 
 		$sql = "SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id".$sql;

@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 /**
  * Contao Open Source CMS
@@ -11,12 +11,16 @@
  */
 
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['lizenzen'] = array('Lizenzen', 'Lizenzen der Person');
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['verbaende'] = array('Verband', 'Verbände der Person');
 
 // Zusätzliche Funktionen
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['referenten'] = array('Referenten', 'Ausbildungsreferenten der Landesverbände');
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['import'] = array('CSV-Import', 'CSV-Import');
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['exportXLS'] = array('Excel-Export', 'Excel-Export der Lizenzen');
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['exportDOSB'] = array('DOSB-Export', 'Aktive Lizenzen zum DOSB exportieren');
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['deleteMarker'] = array('Markierungen löschen', 'Markierungen in den Lizenzen löschen');
+
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['deleteMarker_confirm'] = 'Wollen Sie die Markierungen in den Lizenzen wirklich löschen?';
 
 // Standardfunktionen
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['new'] = array('Neue Person', 'Neue Person anlegen');
@@ -63,3 +67,21 @@ $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_active_licenses'] = 'Personen
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_inactive_licenses'] = 'Personen mit ungültigen Lizenzen';
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_marked_licenses'] = 'Personen mit markierten Lizenzen';
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_unsentmails'] = 'Personen mit ungesendeten E-Mails';
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_S'] = 'Lizenzen Deutscher Schachbund';
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_1'] = 'Lizenzen Baden';
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_2'] = 'Lizenzen Bayern';
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_3'] = 'Lizenzen Berlin';
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_D'] = 'Lizenzen Brandenburg';
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_B'] = 'Lizenzen Bremen';
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_4'] = 'Lizenzen Hamburg';
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_5'] = 'Lizenzen Hessen';
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_E'] = 'Lizenzen Mecklenburg-Vorpommern';
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_7'] = 'Lizenzen Niedersachsen';
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_6'] = 'Lizenzen Nordrhein-Westfalen';
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_8'] = 'Lizenzen Rheinland-Pfalz';
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_9'] = 'Lizenzen Saarland';
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_F'] = 'Lizenzen Sachsen';
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_H'] = 'Lizenzen Sachsen-Anhalt';
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_A'] = 'Lizenzen Schleswig-Holstein';
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_G'] = 'Lizenzen Thüringen';
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_C'] = 'Lizenzen Württemberg';

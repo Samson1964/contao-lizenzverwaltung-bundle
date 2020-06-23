@@ -250,5 +250,4 @@ class Helper extends \Frontend
 		return false;
 	}
 
-
 }

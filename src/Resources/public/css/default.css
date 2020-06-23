@@ -1,12 +1,9 @@
 /* Allgemein */
 
 .dosb_button {
-	background: #eee;
-	background-image: url(../images/dosb-logo.png);
-	background-image: url(../images/dosb-logo.png) linear-gradient(to top, #ccc 0px, #eee 60%) repeat scroll 0 0;
+	background: url("/bundles/contaolizenzverwaltung/images/dosb-logo.png") no-repeat, linear-gradient(to top, #ccc, #eee);
 	background-size: 21px;
 	background-position: 5px center;
-	background-repeat: no-repeat;
 	border: 1px solid #aaa;
 	border-radius: 3px;
 	color: #555;

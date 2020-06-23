@@ -29,6 +29,7 @@ $GLOBALS['BE_MOD']['content']['lizenzverwaltung'] = array
 	'getLizenzPDF'      => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\DOSBLizenzen', 'getLizenzPDF'),
 	'getLizenzPDFCard'  => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\DOSBLizenzen', 'getLizenzPDFCard'),
 	'exportDOSB'        => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\DOSBLizenzen', 'exportToDOSB'),
+	'deleteMarker'      => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\Marker', 'deleteMarker'),
 	'send'              => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\Mailer', 'send'), 
 );
 

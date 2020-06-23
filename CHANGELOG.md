@@ -1,5 +1,15 @@
 # Lizenzverwaltung Changelog
 
+## Version 3.0.0 (2020-06-23)
+
+* Beschreibung der Erweiterung in composer.json verändert
+* Korrektur Icons im Backend-CSS
+* Anzeige der Landesverbände (der Lizenzen) in der Personenliste
+* Personenliste: PLZ und Wohnort in der Übersicht entfernt
+* Spezialfilter für Verbände hinzugefügt
+* Spezialfilter (außer Personen mit ungesendeten Mails) werden im Excel-Export berücksichtigt
+* Markierungen in Lizenzen löschen
+
 ## Version 2.0.1 (2020-06-17)
 
 * Abhängigkeit richardhj/contao-simple-ajax entfernt (Paket wird nicht verwendet)

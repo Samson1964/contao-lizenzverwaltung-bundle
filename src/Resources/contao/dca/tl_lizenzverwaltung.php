@@ -49,9 +49,9 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung'] = array
 		),
 		'label' => array
 		(
-			'fields'                  => array('name', 'vorname', 'geburtstag', 'email', 'plz', 'ort', 'lizenzen'),
+			'fields'                  => array('name', 'vorname', 'geburtstag', 'email', 'lizenzen', 'verbaende'),
 			'showColumns'             => true,
-			'label_callback'          => array('tl_lizenzverwaltung', 'viewLizenzen'),
+			'label_callback'          => array('tl_lizenzverwaltung', 'viewLabels'),
 		),
 		'global_operations' => array
 		(
@@ -75,6 +75,13 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung'] = array
 				'href'                => 'key=exportXLS',
 				'icon'                => 'bundles/contaolizenzverwaltung/images/exportEXCEL.gif',
 				'attributes'          => 'onclick="Backend.getScrollOffset();"'
+			),
+			'deleteMarker' => array
+			(
+				'label'               => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['deleteMarker'],
+				'href'                => 'key=deleteMarker',
+				'icon'                => 'bundles/contaolizenzverwaltung/images/marker_delete.png',
+				'attributes'          => 'onclick="if(!confirm(\'' . $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['deleteMarker_confirm'] . '\'))return false;Backend.getScrollOffset()"',
 			),
 			'all' => array
 			(
@@ -391,6 +398,10 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung'] = array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['lizenzen'],
 		),
+		'verbaende' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['verbaende'],
+		),
 	),
 );
 
@@ -477,10 +488,28 @@ class tl_lizenzverwaltung extends \Backend
 				'label'   => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_extended'],
 				'options' => array
 				(
-					'1' => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_active_licenses'],
-					'2' => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_inactive_licenses'],
-					'3' => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_marked_licenses'],
-					'4' => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_unsentmails'],
+					'1'   => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_active_licenses'],
+					'2'   => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_inactive_licenses'],
+					'3'   => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_marked_licenses'],
+					'4'   => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_unsentmails'],
+					'VS'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_S'],
+					'V1'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_1'],
+					'V2'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_2'],
+					'V3'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_3'],
+					'VD'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_D'],
+					'VB'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_B'],
+					'V4'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_4'],
+					'V5'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_5'],
+					'VE'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_E'],
+					'V7'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_7'],
+					'V6'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_6'],
+					'V8'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_8'],
+					'V9'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_9'],
+					'VF'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_F'],
+					'VH'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_H'],
+					'VA'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_A'],
+					'VG'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_G'],
+					'VC'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_C'],
 				)
 			),
 		);
@@ -571,6 +600,29 @@ class tl_lizenzverwaltung extends \Backend
 				$arrPlayers = is_array($arrPlayers) ? array_intersect($arrPlayers, $objPlayers->fetchEach('id')) : $objPlayers->fetchEach('id');
 				break;
 
+			case 'VS': // Lizenzen Deutscher Schachbund
+			case 'V1': // Lizenzen Baden
+			case 'V2': // Lizenzen Bayern
+			case 'V3': // Lizenzen Berlin
+			case 'VD': // Lizenzen Brandenburg
+			case 'VB': // Lizenzen Bremen
+			case 'V4': // Lizenzen Hamburg
+			case 'V5': // Lizenzen Hessen
+			case 'VE': // Lizenzen Mecklenburg-Vorpommern
+			case 'V7': // Lizenzen Niedersachsen
+			case 'V6': // Lizenzen Nordrhein-Westfalen
+			case 'V8': // Lizenzen Rheinland-Pfalz
+			case 'V9': // Lizenzen Saarland
+			case 'VF': // Lizenzen Sachsen
+			case 'VH': // Lizenzen Sachsen-Anhalt
+			case 'VA': // Lizenzen Schleswig-Holstein
+			case 'VG': // Lizenzen Thüringen
+			case 'VC': // Lizenzen Württemberg'
+				$objPlayers = \Database::getInstance()->prepare("SELECT tl_lizenzverwaltung.id FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.verband = ?")
+				                                      ->execute(substr($session['filter']['tl_lizenzverwaltungFilter']['tli_filter'],1,1));
+				$arrPlayers = is_array($arrPlayers) ? array_intersect($arrPlayers, $objPlayers->fetchEach('id')) : $objPlayers->fetchEach('id');
+				break;
+
 			default:
 
 		}
@@ -636,14 +688,14 @@ class tl_lizenzverwaltung extends \Backend
 			}
 		}
 		else $antwort = '';
-		
+
 		$string = '
 <div class="clr widget">
 	<h3><label for="ctrl_enclosureInfo">'.$GLOBALS['TL_LANG']['tl_trainerlizenzen']['enclosureInfo'][0].'</label></h3>
 	'.$antwort.'
 	<p class="tl_help tl_tip" title="" style="margin-top:3px;">'.$GLOBALS['TL_LANG']['tl_trainerlizenzen']['enclosureInfo'][1].'</p>
-</div>'; 
-		
+</div>';
+
 		return $string;
 	}
 
@@ -657,7 +709,7 @@ class tl_lizenzverwaltung extends \Backend
 	 *
 	 * @return array
 	 */
-	public function viewLizenzen($row, $label, Contao\DataContainer $dc, $args)
+	public function viewLabels($row, $label, Contao\DataContainer $dc, $args)
 	{
 
 		// Lizenzen der Person laden
@@ -665,6 +717,7 @@ class tl_lizenzverwaltung extends \Backend
 		                                       ->execute($row['id']);
 
 		$lizenzen = array();
+		$verbaende = array();
 		if($objLizenzen->numRows)
 		{
 			while($objLizenzen->next())
@@ -682,10 +735,12 @@ class tl_lizenzverwaltung extends \Backend
 				}
 				$marker = $objLizenzen->marker ? '<img src="bundles/contaolizenzverwaltung/images/marker.png" title="Lizenz ist markiert">' : '';
 				$lizenzen[] = $str.$objLizenzen->lizenz.$marker.'</span>';
+				$verbaende[] = \Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerband($objLizenzen->verband);
 			}
-			$args[6] = implode(', ', $lizenzen);
+			$verbaende = array_unique($verbaende); // Doppelte Verbände entfernen
+			$args[4] = implode(', ', $lizenzen);
+			$args[5] = implode(', ', $verbaende);
 		}
-		else $args[6] = '-'; // Keine Lizenzen gefunden
 
 		// Datensatz komplett zurückgeben
 		return $args;

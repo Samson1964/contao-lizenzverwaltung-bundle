@@ -227,7 +227,7 @@ class DOSBLizenzen extends \Backend
 			{
 				// Schreiben der Daten in eine PDF
 				$filename = TL_ROOT.'/'.$lizenzordner->path.'/'.$result->license_number_dosb.'.pdf';
-				file_put_contents($filename, $response);
+				file_put_contents($filename, $body);
 				$httpText = 'OK';
 			}
 			else
@@ -313,7 +313,7 @@ class DOSBLizenzen extends \Backend
 			{
 				// Schreiben der Daten in eine PDF
 				$filename = TL_ROOT.'/'.$lizenzordner->path.'/'.$result->license_number_dosb.'-card.pdf';
-				file_put_contents($filename, $response);
+				file_put_contents($filename, $body);
 				$httpText = 'OK';
 			}
 			else

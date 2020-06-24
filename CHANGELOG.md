@@ -1,5 +1,9 @@
 # Lizenzverwaltung Changelog
 
+## Version 3.0.1 (2020-06-24)
+
+* Fix: PDF vom DOSB wurden mit HTTP-Header abgespeichert
+
 ## Version 3.0.0 (2020-06-23)
 
 * Beschreibung der Erweiterung in composer.json verändert

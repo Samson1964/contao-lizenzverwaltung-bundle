@@ -215,9 +215,10 @@ class Mailer extends \Backend
 		// Mail-Datensatz einlesen
 		$mail = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_mails WHERE id = ?")
 		                                ->execute($mail_id);
-		// Trainer-Datensatz einlesen
-		$trainer = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung WHERE id = ?")
+		// Lizenz- und Personen-Datensatz einlesen
+		$trainer = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
 		                                   ->execute($trainer_id);
+
 		$objTemplate->setData($trainer->row()); // Trainer-Daten in Template-Objekt eintragen
 		$objTemplate->title = $mail->subject;
 		$objTemplate->charset = \Config::get('characterSet');

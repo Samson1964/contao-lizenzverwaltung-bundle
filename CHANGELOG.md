@@ -1,5 +1,9 @@
 # Lizenzverwaltung Changelog
 
+## Version 3.0.3 (2020-06-25)
+
+* Fix: Spezialfilter bei Excel-Import nicht anwendbar - Leerzeichen fehlt vor WHERE
+
 ## Version 3.0.2 (2020-06-25)
 
 * Fix: In Mailvorschau und den verschickten Mails fehlt der Name/Vorname

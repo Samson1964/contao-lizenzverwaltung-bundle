@@ -211,17 +211,17 @@ class TrainerlizenzExport extends \Backend
 		switch($filter)
 		{
 			case '1': // Alle Personen mit gültigen Lizenzen
-				($sql) ? $sql .= ' AND' : $sql = 'WHERE';
+				($sql) ? $sql .= ' AND' : $sql = ' WHERE';
 				$sql .= " tl_lizenzverwaltung_items.gueltigkeit >= ".time();
 				break;
 
 			case '2': // Alle Personen mit ungültigen Lizenzen
-				($sql) ? $sql .= ' AND' : $sql = 'WHERE';
+				($sql) ? $sql .= ' AND' : $sql = ' WHERE';
 				$sql .= " tl_lizenzverwaltung_items.gueltigkeit < ".time();
 				break;
 
 			case '3': // Alle Personen mit markierten Lizenzen
-				($sql) ? $sql .= ' AND' : $sql = 'WHERE';
+				($sql) ? $sql .= ' AND' : $sql = ' WHERE';
 				$sql .= " tl_lizenzverwaltung_items.marker = 1";
 				break;
 
@@ -243,7 +243,7 @@ class TrainerlizenzExport extends \Backend
 			case 'VA': // Lizenzen Schleswig-Holstein
 			case 'VG': // Lizenzen Thüringen
 			case 'VC': // Lizenzen Württemberg'
-				($sql) ? $sql .= ' AND' : $sql = 'WHERE';
+				($sql) ? $sql .= ' AND' : $sql = ' WHERE';
 				$sql .= " tl_lizenzverwaltung_items.verband = '".substr($filter,1,1)."'";
 				break;
 

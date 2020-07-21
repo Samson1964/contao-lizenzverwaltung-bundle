@@ -116,7 +116,6 @@ class Helper extends \Frontend
 	{
 		return array
 		(
-			'-'                   => '-',
 			'A'                   => 'A-Trainer Leistungssport',
 			'B'                   => 'B-Trainer Leistungssport',
 			'C'                   => 'C-Trainer Leistungssport',

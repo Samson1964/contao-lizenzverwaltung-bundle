@@ -11,7 +11,7 @@
  * @copyright Frank Hoppe 2014
  */
 
-namespace Schachbulle\ContaoLizenzverwaltungBundle\Classes;
+namespace Schachbulle\ContaoLizenzverwaltungBundle\Modules;
 
 class Lizenzenliste extends \Module
 {
@@ -30,7 +30,7 @@ class Lizenzenliste extends \Module
 	{
 		if (TL_MODE == 'BE')
 		{
-			$objTemplate = new \BackendTemplate('be_dewis');
+			$objTemplate = new \BackendTemplate('be_wildcard');
 
 			$objTemplate->wildcard = '### LISTE DER LIZENZEN ###';
 			$objTemplate->title = $this->name;
@@ -51,27 +51,29 @@ class Lizenzenliste extends \Module
 	protected function compile()
 	{
 		
-		$Verband = \Schachbulle\ContaoLizenzverwaltungBundle\Helper::getVerbaende(); // Verbände holen
+		$Verband = \Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerbaende(); // Verbände holen
 		$heute = time();
 	
 		// Zu zeigende Lizenzen in SQL-String verpacken
-		$lizenzen = unserialize($this->trainerlizenzen_typ);
-		$sql = 'lizenz = \''.$lizenzen[0].'\'';
+		$lizenzen = unserialize($this->lizenzverwaltung_typ);
+		$sql = ' (tl_lizenzverwaltung_items.lizenz = \''.$lizenzen[0].'\'';
 		for($x = 1; $x < count($lizenzen); $x++)
 		{
-			$sql .= ' OR lizenz = \''.$lizenzen[$x].'\'';
+			$sql .= ' OR tl_lizenzverwaltung_items.lizenz = \''.$lizenzen[$x].'\'';
 		}
+		$sql .= ')';
 
-		// Trainer-Datensatz einlesen
-		$result = \Database::getInstance()->prepare("SELECT * FROM tl_trainerlizenzen WHERE ($sql) AND gueltigkeit >= ? AND published = ? ORDER BY name ASC, vorname ASC")
+		// Lizenzen einlesen
+		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.gueltigkeit >= ? AND tl_lizenzverwaltung_items.published = ? AND $sql ORDER BY tl_lizenzverwaltung.name ASC, tl_lizenzverwaltung.vorname ASC")
 		                                  ->execute($heute, 1);
+		//$lizenzen = is_array($lizenzen) ? array_intersect($lizenzen, $result->fetchEach('id')) : $result->fetchEach('id');
 
-		$trainerArr = array();
+		$lizenzen = array();
 		if($result->numRows)
 		{
 			while($result->next())
 			{
-				$trainerArr[] = array
+				$lizenzen[] = array
 				(
 					'nachname'    => $result->name,
 					'vorname'     => $result->vorname,
@@ -82,10 +84,10 @@ class Lizenzenliste extends \Module
 			}
 		}
 			
-		$this->Template->lizenzview = $this->trainerlizenzen_typview;
+		$this->Template->lizenzview = $this->lizenzverwaltung_typview;
 		$this->Template->headline = $this->headline;
 		$this->Template->hl = $this->hl;
-		$this->Template->trainer = $trainerArr;
+		$this->Template->trainer = $lizenzen;
 		
 	}
 

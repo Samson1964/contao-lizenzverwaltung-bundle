@@ -1,5 +1,10 @@
 # Lizenzverwaltung Changelog
 
+## Version 3.1.0 (2020-07-21)
+
+* Ausgabe der Lizenzen im Frontend fertig programmiert
+* Helper-Klasse: Leereintrag bei Lizenzen entfernt
+
 ## Version 3.0.3 (2020-06-25)
 
 * Fix: Spezialfilter bei Excel-Import nicht anwendbar - Leerzeichen fehlt vor WHERE

@@ -39,7 +39,7 @@ $GLOBALS['TL_HOOKS']['simpleAjax'][] = array('ajaxRequest', 'compile');
 /**
  * Frontend-Module
  */
-$GLOBALS['FE_MOD']['application']['lizenzverwaltung'] = '\Schachbulle\ContaoLizenzverwaltungBundle\Classes\Lizenzenliste';
+$GLOBALS['FE_MOD']['application']['lizenzverwaltung'] = '\Schachbulle\ContaoLizenzverwaltungBundle\Modules\Lizenzenliste';
 
 // Backend-CSS einbinden
 if(TL_MODE == "BE") $GLOBALS['TL_CSS'][] = 'bundles/contaolizenzverwaltung/css/default.css';

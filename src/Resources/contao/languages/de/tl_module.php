@@ -10,15 +10,10 @@
  * @license   GNU/LGPL
  * @copyright Frank Hoppe 2014
  */
-
-
-/**
- * Legends
- */
-$GLOBALS['TL_LANG']['tl_module']['dsb'] = 'Schachbund';
-
 /**
  * Felder für Ausgabemodul
  */
-$GLOBALS['TL_LANG']['tl_module']['trainerlizenzen_typ'] = array('Trainer-Lizenzart', 'Nur aktive Trainer mit dieser Lizenz ausgeben.');
-$GLOBALS['TL_LANG']['tl_module']['trainerlizenzen_typview'] = array('Lizenzspalte anzeigen', 'Lizenzspalte im Frontend anzeigen.');
+$GLOBALS['TL_LANG']['tl_module']['lizenzverwaltung_legend'] = 'Einstellungen';
+
+$GLOBALS['TL_LANG']['tl_module']['lizenzverwaltung_typ'] = array('Lizenzart', 'Nur aktive Personen mit dieser Lizenz ausgeben.');
+$GLOBALS['TL_LANG']['tl_module']['lizenzverwaltung_typview'] = array('Lizenzspalte anzeigen', 'Lizenzspalte im Frontend anzeigen.');

@@ -13,17 +13,18 @@
  * Add palette to tl_module
  */
 
-$GLOBALS['TL_DCA']['tl_module']['palettes']['trainerlizenzen'] = '{title_legend},name,headline,type;{settings_legend},trainerlizenzen_typ,trainerlizenzen_typview;{protected_legend:hide},protected;{expert_legend:hide},cssID,align,space';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['lizenzverwaltung'] = '{title_legend},name,headline,type;{lizenzverwaltung_legend},lizenzverwaltung_typ,lizenzverwaltung_typview;{protected_legend:hide},protected;{expert_legend:hide},cssID,align,space';
 
 
-$GLOBALS['TL_DCA']['tl_module']['fields']['trainerlizenzen_typ'] = array
+$GLOBALS['TL_DCA']['tl_module']['fields']['lizenzverwaltung_typ'] = array
 (
-	'label'                   => &$GLOBALS['TL_LANG']['tl_module']['trainerlizenzen_typ'],
+	'label'                   => &$GLOBALS['TL_LANG']['tl_module']['lizenzverwaltung_typ'],
 	'inputType'               => 'checkboxWizard',
 	'options'                 => \Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getLizenzen(),
 	'eval'                    => array
 	(
 		'tl_class'            => 'w50 clr',
+		'includeBlankOption'  => true,
 		'chosen'              => true,
 		'mandatory'           => true,
 		'multiple'            => true
@@ -31,9 +32,9 @@ $GLOBALS['TL_DCA']['tl_module']['fields']['trainerlizenzen_typ'] = array
 	'sql'                     => "blob NULL", 
 );
 
-$GLOBALS['TL_DCA']['tl_module']['fields']['trainerlizenzen_typview'] = array
+$GLOBALS['TL_DCA']['tl_module']['fields']['lizenzverwaltung_typview'] = array
 (
-	'label'                   => &$GLOBALS['TL_LANG']['tl_module']['trainerlizenzen_typview'],
+	'label'                   => &$GLOBALS['TL_LANG']['tl_module']['lizenzverwaltung_typview'],
 	'inputType'               => 'checkbox',
 	'default'                 => false,
 	'eval'                    => array

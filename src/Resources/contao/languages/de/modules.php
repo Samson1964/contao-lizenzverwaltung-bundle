@@ -14,4 +14,4 @@ $GLOBALS["TL_LANG"]["MOD"]["lizenzverwaltung"] = array('Lizenzverwaltung', 'Lize
 /**
  * Frontendmodule
  */
-$GLOBALS['TL_LANG']['FMD']['lizenzverwaltung'] = array('Liste der aktiven Trainer', 'Nur aktive Trainer mit einer bestimmten Lizenz ausgeben.');
+$GLOBALS['TL_LANG']['FMD']['lizenzverwaltung'] = array('Lizenzenliste', 'Nur Personen mit einer bestimmten aktiven Lizenz ausgeben.');

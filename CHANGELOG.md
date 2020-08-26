@@ -1,5 +1,10 @@
 # Lizenzverwaltung Changelog
 
+## Version 3.1.1 (2020-08-26)
+
+* trainerlizenzen.log auf lizenzverwaltung.log geändert
+* Curl error: HTTP/2 stream 0 was not closed cleanly: PROTOCOL_ERROR (err 1) - bei PDF-Card bevorzugt -> Curl auf HTTP 1.1 umgestellt wegen Apache-Fehler
+
 ## Version 3.1.0 (2020-07-21)
 
 * Ausgabe der Lizenzen im Frontend fertig programmiert

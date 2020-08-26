@@ -201,6 +201,7 @@ class DOSBLizenzen extends \Backend
 			curl_setopt($process, CURLOPT_HTTPHEADER, array(
 			  'Accept: application/json'
 			));
+			curl_setopt($process, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1); // Fix wegen https://github.com/icing/mod_h2/issues/167 - Mail Hetzner 25.08.2020
 			curl_setopt($process, CURLOPT_HEADER, 1);
 			curl_setopt($process, CURLOPT_USERPWD, $this->username . ":" . $this->password);
 			curl_setopt($process, CURLOPT_TIMEOUT, 60);
@@ -251,7 +252,7 @@ class DOSBLizenzen extends \Backend
 		$log .= "Host: $host\n";
 		$log .= "Response Body: $httpCode $httpText\n";
 		$log .= "CURL Errors: $errors";
-		log_message($log, 'trainerlizenzen.log');
+		log_message($log, 'lizenzverwaltung.log');
 
 		// Zurück zur Seite
 		\Controller::redirect(str_replace('&key=getLizenzPDF', '&act=edit', \Environment::get('request')));
@@ -286,6 +287,7 @@ class DOSBLizenzen extends \Backend
 			curl_setopt($process, CURLOPT_HTTPHEADER, array(
 			  'Accept: application/json'
 			));
+			curl_setopt($process, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1); // Fix wegen https://github.com/icing/mod_h2/issues/167 - Mail Hetzner 25.08.2020
 			curl_setopt($process, CURLOPT_HEADER, 1);
 			curl_setopt($process, CURLOPT_USERPWD, $this->username . ":" . $this->password);
 			curl_setopt($process, CURLOPT_TIMEOUT, 60);
@@ -337,7 +339,7 @@ class DOSBLizenzen extends \Backend
 		$log .= "Host: $host\n";
 		$log .= "Response Body: $httpCode $httpText\n";
 		$log .= "CURL Errors: $errors";
-		log_message($log, 'trainerlizenzen.log');
+		log_message($log, 'lizenzverwaltung.log');
 
 		// Zurück zur Seite
 		\Controller::redirect(str_replace('&key=getLizenzPDFCard', '&act=edit', \Environment::get('request')));

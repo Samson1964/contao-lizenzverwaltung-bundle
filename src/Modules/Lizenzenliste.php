@@ -56,15 +56,19 @@ class Lizenzenliste extends \Module
 	
 		// Zu zeigende Lizenzen in SQL-String verpacken
 		$lizenzen = unserialize($this->lizenzverwaltung_typ);
-		$sql = ' (tl_lizenzverwaltung_items.lizenz = \''.$lizenzen[0].'\'';
-		for($x = 1; $x < count($lizenzen); $x++)
+
+		if(is_array($lizenzen))
 		{
-			$sql .= ' OR tl_lizenzverwaltung_items.lizenz = \''.$lizenzen[$x].'\'';
+			$sql = 'AND (tl_lizenzverwaltung_items.lizenz = \''.$lizenzen[0].'\'';
+			for($x = 1; $x < count($lizenzen); $x++)
+			{
+				$sql .= ' OR tl_lizenzverwaltung_items.lizenz = \''.$lizenzen[$x].'\'';
+			}
+			$sql .= ')';
 		}
-		$sql .= ')';
 
 		// Lizenzen einlesen
-		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.gueltigkeit >= ? AND tl_lizenzverwaltung_items.published = ? AND $sql ORDER BY tl_lizenzverwaltung.name ASC, tl_lizenzverwaltung.vorname ASC")
+		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.gueltigkeit >= ? AND tl_lizenzverwaltung_items.published = ? $sql ORDER BY tl_lizenzverwaltung.name ASC, tl_lizenzverwaltung.vorname ASC")
 		                                  ->execute($heute, 1);
 		//$lizenzen = is_array($lizenzen) ? array_intersect($lizenzen, $result->fetchEach('id')) : $result->fetchEach('id');
 

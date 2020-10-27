@@ -1,5 +1,9 @@
 # Lizenzverwaltung Changelog
 
+## Version 3.1.2 (2020-10-27)
+
+* Fix: count(): Parameter must be an array or an object that implements Countable in Zeile 60 Lizenzenliste.php
+
 ## Version 3.1.1 (2020-08-26)
 
 * trainerlizenzen.log auf lizenzverwaltung.log geändert

@@ -1,5 +1,8 @@
 # Lizenzverwaltung Changelog
 
+* Fix: Syntaxfehler bei Mailversand Address in mailbox given [ xxx@gmail.com] does not comply with RFC 2822, 3.6.2. (Leerzeichen zuviel)
+* Add: Feld tl_lizenzverwaltung.alias, wo automatisch ein Alias aus Nachname und Vorname gespeichert wird, um darin suchen zu können
+
 ## Version 3.1.2 (2020-10-27)
 
 * Fix: count(): Parameter must be an array or an object that implements Countable in Zeile 60 Lizenzenliste.php

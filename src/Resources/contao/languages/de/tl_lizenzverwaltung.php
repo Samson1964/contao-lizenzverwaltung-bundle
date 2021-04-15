@@ -32,6 +32,7 @@ $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['toggle'] = array("Person %s aktivier
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['show'] = array("Details zur Person %s anzeigen", "Details zur Person %s anzeigen");
 
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['tstamp'] = array('Änderungsdatum', 'Änderungsdatum des Datensatzes');
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['alias'] = array('Nach- oder Vorname', 'Nach- oder Vorname suchen');
 
 // Formularfelder
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['name_legend'] = 'Trainer';

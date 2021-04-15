@@ -32,9 +32,14 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung'] = array
 			(
 				'id'             => 'primary',
 				'vorname'        => 'index',
-				'name'           => 'index'
+				'name'           => 'index',
+				'alias'          => 'index'
 			)
-		)
+		),
+		'onsubmit_callback' => array
+		(
+			array('tl_lizenzverwaltung', 'generateAlias')
+		),
 	),
 	// List
 	'list' => array
@@ -160,6 +165,14 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung'] = array
 			'flag'                    => 8,
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['tstamp'],
 			'sql'                     => "int(10) unsigned NOT NULL default '0'"
+		),
+		// Alias aus Vorname und Nachname
+		'alias' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['alias'],
+			'inputType'               => 'text',
+			'search'                  => true,
+			'sql'                     => "varchar(255) NOT NULL default ''",
 		),
 		// Vorname
 		'vorname' => array
@@ -744,6 +757,22 @@ class tl_lizenzverwaltung extends \Backend
 
 		// Datensatz komplett zurückgeben
 		return $args;
+	}
+
+	/**
+	 * Generiert automatisch ein Alias aus Vorname und Nachname
+	 * @param mixed
+	 * @param \DataContainer
+	 * @return string
+	 * @throws \Exception
+	 */
+	public function generateAlias(DataContainer $dc)
+	{
+		$temp = $dc->activeRecord->name.'-'.$dc->activeRecord->vorname;
+
+		$myAlias = \Schachbulle\ContaoHelperBundle\Classes\Helper::generateAlias($temp); 
+		\Database::getInstance()->prepare("UPDATE tl_lizenzverwaltung SET alias = ? WHERE id = ?")
+		                        ->execute($myAlias, $dc->id);
 	}
 
 }

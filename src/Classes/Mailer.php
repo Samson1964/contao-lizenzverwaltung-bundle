@@ -79,6 +79,17 @@ class Mailer extends \Backend
 			$cc = explode(',', html_entity_decode(\Input::get('cc')));
 			$bcc = explode(',', html_entity_decode(\Input::get('bcc')));
 
+			// Führende und abschließende Leerzeichen entfernen
+			$to = array_map('trim', $to);
+			$cc = array_map('trim', $cc);
+			$bcc = array_map('trim', $bcc);
+
+			// Check whether the alias exists
+			//if(!$test)
+			//{
+			//	throw new \Exception(sprintf($GLOBALS['TL_LANG']['ERR']['aliasExists'], 'Fehler'));
+			//}
+
 			$objEmail->from = $arrFrom[2];
 			$objEmail->fromName = $arrFrom[1];
 			$objEmail->subject = $mail->subject;

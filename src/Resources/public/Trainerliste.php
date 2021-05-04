@@ -209,7 +209,7 @@ class Trainerliste
 					// Ablaufende Lizenzen einbauen
 					if($ablaufendArr)
 					{
-						$ablaufendArr = \Schachbulle\ContaoLizenzverwaltung\Classes\Helper::sortArrayByFields($ablaufendArr, array('gueltigkeit' => SORT_DESC, 'name' => array(SORT_ASC, SORT_STRING), 'vorname' => array(SORT_ASC, SORT_STRING), 'lizenz' => array(SORT_ASC, SORT_STRING)));
+						$ablaufendArr = \Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::sortArrayByFields($ablaufendArr, array('gueltigkeit' => SORT_DESC, 'name' => array(SORT_ASC, SORT_STRING), 'vorname' => array(SORT_ASC, SORT_STRING), 'lizenz' => array(SORT_ASC, SORT_STRING)));
 						$content .= '<p>Folgende Lizenzen laufen innerhalb der nächsten 6 Monate ab:</p>';
 						$content .= '<ul>';
 						foreach($ablaufendArr as $item)

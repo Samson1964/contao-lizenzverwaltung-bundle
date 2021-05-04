@@ -1,5 +1,11 @@
 # Lizenzverwaltung Changelog
 
+## Version 3.1.4 (2021-05-04)
+
+* Fix: Class Schachbulle\ContaoLizenzverwaltung\Classes\Helper not found in public/Trainerliste.php:212 (ContaoLizenzverwaltungBundle ist richtig)
+
+## Version 3.1.3 (2021-04-15)
+
 * Fix: Syntaxfehler bei Mailversand Address in mailbox given [ xxx@gmail.com] does not comply with RFC 2822, 3.6.2. (Leerzeichen zuviel)
 * Add: Feld tl_lizenzverwaltung.alias, wo automatisch ein Alias aus Nachname und Vorname gespeichert wird, um darin suchen zu können
 

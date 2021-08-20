@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace Schachbulle\ContaoLizenzverwaltungBundle\Classes;
 
@@ -19,7 +19,7 @@ class Mailer extends \Backend
 		$css = '<style>
 	* { font-family:Calibri,Verdana,sans-serif,Arial; font-size:16px; }
 </style>';
-		
+
 		// E-Mail-Datensatz einlesen
 		$mail = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_mails WHERE id = ?")
 		                                ->execute($dc->id);
@@ -64,16 +64,16 @@ class Mailer extends \Backend
 		// E-Mail versenden
 		if(\Input::get('token') != '' && \Input::get('token') == $this->Session->get('tl_lizenzverwaltung_send'))
 		{
-			
-			$this->Session->set('tl_lizenzverwaltung_send', null); 
+
+			$this->Session->set('tl_lizenzverwaltung_send', null);
 			$objEmail = new \Email();
-			
+
 			if($lizenzfilenameA4) $objEmail->attachFile($lizenzfilenameA4); // Lizenz-PDF DIN A4 anhängen
 			if($lizenzfilenameCard) $objEmail->attachFile($lizenzfilenameCard); // Lizenz-PDF Karte anhängen
-			
+
 			// Absender "Name <email>" in ein Array $arrFrom aufteilen
 			preg_match('~(?:([^<]*?)\s*)?<(.*)>~', LIZENZVERWALTUNG_ABSENDER, $arrFrom);
-			
+
 			// Empfänger-Adressen in ein Array packen
 			$to = explode(',', html_entity_decode(\Input::get('an')));
 			$cc = explode(',', html_entity_decode(\Input::get('cc')));
@@ -84,20 +84,38 @@ class Mailer extends \Backend
 			$cc = array_map('trim', $cc);
 			$bcc = array_map('trim', $bcc);
 
-			// Check whether the alias exists
-			//if(!$test)
-			//{
-			//	throw new \Exception(sprintf($GLOBALS['TL_LANG']['ERR']['aliasExists'], 'Fehler'));
-			//}
+
+			// Adressen validieren, Exception bei ungültiger Adresse
+			foreach($to as $email)
+			{
+				if(!self::validateEmail($email))
+				{
+					throw new \Exception(sprintf($GLOBALS['TL_LANG']['Lizenzverwaltung']['emailCorrupt'], $email));
+				}
+			}
+			foreach($cc as $email)
+			{
+				if(!self::validateEmail($email))
+				{
+					throw new \Exception(sprintf($GLOBALS['TL_LANG']['Lizenzverwaltung']['emailCorrupt'], $email));
+				}
+			}
+			foreach($bcc as $email)
+			{
+				if(!self::validateEmail($email))
+				{
+					throw new \Exception(sprintf($GLOBALS['TL_LANG']['Lizenzverwaltung']['emailCorrupt'], $email));
+				}
+			}
 
 			$objEmail->from = $arrFrom[2];
 			$objEmail->fromName = $arrFrom[1];
 			$objEmail->subject = $mail->subject;
 			$objEmail->logFile = 'lizenzverwaltung_email.log';
-			$objEmail->html = $preview_css; 
-			if($cc[0]) $objEmail->sendCc($cc); 
-			if($bcc[0]) $objEmail->sendBcc($bcc); 
-			$status = $objEmail->sendTo($to); 
+			$objEmail->html = $preview_css;
+			if($cc[0]) $objEmail->sendCc($cc);
+			if($bcc[0]) $objEmail->sendBcc($bcc);
+			$status = $objEmail->sendTo($to);
 			if($status)
 			{
 				// Versanddatum in Datenbank eintragen
@@ -111,7 +129,7 @@ class Mailer extends \Backend
 				                                   ->set($set)
 				                                   ->execute($dc->id);
 				// Email-Versand bestätigen und weiterleiten
-				\Message::addConfirmation('E-Mail versendet'); 
+				\Message::addConfirmation('E-Mail versendet');
 				// Zurücklink generieren, ab C4 ist das ein symbolischer Link zu "contao"
 				if (version_compare(VERSION, '4.0', '>='))
 				{
@@ -125,7 +143,7 @@ class Mailer extends \Backend
 			}
 			exit;
 		}
-		
+
 		// E-Mail-Empfänger festlegen
 		// 1. Lizenzinhaber
 		$trainer->email ? $email_an = htmlentities($trainer->vorname.' '.$trainer->name.' <'.$trainer->email.'>') : $email_an = '';
@@ -153,7 +171,7 @@ class Mailer extends \Backend
 		}
 
 		$strToken = md5(uniqid(mt_rand(), true));
-		$this->Session->set('tl_lizenzverwaltung_send', $strToken); 
+		$this->Session->set('tl_lizenzverwaltung_send', $strToken);
 
 		return
 		'<div id="tl_buttons">
@@ -215,7 +233,7 @@ class Mailer extends \Backend
 '.($mail->sent_state ? '<span class="mandatory">Die E-Mail wurde bereits gesendet!</span>' : '<input type="submit" onclick="return confirm(\'Soll die E-Mail wirklich verschickt werden?\')" value="E-Mail versenden" accesskey="s" class="tl_submit" id="send">').'
 </div>
 </div>
-</form>'; 
+</form>';
 
 	}
 
@@ -237,7 +255,7 @@ class Mailer extends \Backend
 		$objTemplate->content = $mail->content;
 		$content = $objTemplate->parse();
 		$content = \StringUtil::restoreBasicEntities($content); // [nbsp] und Co. ersetzen
-		
+
 		if($header)
 		{
 			// Mit HTML-Header zurückgeben
@@ -251,5 +269,16 @@ class Mailer extends \Backend
 		}
 
 	}
-	
+
+	function validateEmail($email)
+	{
+		// Prüfen ob Email im Format "Name <Adresse>" vorliegt, ggfs. $email ändern vor der Validierung
+		preg_match('~(?:([^<]*?)\s*)?<(.*)>~', $email, $result);
+		
+		if(isset($result[2])) $email = $result[2];
+		
+		return filter_var($email, FILTER_VALIDATE_EMAIL);
+
+	}
+
 }

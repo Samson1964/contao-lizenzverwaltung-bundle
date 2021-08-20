@@ -1,5 +1,9 @@
 # Lizenzverwaltung Changelog
 
+## Version 3.1.5 (2021-08-20)
+
+* Fix: Bei Versand von E-Mails stören Umlaute in der Adresse und führen zum Absturz (weiße Seite)
+
 ## Version 3.1.4 (2021-05-04)
 
 * Fix: Class Schachbulle\ContaoLizenzverwaltung\Classes\Helper not found in public/Trainerliste.php:212 (ContaoLizenzverwaltungBundle ist richtig)

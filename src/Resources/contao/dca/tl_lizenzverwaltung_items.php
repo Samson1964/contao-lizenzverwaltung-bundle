@@ -641,7 +641,7 @@ class tl_lizenzverwaltung_items extends \Backend
 
 		for($x=0;$x<count($args);$x++)
 		{
-			$args[$x] = \Samson\Helper::getDate($args[$x]);
+			$args[$x] = \Schachbulle\ContaoHelperBundle\Classes\Helper::getDate($args[$x]);
 		}
 		return $args; 
 	} 

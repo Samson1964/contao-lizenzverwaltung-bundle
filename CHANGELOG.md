@@ -1,5 +1,9 @@
 # Lizenzverwaltung Changelog
 
+## Version 3.1.6 (2021-10-01)
+
+* Fix: Attempted to load class "Helper" from namespace "Samson" (in tl_lizenzverwaltung_items.php)
+
 ## Version 3.1.5 (2021-08-20)
 
 * Fix: Bei Versand von E-Mails stören Umlaute in der Adresse und führen zum Absturz (weiße Seite)

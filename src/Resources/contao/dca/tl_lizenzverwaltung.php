@@ -88,6 +88,13 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung'] = array
 				'icon'                => 'bundles/contaolizenzverwaltung/images/marker_delete.png',
 				'attributes'          => 'onclick="if(!confirm(\'' . $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['deleteMarker_confirm'] . '\'))return false;Backend.getScrollOffset()"',
 			),
+			'templates' => array
+			(
+				'label'               => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['templates'],
+				'href'                => 'table=tl_lizenzverwaltung_templates',
+				'icon'                => 'bundles/contaolizenzverwaltung/images/templates.png',
+				'attributes'          => 'onclick="Backend.getScrollOffset();"'
+			),
 			'all' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['MSC']['all'],

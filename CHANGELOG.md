@@ -1,5 +1,14 @@
 # Lizenzverwaltung Changelog
 
+## Version 4.0.0 (2022-03-09)
+
+* Fix: Fehlerhafte Hilfe-Links in den Feldern tl_lizenzverwaltung_items.codex und tl_lizenzverwaltung_items.help verschoben nach codex_date und help_date
+* Change: Leitfaden_LiMS_11.07.2016.pdf (Version 1.1) in den Links ausgetauscht gegen Leitfaden_LiMS_09.04.2019.pdf (Version 7.0)
+* Add: Hilfe-Tooltip bei tl_lizenzverwaltung_items.gueltigkeit
+* Add: Leitfaden-Link tl_lizenzverwaltung_items.leitfaden
+* Add: Mailtemplate-Verwaltung
+* Add: Abhängigkeit codefog/contao-haste für die Variablenersetzung in den Mailtemplates
+
 ## Version 3.1.6 (2021-10-01)
 
 * Fix: Attempted to load class "Helper" from namespace "Samson" (in tl_lizenzverwaltung_items.php)

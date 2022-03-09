@@ -10,7 +10,6 @@
  * @license   GNU/LGPL
  * @copyright Frank Hoppe 2014
  */
-
 define('LIZENZVERWALTUNG_ABSENDER', $GLOBALS['TL_CONFIG']['lizenzverwaltung_absender']);
 
 // Zugang LiMS
@@ -21,7 +20,7 @@ define('LIMS_LINK', $GLOBALS['TL_CONFIG']['lims_link']);
 
 $GLOBALS['BE_MOD']['content']['lizenzverwaltung'] = array
 (
-	'tables'            => array('tl_lizenzverwaltung', 'tl_lizenzverwaltung_items', 'tl_lizenzverwaltung_referenten', 'tl_lizenzverwaltung_mails'),
+	'tables'            => array('tl_lizenzverwaltung', 'tl_lizenzverwaltung_items', 'tl_lizenzverwaltung_referenten', 'tl_lizenzverwaltung_mails', 'tl_lizenzverwaltung_templates'),
 	'icon'              => 'bundles/contaolizenzverwaltung/images/icon.png',
 	'exportXLS'         => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\TrainerlizenzExport', 'exportTrainer_XLS'),
 	'import'            => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\TrainerlizenzImport', 'importTrainer'), 

@@ -102,7 +102,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 	'palettes' => array
 	(
 		'__selector__'                => array('codex', 'addEnclosure','help'),
-		'default'                     => 'verification,{dosb_legend},license_number_dosb,button_license,view_pdf,button_pdf,view_pdfcard,button_pdfcard;{marker_legend},marker;{verband_legend},verband;{lizenz_legend},lizenznummer,lizenz;{lizenzver_legend},erwerb,verlaengerungen;{lizenzbis_legend},gueltigkeit;{codex_legend},codex,help;{datum_legend},letzteAenderung,setHeute;{hinweise_legend:hide},addEnclosure,bemerkung;{published_legend},published'
+		'default'                     => 'verification,{leitfaden_legend:hide},leitfaden;{dosb_legend},license_number_dosb,button_license,view_pdf,button_pdf,view_pdfcard,button_pdfcard;{marker_legend},marker;{verband_legend},verband;{lizenz_legend},lizenznummer,lizenz;{lizenzver_legend},erwerb,verlaengerungen;{lizenzbis_legend},gueltigkeit;{codex_legend},codex,help;{datum_legend},letzteAenderung,setHeute;{hinweise_legend:hide},addEnclosure,bemerkung;{published_legend},published'
 	),
 
 	// Subpalettes
@@ -132,6 +132,12 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'sorting'                 => true,
 			'flag'                    => 6,
 			'sql'                     => "int(10) unsigned NOT NULL default '0'"
+		),
+		// Gibt einen Link zum LiMS-Leitfaden aus
+		'leitfaden' => array
+		(
+			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['leitfaden'],
+			'input_field_callback'    => array('tl_lizenzverwaltung_items', 'getLeitfaden'),
 		),
 		// Gibt Warnungen und Hinweise aus
 		'verification' => array
@@ -379,11 +385,13 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['gueltigkeit'],
 			'inputType'               => 'text',
+			'explanation'             => 'lizenzverwaltung_verlaengerung', 
 			'exclude'                 => true,
 			'flag'                    => 8,
 			'eval'                    => array
 			(
 				'rgxp'                => 'date',
+				'helpwizard'          => true,
 				'datepicker'          => true,
 				'tl_class'            => 'w50 wizard',
 				'doNotCopy'           => true
@@ -396,13 +404,11 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['codex'],
 			'inputType'               => 'checkbox',
 			'default'                 => true,
-			'explanation'             => 'lizenzverwaltung_codex', 
 			'exclude'                 => true,
 			'eval'                    => array
 			(
 				'mandatory'           => false,
-				'tl_class'            => 'w50',
-				'helpwizard'          => true,
+				'tl_class'            => 'long',
 				'isBoolean'           => true,
 				'submitOnChange'      => true
 			),
@@ -414,10 +420,12 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['codex_date'],
 			'inputType'               => 'text',
 			'exclude'                 => true,
+			'explanation'             => 'lizenzverwaltung_codex', 
 			'flag'                    => 8,
 			'eval'                    => array
 			(
 				'rgxp'                => 'date',
+				'helpwizard'          => true,
 				'datepicker'          => true,
 				'tl_class'            => 'w50 wizard',
 				'doNotCopy'           => true
@@ -431,12 +439,10 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'inputType'               => 'checkbox',
 			'default'                 => true,
 			'exclude'                 => true,
-			'explanation'             => 'lizenzverwaltung_codex', 
 			'eval'                    => array
 			(
 				'mandatory'           => false,
-				'tl_class'            => 'w50 clr',
-				'helpwizard'          => true,
+				'tl_class'            => 'long',
 				'isBoolean'           => true,
 				'submitOnChange'      => true
 			),
@@ -448,11 +454,13 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['help_date'],
 			'inputType'               => 'text',
 			'exclude'                 => true,
+			'explanation'             => 'lizenzverwaltung_codex', 
 			'flag'                    => 8,
 			'eval'                    => array
 			(
 				'rgxp'                => 'date',
 				'datepicker'          => true,
+				'helpwizard'          => true,
 				'tl_class'            => 'w50 wizard',
 				'doNotCopy'           => true
 			),
@@ -842,6 +850,17 @@ class tl_lizenzverwaltung_items extends \Backend
 
 	}
 	
+	public function getLeitfaden(DataContainer $dc)
+	{
+		$text = 
+		'<div class="long widget">
+		<div class="tl_text" style="border:0;"><a href="bundles/contaolizenzverwaltung/pdf/Leitfaden_LiMS_09.04.2019.pdf" target="_blank" style="color:blue;">Leitfaden zum Lizenzmanagementsystem</a><span> (Version 7.0 vom 09.04.2019)</span></div>
+		<p class="tl_help tl_tip" title="" style="margin-left:7px;">'.$info.'</p>
+		</div>';
+
+		return $text;
+	}
+
 	public function getVerification(DataContainer $dc)
 	{
 

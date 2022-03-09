@@ -123,7 +123,6 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_mails'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_mails']['template'],
 			'exclude'                 => true,
 			'inputType'               => 'select',
-			'default'                 => 'mail_trainerlizenzen_blanko',
 			'options_callback'        => array('tl_lizenzverwaltung_mails', 'getTemplates'),
 			'eval'                    => array
 			(
@@ -295,17 +294,34 @@ class tl_lizenzverwaltung_mails extends Backend
 	 */
 	public function listEmails($arrRow)
 	{
-		$objTemplate = new \BackendTemplate($arrRow['template']);
+		// Template aus Datenbank laden
+		$tpl = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_templates WHERE id=?")
+		                               ->execute($arrRow['template']);
 
 		// Lizenz- und Personen-Datensatz einlesen
-		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
+		$lizenz = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
 		                                  ->execute($arrRow['pid']);
 
-		$objTemplate->setData($result->row()); // Trainer-Daten in Template-Objekt eintragen
-		$objTemplate->subject = $arrRow['subject'];
-		if($arrRow['signatur']) $objTemplate->signatur = $GLOBALS['TL_CONFIG']['lizenzverwaltung_mailsignatur'];
-		$objTemplate->content = $arrRow['content'];
-		$arrRow['sent_text'] ? $content = $arrRow['sent_text'] : $content = $objTemplate->parse();
+		if($tpl->numRows)
+		{
+			preg_match('/<body>(.*)<\/body>/s', $tpl->template, $matches); // Body extrahieren
+			$content = \StringUtil::restoreBasicEntities($matches[1]); // [nbsp] und Co. ersetzen
+			$arrTokens = array
+			(
+				'css'               => '',
+				'lizenz_vorname'    => $lizenz->vorname,
+				'lizenz_nachname'   => $lizenz->name,
+				'lizenz_geschlecht' => $lizenz->geschlecht,
+				'lizenz_content'    => $arrRow['content'],
+				'lizenz_signatur'   => $arrRow['signatur'] ? $GLOBALS['TL_CONFIG']['lizenzverwaltung_mailsignatur'] : '',
+			);
+			$content = \Haste\Util\StringUtil::recursiveReplaceTokensAndTags($content, $arrTokens);
+		}
+		else
+		{
+			// Kein Template gefunden
+			$content = 'Kein Template gefunden!';
+		}
 
 		return '
 <div class="cte_type ' . (($arrRow['sent_state'] && $arrRow['sent_date']) ? 'published' : 'unpublished') . '"><strong>' . $arrRow['subject'] . '</strong> - ' . (($arrRow['sent_state'] && $arrRow['sent_date']) ? 'Versendet am '.Date::parse(Config::get('datimFormat'), $arrRow['sent_date']) : 'Nicht versendet'). '</div>
@@ -316,18 +332,33 @@ class tl_lizenzverwaltung_mails extends Backend
 	}
 
 
-	public function getTemplates($dc)
+	public function getTemplates(\DataContainer $dc)
 	{
+
+		// Neue Templates laden
+		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_templates WHERE published = ?")
+		                                  ->execute(1);
+
+		$options = array();
+		while($result->next())
+		{
+			$options[$result->id] = $result->name.($result->description ? ' ('.$result->description.')' : '');
+		}
+		
+		return $options;
+
 		if(version_compare(VERSION.BUILD, '2.9.0', '>=') && version_compare(VERSION.BUILD, '4.8.0', '<'))
 		{
 			// Den 2. Parameter gibt es nur ab Contao 2.9 bis 4.7
-			return $this->getTemplateGroup('mail_lizenzverwaltung_', $dc->activeRecord->id);
+			$options = $this->getTemplateGroup('mail_lizenzverwaltung_', $dc->activeRecord->id);
 		}
 		else
 		{
 			// Ohne 2. Parameter bis Contao 2.8 und ab Contao 4.8
-			return $this->getTemplateGroup('mail_lizenzverwaltung_');
+			$options = $this->getTemplateGroup('mail_lizenzverwaltung_');
 		}
+
+
 	}
 
 	public function getPreview(\DataContainer $dc)
@@ -335,18 +366,34 @@ class tl_lizenzverwaltung_mails extends Backend
 		// Templatestatus
 		if($dc->activeRecord->template)
 		{
-			$objTemplate = new \BackendTemplate($dc->activeRecord->template);
 			// Lizenz- und Personen-Datensatz einlesen
-			$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
+			$lizenz = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
 			                                  ->execute($dc->activeRecord->pid);
-			//print_r($result->row());
-			$objTemplate->setData($result->row()); // Trainer-Daten in Template-Objekt eintragen
-			$objTemplate->subject = $dc->activeRecord->subject;
-			if($dc->activeRecord->signatur) $objTemplate->signatur = $GLOBALS['TL_CONFIG']['lizenzverwaltung_mailsignatur'];
-			$objTemplate->content = $dc->activeRecord->content;
-			preg_match('/<body>(.*)<\/body>/s', $objTemplate->parse(), $matches); // Body extrahieren
-			$content = \StringUtil::restoreBasicEntities($matches[1]); // [nbsp] und Co. ersetzen
-			$content = '<div class="tl_preview">'.$content.'</div>';
+
+			// Template aus Datenbank laden
+			$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_templates WHERE id=?")
+			                                  ->execute($dc->activeRecord->template);
+			if($result->numRows)
+			{
+				preg_match('/<body>(.*)<\/body>/s', $result->template, $matches); // Body extrahieren
+				$content = \StringUtil::restoreBasicEntities($matches[1]); // [nbsp] und Co. ersetzen
+				$arrTokens = array
+				(
+					'css'               => '',
+					'lizenz_vorname'    => $lizenz->vorname,
+					'lizenz_nachname'   => $lizenz->name,
+					'lizenz_geschlecht' => $lizenz->geschlecht,
+					'lizenz_content'    => $dc->activeRecord->content,
+					'lizenz_signatur'   => $dc->activeRecord->signatur ? $GLOBALS['TL_CONFIG']['lizenzverwaltung_mailsignatur'] : '',
+				);
+				$content = \Haste\Util\StringUtil::recursiveReplaceTokensAndTags($content, $arrTokens);
+				$content = '<div class="tl_preview">'.$content.'</div>';
+			}
+			else
+			{
+				// Kein Template gefunden
+				$content = '<div class="tl_preview">Kein Template gefunden!</div>';
+			}
 		}
 		else
 		{

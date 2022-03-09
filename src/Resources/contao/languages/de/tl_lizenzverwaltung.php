@@ -19,6 +19,7 @@ $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['import'] = array('CSV-Import', 'CSV-
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['exportXLS'] = array('Excel-Export', 'Excel-Export der Lizenzen');
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['exportDOSB'] = array('DOSB-Export', 'Aktive Lizenzen zum DOSB exportieren');
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['deleteMarker'] = array('Markierungen löschen', 'Markierungen in den Lizenzen löschen');
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['templates'] = array('Mail-Templates', 'E-Mail-Templates verwalten');
 
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['deleteMarker_confirm'] = 'Wollen Sie die Markierungen in den Lizenzen wirklich löschen?';
 

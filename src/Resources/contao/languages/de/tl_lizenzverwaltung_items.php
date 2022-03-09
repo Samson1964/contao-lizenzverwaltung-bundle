@@ -29,6 +29,8 @@ $GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['show']= array("Details zur Liz
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['tstamp']= array('Änderungsdatum', 'Änderungsdatum des Datensatzes');
 
 // Formularfelder
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['leitfaden_legend'] = 'DOSB-Leitfaden';
+
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['dosb_legend'] = 'DOSB-Lizenz';
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['lid']= array('LiMS-ID', 'Interne ID des DOSB-Lizenzmanagementsystems');
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['license_number_dosb']= array('DOSB-Lizenznummer', 'Wird automatisch beim DOSB abgerufen');
@@ -64,13 +66,9 @@ $GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['gueltigkeit']= array('Gültig 
 
 
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['codex_legend'] = 'Ehrenkodex/Erste-Hilfe-Ausbildung';
-$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['codex']= array('Ehrenkodex anerkannt <a href="contao/help.php?table=tl_lizenzverwaltung&field=codex" title="" onclick="Backend.openModalIframe({\'width\':735,\'height\':405,\'title\':\'Ehrenkodex anerkannt\',\'url\':this.href});return false">
-<img src="system/themes/default/images/about.gif" alt="Den Hilfe-Assistent aufrufen" style="vertical-align:text-bottom" width="14" height="14">
-</a>', 'Anerkennung des <a href="http://www.dosb.de/index.php?id=14138" target="_blank">DOSB-Ehrenkodex</a>');
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['codex']= array('Ehrenkodex anerkannt', 'Anerkennung des DOSB-Ehrenkodex');
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['codex_date']= array('Datum Ehrenkodex', 'Datum der Anerkennung im Format TT.MM.JJJJ');
-$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['help']= array('Erste-Hilfe-Ausbildung absolviert <a href="contao/help.php?table=tl_lizenzverwaltung&field=codex" title="" onclick="Backend.openModalIframe({\'width\':735,\'height\':405,\'title\':\'Ehrenkodex anerkannt\',\'url\':this.href});return false">
-<img src="system/themes/default/images/about.gif" alt="Den Hilfe-Assistent aufrufen" style="vertical-align:text-bottom" width="14" height="14">
-</a>', 'Wurde die Erste-Hilfe-Ausbildung absolviert?');
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['help']= array('Erste-Hilfe-Ausbildung absolviert', 'Wurde die Erste-Hilfe-Ausbildung absolviert?');
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['help_date']= array('Datum Erste-Hilfe-Ausbildung', 'Endedatum der Ausbildung im Format TT.MM.JJJJ');
 
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['datum_legend'] = 'Änderungsdatum';

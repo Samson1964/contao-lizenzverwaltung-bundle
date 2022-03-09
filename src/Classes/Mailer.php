@@ -23,6 +23,9 @@ class Mailer extends \Backend
 		// E-Mail-Datensatz einlesen
 		$mail = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_mails WHERE id = ?")
 		                                ->execute($dc->id);
+		// Template-Datensatz einlesen
+		$tpl = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_templates WHERE id = ?")
+		                                ->execute($mail->template);
 		// Lizenz und Personen-Datensatz einlesen
 		$trainer = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
 		                                   ->execute($mail->pid);
@@ -197,7 +200,7 @@ class Mailer extends \Backend
   </tr>
   <tr class="row_2">
     <td class="col_0"><b>E-Mail-Template:</b></td>
-    <td class="col_1">' . $mail->template . '</td>
+    <td class="col_1">' . $tpl->name . '</td>
   </tr>
 </table>
 </div>
@@ -240,21 +243,33 @@ class Mailer extends \Backend
 
 	public function getPreview($mail_id, $trainer_id, $template, $header = true, $css = false)
 	{
-		$objTemplate = new \BackendTemplate($template);
+		// Template-Datensatz einlesen
+		$tpl = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_templates WHERE id = ?")
+		                               ->execute($template);
+
 		// Mail-Datensatz einlesen
 		$mail = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_mails WHERE id = ?")
 		                                ->execute($mail_id);
+
 		// Lizenz- und Personen-Datensatz einlesen
 		$trainer = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
 		                                   ->execute($trainer_id);
 
-		$objTemplate->setData($trainer->row()); // Trainer-Daten in Template-Objekt eintragen
-		$objTemplate->title = $mail->subject;
-		$objTemplate->charset = \Config::get('characterSet');
-		$objTemplate->css = $css;
-		$objTemplate->content = $mail->content;
-		$content = $objTemplate->parse();
+		// Token-Ersetzung
+		$arrTokens = array
+		(
+			'css'               => $css,
+			'lizenz_title'      => $mail->subject,
+			'lizenz_vorname'    => $trainer->vorname,
+			'lizenz_nachname'   => $trainer->name,
+			'lizenz_geschlecht' => $trainer->geschlecht,
+			'lizenz_content'    => $mail->content,
+			'lizenz_signatur'   => $mail->signatur ? $GLOBALS['TL_CONFIG']['lizenzverwaltung_mailsignatur'] : '',
+		);
+
+		$content = $tpl->template;
 		$content = \StringUtil::restoreBasicEntities($content); // [nbsp] und Co. ersetzen
+		$content = \Haste\Util\StringUtil::recursiveReplaceTokensAndTags($content, $arrTokens);
 
 		if($header)
 		{

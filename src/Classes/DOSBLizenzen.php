@@ -356,7 +356,7 @@ class DOSBLizenzen extends \Backend
 		if($start)
 		{
 			// jQuery einbinden
-			$GLOBALS['TL_JAVASCRIPT'][] = 'http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js';
+			$GLOBALS['TL_JAVASCRIPT'][] = 'https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js';
 
 			// Export starten
 			// Datensätze einlesen, bei der die Lizenz noch aktiv ist (größer/gleich aktuelles Datum)
@@ -409,7 +409,7 @@ class DOSBLizenzen extends \Backend
 		elseif($umzug)
 		{
 			// jQuery einbinden
-			$GLOBALS['TL_JAVASCRIPT'][] = 'http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js';
+			$GLOBALS['TL_JAVASCRIPT'][] = 'https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js';
 
 			// Export starten
 			// Datensätze einlesen, bei der die Lizenz noch aktiv ist (größer/gleich aktuelles Datum)

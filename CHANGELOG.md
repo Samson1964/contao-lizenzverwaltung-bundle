@@ -1,5 +1,9 @@
 # Lizenzverwaltung Changelog
 
+## Version 4.1.4 (2022-03-16)
+
+* Fix: JQuery-Verlinkung auf https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js in DOSBLizenzen.php geändert
+
 ## Version 4.1.3 (2022-03-16)
 
 * Der Fix aus Version 4.1.2 hat funktioniert. getVerbaende wird also bereits bei composer:install aufgerufen!

@@ -1,5 +1,10 @@
 # Lizenzverwaltung Changelog
 
+## Version 4.1.2 (2022-03-16)
+
+* Fix: Base table or view not found: 1146 Table 'tl_lizenzverwaltung_verbaende' doesn't exist (bei Installation im CM) - SELECT * FROM tl_lizenzverwaltung_verbaende WHERE published = 1
+* Change: Helper::getVerbaende alte Funktion reaktivert zum Testen
+
 ## Version 4.1.1 (2022-03-16)
 
 * Fix: Base table or view not found: 1146 Table 'tl_lizenzverwaltung_verbaende' doesn't exist (bei Installation im CM) - SELECT * FROM tl_lizenzverwaltung_verbaende WHERE published = 1

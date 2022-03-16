@@ -84,18 +84,18 @@ class Helper extends \Frontend
 	public function getVerbaende()
 	{
 
-		$return = array();
-		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_verbaende WHERE published = ?")
-		                                  ->execute(1);
-		// Auswerten
-		if($result->numRows)
-		{
-			while($result->next())
-			{
-				$return[$result->kennzeichen] = $result->name;
-			}
-		}
-		return $return;
+		//$return = array();
+		//$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_verbaende WHERE published = ?")
+		//                                  ->execute(1);
+		//// Auswerten
+		//if($result->numRows)
+		//{
+		//	while($result->next())
+		//	{
+		//		$return[$result->kennzeichen] = $result->name;
+		//	}
+		//}
+		//return $return;
 
 		// Altes Format
 		return array

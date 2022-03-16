@@ -1,5 +1,10 @@
 # Lizenzverwaltung Changelog
 
+## Version 4.1.1 (2022-03-16)
+
+* Fix: Base table or view not found: 1146 Table 'tl_lizenzverwaltung_verbaende' doesn't exist (bei Installation im CM) - SELECT * FROM tl_lizenzverwaltung_verbaende WHERE published = 1
+* Change: config.php - simpleAjax-Hook auskommentiert (vielleicht am Fehler schuld, weil die Hook-Klasse auf Helper::getVerbaende zugreift
+
 ## Version 4.1.0 (2022-03-16)
 
 * Funktionen für untergliederte Verbände eingebaut, aber deaktiviert, da nicht benötigt

@@ -33,7 +33,7 @@ $GLOBALS['BE_MOD']['content']['lizenzverwaltung'] = array
 );
 
 // SimpleAjax Hook
-$GLOBALS['TL_HOOKS']['simpleAjax'][] = array('ajaxRequest', 'compile');
+//$GLOBALS['TL_HOOKS']['simpleAjax'][] = array('ajaxRequest', 'compile');
 
 /**
  * Frontend-Module

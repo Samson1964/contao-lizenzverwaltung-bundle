@@ -60,6 +60,13 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung'] = array
 		),
 		'global_operations' => array
 		(
+			'verbaende' => array
+			(
+				'label'               => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['verbaende_all'],
+				'href'                => 'table=tl_lizenzverwaltung_verbaende',
+				'icon'                => 'bundles/contaolizenzverwaltung/images/verband.png',
+				'attributes'          => 'onclick="Backend.getScrollOffset();"'
+			),
 			'referenten' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['referenten'],

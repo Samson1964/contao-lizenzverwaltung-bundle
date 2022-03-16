@@ -83,6 +83,21 @@ class Helper extends \Frontend
 
 	public function getVerbaende()
 	{
+
+		$return = array();
+		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_verbaende WHERE published = ?")
+		                                  ->execute(1);
+		// Auswerten
+		if($result->numRows)
+		{
+			while($result->next())
+			{
+				$return[$result->kennzeichen] = $result->name;
+			}
+		}
+		return $return;
+
+		// Altes Format
 		return array
 		(
 			'S'                   => 'Deutscher Schachbund',
@@ -104,6 +119,26 @@ class Helper extends \Frontend
 			'G'                   => 'Thüringen',
 			'C'                   => 'Württemberg'
 		);
+	}
+
+	public function getUntergliederung($kennzeichen)
+	{
+
+		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_verbaende WHERE kennzeichen=? AND published=?")
+		                                  ->limit(1)
+		                                  ->execute($kennzeichen, 1);
+		$return = array();
+		// Treffer?
+		if($result->numRows && $result->organisation)
+		{
+			// Untergeordnete Verbandsnummern zurückgeben
+			$daten = unserialize($result->organisation);
+			foreach($daten as $item)
+			{
+				$return[] = $item['organisation_id'];
+			}
+		}
+		return $return;
 	}
 
 	public function getVerband($verband)

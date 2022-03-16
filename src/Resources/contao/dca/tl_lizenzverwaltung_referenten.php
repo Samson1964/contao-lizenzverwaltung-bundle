@@ -96,7 +96,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_referenten'] = array
 	// Paletten
 	'palettes' => array
 	(
-		'default'                     => '{verband_legend},verband,funktion;{person_legend},nachname,vorname,titel;{email_legend},email;{adresse_legend:hide},plz,ort,strasse;{telefon_legend:hide},telefon1,telefon2,telefax1,telefax2;{info_legend:hide},info;{sent_legend},sent_info,sent_date;{publish_legend},published'
+		'default'                     => '{verband_legend},verband,funktion,untergliederung;{person_legend},nachname,vorname,titel;{email_legend},email;{adresse_legend:hide},plz,ort,strasse;{telefon_legend:hide},telefon1,telefon2,telefax1,telefax2;{info_legend:hide},info;{sent_legend},sent_info,sent_date;{publish_legend},published'
 	),
 
 	// Felder

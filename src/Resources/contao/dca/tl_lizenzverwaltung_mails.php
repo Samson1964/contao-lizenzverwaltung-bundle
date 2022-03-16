@@ -312,6 +312,8 @@ class tl_lizenzverwaltung_mails extends Backend
 				'lizenz_vorname'    => $lizenz->vorname,
 				'lizenz_nachname'   => $lizenz->name,
 				'lizenz_geschlecht' => $lizenz->geschlecht,
+				'lizenz_art'        => $result->lizenz,
+				'lizenz_nummer'     => $lizenz->license_number_dosb,
 				'lizenz_content'    => $arrRow['content'],
 				'lizenz_signatur'   => $arrRow['signatur'] ? $GLOBALS['TL_CONFIG']['lizenzverwaltung_mailsignatur'] : '',
 			);
@@ -383,6 +385,8 @@ class tl_lizenzverwaltung_mails extends Backend
 					'lizenz_vorname'    => $lizenz->vorname,
 					'lizenz_nachname'   => $lizenz->name,
 					'lizenz_geschlecht' => $lizenz->geschlecht,
+					'lizenz_art'        => $result->lizenz,
+					'lizenz_nummer'     => $lizenz->license_number_dosb,
 					'lizenz_content'    => $dc->activeRecord->content,
 					'lizenz_signatur'   => $dc->activeRecord->signatur ? $GLOBALS['TL_CONFIG']['lizenzverwaltung_mailsignatur'] : '',
 				);

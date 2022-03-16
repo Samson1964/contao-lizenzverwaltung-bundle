@@ -26,6 +26,7 @@ $GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['tstamp']= array('Änderun
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['verband_legend'] = 'Verband';
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['verband']= array('Bundes- oder Landesverband', 'Bitte wählen Sie den Verband des Referenten aus. Bei Auswahl von <i>Deutscher Schachbund</i> hat der Referent besondere Rechte und wird beim E-Mail-Versand gesondert berücksichtigt.');
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['funktion']= array('Funktion', 'Funktion im Verband');
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['untergliederung']= array('Zugeordnete Verbände', 'Zugeordnete Verbände = Untergliederung im DOSB');
 
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['person_legend'] = 'Name';
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['nachname']= array('Nachname', 'Geben Sie hier den Nachnamen ein.');

@@ -14,6 +14,7 @@ $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['lizenzen'] = array('Lizenzen', 'Lize
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['verbaende'] = array('Verband', 'Verbände der Person');
 
 // Zusätzliche Funktionen
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['verbaende_all'] = array('Verbände', 'Verbände bearbeiten');
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['referenten'] = array('Referenten', 'Ausbildungsreferenten der Landesverbände');
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['import'] = array('CSV-Import', 'CSV-Import');
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['exportXLS'] = array('Excel-Export', 'Excel-Export der Lizenzen');

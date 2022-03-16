@@ -1,5 +1,14 @@
 # Lizenzverwaltung Changelog
 
+## Version 4.1.0 (2022-03-16)
+
+* Funktionen für untergliederte Verbände eingebaut, aber deaktiviert, da nicht benötigt
+* Add: tl_lizenzverwaltung_verbaende
+* Add: ajaxRequestUmzug.php
+* Add: Helper-Funktion getVerbaende() in Tabelle ausgelagert
+* Add: Verbandsname wird an DOSB-API im Feld custom_1 (Zusatzfeld 1) übermittelt
+* Add: Template-Variablen lizenz_art und lizenz_nummer
+
 ## Version 4.0.0 (2022-03-09)
 
 * Fix: Fehlerhafte Hilfe-Links in den Feldern tl_lizenzverwaltung_items.codex und tl_lizenzverwaltung_items.help verschoben nach codex_date und help_date

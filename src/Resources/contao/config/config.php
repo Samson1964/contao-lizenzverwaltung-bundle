@@ -20,14 +20,14 @@ define('LIMS_LINK', $GLOBALS['TL_CONFIG']['lims_link']);
 
 $GLOBALS['BE_MOD']['content']['lizenzverwaltung'] = array
 (
-	'tables'            => array('tl_lizenzverwaltung', 'tl_lizenzverwaltung_items', 'tl_lizenzverwaltung_referenten', 'tl_lizenzverwaltung_mails', 'tl_lizenzverwaltung_templates'),
+	'tables'            => array('tl_lizenzverwaltung', 'tl_lizenzverwaltung_items', 'tl_lizenzverwaltung_referenten', 'tl_lizenzverwaltung_mails', 'tl_lizenzverwaltung_templates', 'tl_lizenzverwaltung_verbaende'),
 	'icon'              => 'bundles/contaolizenzverwaltung/images/icon.png',
-	'exportXLS'         => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\TrainerlizenzExport', 'exportTrainer_XLS'),
 	'import'            => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\TrainerlizenzImport', 'importTrainer'), 
+	'exportXLS'         => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\TrainerlizenzExport', 'exportTrainer_XLS'),
+	'exportDOSB'        => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\DOSBLizenzen', 'exportToDOSB'),
 	'getLizenz'         => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\DOSBLizenzen', 'getLizenz'),
 	'getLizenzPDF'      => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\DOSBLizenzen', 'getLizenzPDF'),
 	'getLizenzPDFCard'  => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\DOSBLizenzen', 'getLizenzPDFCard'),
-	'exportDOSB'        => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\DOSBLizenzen', 'exportToDOSB'),
 	'deleteMarker'      => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\Marker', 'deleteMarker'),
 	'send'              => array('Schachbulle\ContaoLizenzverwaltungBundle\Classes\Mailer', 'send'), 
 );

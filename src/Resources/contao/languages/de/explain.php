@@ -43,4 +43,13 @@ $GLOBALS['TL_LANG']['XPL']['lizenzverwaltung_templates'] = array
 	array('colspan', '<b>Verlängerung von Lizenzen</b>'),
 	array('colspan', 'Der maximale Gültigkeitszeitraum für die Lizenzverlängerung beträgt vier bzw. bei A-Lizenzen zwei Jahre +92 Tage (ein Quartal).'),
 	array('colspan', '<i>Quelle: <a href="bundles/contaolizenzverwaltung/pdf/Leitfaden_LiMS_09.04.2019.pdf" target="_blank">DOSB-Leitfaden LiMS 09.04.2019</a>, S. 47</i>'),
+	array('colspan', '<b>Inserttags der Lizenzverwaltung</b>'),
+	array('colspan', '<b style="display:inline-block; width:200px;">##css##</b> Interne Style-Sheet-Definitionen<br><b style="display:inline-block; width:200px;">##lizenz_vorname##</b> Vorname der lizenzierten Person<br><b style="display:inline-block; width:200px;">##lizenz_nachname##</b> Nachname der lizenzierten Person<br><b style="display:inline-block; width:200px;">##lizenz_geschlecht##</b> Geschlecht (m/w/d)<br><b style="display:inline-block; width:200px;">##lizenz_art##</b> Ausbildungsgang: A, B, C-Sonderlizenz usw.<br><b style="display:inline-block; width:200px;">##lizenz_nummer##</b> Lizenznummer des DOSB, z.B. DSchB-T-C-0002146<br><b style="display:inline-block; width:200px;">##lizenz_content##</b> Inhalt aus der Textarea der E-Mail<br><b style="display:inline-block; width:200px;">##lizenz_signatur##</b> Signatur aus der E-Mail bzw. aus den System-Einstellungen'),
+);
+
+$GLOBALS['TL_LANG']['XPL']['lizenzverwaltung_verbaende'] = array
+(
+	array('colspan', '<b>Dringend empfohlene Konfiguration für Verbände!</b>'),
+	array('colspan', 'Kennzeichen = Name'),
+	array('colspan', 'S = Deutscher Schachbund<br>1 = Baden<br>2 = Bayern<br>3 = Berlin<br>D = Brandenburg<br>B = Bremen<br>4 = Hamburg<br>5 = Hessen<br>E = Mecklenburg-Vorpommern<br>7 = Niedersachsen<br>6 = Nordrhein-Westfalen<br>8 = Rheinland-Pfalz<br>9 = Saarland<br>F = Sachsen<br>H = Sachsen-Anhalt<br>A = Schleswig-Holstein<br>G = Thüringen<br>C = Württemberg')
 );

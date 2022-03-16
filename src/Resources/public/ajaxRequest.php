@@ -83,6 +83,7 @@ class ajaxRequest
 					'honor_code_date'    => $result->codex_date, // Datum Ehrenkodex
 					'first_aid'          => (int)$result->help, // Erste-Hilfe-Ausbildung
 					'first_aid_date'     => $result->help_date, // Datum der Erste-Hilfe-Ausbildung
+					'custom_1'           => \Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerband($result->verband), // Verbandsname in Zusatzfeld 1
 				);
 				// Restliche Werte ergänzen
 				if($result->license_number_dosb)

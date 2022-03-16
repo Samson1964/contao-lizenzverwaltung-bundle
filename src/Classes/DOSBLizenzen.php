@@ -2,8 +2,6 @@
 
 namespace Schachbulle\ContaoLizenzverwaltungBundle\Classes;
 
-if (!defined('TL_ROOT')) die('You cannot access this file directly!');
-
 /**
  * Class dsb_trainerlizenzImport
   */
@@ -79,6 +77,7 @@ class DOSBLizenzen extends \Backend
 				'honor_code_date'    => $result->codex_date, // Datum Ehrenkodex
 				'first_aid'          => (int)$result->help, // Erste-Hilfe-Ausbildung
 				'first_aid_date'     => $result->help_date, // Datum der Erste-Hilfe-Ausbildung
+				'custom_1'           => \Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerband($result->verband), // Verbandsname in Zusatzfeld 1
 			);
 			// Restliche Werte ergänzen
 			if($result->license_number_dosb)
@@ -353,6 +352,7 @@ class DOSBLizenzen extends \Backend
 	{
 
 		$start = \Input::get('start');
+		$umzug = \Input::get('umzug');
 		if($start)
 		{
 			// jQuery einbinden
@@ -406,9 +406,62 @@ class DOSBLizenzen extends \Backend
 			$session->set('lizenzverwaltung_max', count($arrLizenzen));
 
 		}
+		elseif($umzug)
+		{
+			// jQuery einbinden
+			$GLOBALS['TL_JAVASCRIPT'][] = 'http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js';
+
+			// Export starten
+			// Datensätze einlesen, bei der die Lizenz noch aktiv ist (größer/gleich aktuelles Datum)
+			$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.gueltigkeit >= ? AND tl_lizenzverwaltung_items.published = ? AND tl_lizenzverwaltung_items.license_number_dosb <> ? AND (tl_lizenzverwaltung_items.letzteAenderung > tl_lizenzverwaltung_items.dosb_tstamp OR tl_lizenzverwaltung_items.dosb_code = 200) ORDER BY tl_lizenzverwaltung.id")
+			                                  ->execute(time(), 1, '');
+			$arrLizenzen = NULL;
+			$arrLizenzen = is_array($arrLizenzen) ? array_intersect($arrLizenzen, $result->fetchEach('id')) : $result->fetchEach('id');
+			$records = implode(',', $arrLizenzen);
+
+			// Datensätze in die Ausgabe schreiben
+			if($result->numRows)
+			{
+				$content .= '<div id="dosb_export_status">[<i>'.date('d.m.Y H:i:s').'</i>] <b>'.$result->numRows.' Datensätze sind zu umzuziehen ...</b><br>';
+				$result->reset();
+				while($result->next())
+				{
+					$content .= '<span class="item" id="export_'.$result->id.'"> ID '.$result->id.' '.$result->license_number_dosb.' '.$result->vorname.' '.$result->name.' ...</span><br>';
+				}
+			}
+			else
+			{
+				$content .= '<div id="dosb_export_status">[<i>'.date('d.m.Y H:i:s').'</i>] <b>Keine Datensätze zum Umziehen gefunden.</b><br>';
+			}
+
+			// Zurücklink generieren
+			$backlink = str_replace('&key=exportDOSB&umzug=1', '', \Environment::get('request'));
+			$content .= '<div style="margin-top:30px;"><a href="'.$backlink.'" class="dosb_button_mini">Zurück zur Lizenzverwaltung</a></div>';
+
+			$content .= '</div>';
+			$content .= '<script>'."\n";
+			$content .= 'var records = ['.$records.'];'."\n";
+			$content .= 'for(let i=0; i<records.length; i++) {'."\n";
+			$content .= "  $.get('bundles/contaolizenzverwaltung/ajaxRequestUmzug.php?acid=lizenzverwaltung&record='+records[i], function (data)"."\n";
+			$content .= '  {'."\n";
+			$content .= '     var item = JSON.parse(data);';
+			$content .= '     $(item.css_id).prepend(item.datum);'."\n";
+			$content .= '     $(item.css_id).append(item.text);'."\n";
+			$content .= '     $(item.css_id).css("color", item.color);'."\n";
+			$content .= '     $(itemcss_id).fadeIn("slow")'."\n";
+			$content .= '  })'."\n";
+			$content .= '}'."\n";
+			$content .= '</script>'."\n";
+
+			// Sitzung anlegen/initialisieren
+			$session = \Session::getInstance();
+			$session->set('lizenzverwaltung_counter', 0);
+			$session->set('lizenzverwaltung_max', count($arrLizenzen));
+
+		}
 		else
 		{
-			// Link generieren
+			// Links generieren
 			$startlink = \Controller::addToUrl('start=1&rt='.REQUEST_TOKEN); // start und Token hinzufügen
 
 			$content .= '<div id="dosb_export_status">';
@@ -417,6 +470,16 @@ class DOSBLizenzen extends \Backend
 			$content .= '<a href="'.$startlink.'" class="dosb_button_mini">Export starten</a>';
 			$content .= '</div>';
 			$content .= '</div>';
+
+			// Umzugsfunktion
+			//$startlink = \Controller::addToUrl('umzug=1&rt='.REQUEST_TOKEN); // start und Token hinzufügen
+            //
+			//$content .= '<div id="dosb_export_status">';
+			//$content .= '<h2 class="sub_headline">Lizenzen beim DOSB in einen untergeordneten Verband umziehen</h2>';
+			//$content .= '<div class="tl_submit_container">';
+			//$content .= '<a href="'.$startlink.'" class="dosb_button_mini">Umzug starten</a>';
+			//$content .= '</div>';
+			//$content .= '</div>';
 		}
 		return $content;
 	}

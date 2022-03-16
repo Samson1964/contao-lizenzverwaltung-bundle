@@ -84,18 +84,26 @@ class Helper extends \Frontend
 	public function getVerbaende()
 	{
 
-		//$return = array();
-		//$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_verbaende WHERE published = ?")
-		//                                  ->execute(1);
-		//// Auswerten
-		//if($result->numRows)
-		//{
-		//	while($result->next())
-		//	{
-		//		$return[$result->kennzeichen] = $result->name;
-		//	}
-		//}
-		//return $return;
+		$return = array();
+
+		// Fix in 4.1.3: composer:install wirft Fehler aus, wenn nicht vorher geprüft wird, ob die Tabelle existiert
+		$result = \Database::getInstance()->prepare("SHOW TABLES LIKE ?")
+		                                  ->execute('%tl_lizenzverwaltung_verbaende%');
+		if($result->numRows)
+		{
+			$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_verbaende WHERE published = ?")
+			                                  ->execute(1);
+			// Auswerten
+			if($result->numRows)
+			{
+				while($result->next())
+				{
+					$return[$result->kennzeichen] = $result->name;
+				}
+			}
+		}
+
+		return $return;
 
 		// Altes Format
 		return array

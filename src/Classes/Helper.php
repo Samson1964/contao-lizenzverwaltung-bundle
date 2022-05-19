@@ -122,9 +122,9 @@ class Helper extends \Frontend
 			'8'                   => 'Rheinland-Pfalz',
 			'9'                   => 'Saarland',
 			'F'                   => 'Sachsen',
-			'H'                   => 'Sachsen-Anhalt',
+			'G'                   => 'Sachsen-Anhalt',
 			'A'                   => 'Schleswig-Holstein',
-			'G'                   => 'Thüringen',
+			'H'                   => 'Thüringen',
 			'C'                   => 'Württemberg'
 		);
 	}

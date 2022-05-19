@@ -641,10 +641,10 @@ class tl_lizenzverwaltung extends \Backend
 			case 'V8': // Lizenzen Rheinland-Pfalz
 			case 'V9': // Lizenzen Saarland
 			case 'VF': // Lizenzen Sachsen
-			case 'VH': // Lizenzen Sachsen-Anhalt
+			case 'VG': // Lizenzen Sachsen-Anhalt
 			case 'VA': // Lizenzen Schleswig-Holstein
-			case 'VG': // Lizenzen Thüringen
-			case 'VC': // Lizenzen Württemberg'
+			case 'VH': // Lizenzen Thüringen
+			case 'VC': // Lizenzen Württemberg
 				$objPlayers = \Database::getInstance()->prepare("SELECT tl_lizenzverwaltung.id FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.verband = ?")
 				                                      ->execute(substr($session['filter']['tl_lizenzverwaltungFilter']['tli_filter'],1,1));
 				$arrPlayers = is_array($arrPlayers) ? array_intersect($arrPlayers, $objPlayers->fetchEach('id')) : $objPlayers->fetchEach('id');

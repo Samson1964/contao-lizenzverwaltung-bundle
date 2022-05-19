@@ -1,5 +1,9 @@
 # Lizenzverwaltung Changelog
 
+## Version 4.1.5 (2022-05-19)
+
+* Fix: Spezialfilter bringt Thüringen und Sachsen-Anhalt durcheinander
+
 ## Version 4.1.4 (2022-03-16)
 
 * Fix: JQuery-Verlinkung auf https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js in DOSBLizenzen.php geändert

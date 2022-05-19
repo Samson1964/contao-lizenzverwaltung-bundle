@@ -239,9 +239,9 @@ class TrainerlizenzExport extends \Backend
 			case 'V8': // Lizenzen Rheinland-Pfalz
 			case 'V9': // Lizenzen Saarland
 			case 'VF': // Lizenzen Sachsen
-			case 'VH': // Lizenzen Sachsen-Anhalt
+			case 'VG': // Lizenzen Sachsen-Anhalt
 			case 'VA': // Lizenzen Schleswig-Holstein
-			case 'VG': // Lizenzen Thüringen
+			case 'VH': // Lizenzen Thüringen
 			case 'VC': // Lizenzen Württemberg'
 				($sql) ? $sql .= ' AND' : $sql = ' WHERE';
 				$sql .= " tl_lizenzverwaltung_items.verband = '".substr($filter,1,1)."'";

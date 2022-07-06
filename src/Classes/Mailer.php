@@ -2,8 +2,6 @@
 
 namespace Schachbulle\ContaoLizenzverwaltungBundle\Classes;
 
-if (!defined('TL_ROOT')) die('You cannot access this file directly!');
-
 /**
  * Class Mailer
   */
@@ -82,32 +80,41 @@ class Mailer extends \Backend
 			$cc = explode(',', html_entity_decode(\Input::get('cc')));
 			$bcc = explode(',', html_entity_decode(\Input::get('bcc')));
 
-			// Führende und abschließende Leerzeichen entfernen
-			$to = array_map('trim', $to);
-			$cc = array_map('trim', $cc);
-			$bcc = array_map('trim', $bcc);
-
+			// Führende und abschließende Leerzeichen entfernen, und leere Elemente entfernen
+			$to = array_filter(array_map('trim', $to));
+			$cc = array_filter(array_map('trim', $cc));
+			$bcc = array_filter(array_map('trim', $bcc));
 
 			// Adressen validieren, Exception bei ungültiger Adresse
-			foreach($to as $email)
+			if($to && is_array($to))
 			{
-				if(!self::validateEmail($email))
+				foreach($to as $email)
 				{
-					throw new \Exception(sprintf($GLOBALS['TL_LANG']['Lizenzverwaltung']['emailCorrupt'], $email));
+					if(!self::validateEmail($email))
+					{
+						throw new \Exception(sprintf($GLOBALS['TL_LANG']['Lizenzverwaltung']['emailCorrupt'], $email));
+					}
 				}
 			}
-			foreach($cc as $email)
+			if($cc && is_array($cc))
 			{
-				if(!self::validateEmail($email))
+				foreach($cc as $email)
 				{
-					throw new \Exception(sprintf($GLOBALS['TL_LANG']['Lizenzverwaltung']['emailCorrupt'], $email));
+					if(!self::validateEmail($email))
+					{
+						throw new \Exception(sprintf($GLOBALS['TL_LANG']['Lizenzverwaltung']['emailCorrupt'], $email));
+					}
 				}
 			}
-			foreach($bcc as $email)
+			print_r($bcc);
+			if($bcc && is_array($bcc))
 			{
-				if(!self::validateEmail($email))
+				foreach($bcc as $email)
 				{
-					throw new \Exception(sprintf($GLOBALS['TL_LANG']['Lizenzverwaltung']['emailCorrupt'], $email));
+					if(!self::validateEmail($email))
+					{
+						throw new \Exception(sprintf($GLOBALS['TL_LANG']['Lizenzverwaltung']['emailCorrupt'], $email));
+					}
 				}
 			}
 
@@ -259,6 +266,8 @@ class Mailer extends \Backend
 		$arrTokens = array
 		(
 			'css'               => $css,
+			'lizenz_art'        => $trainer->lizenz,
+			'lizenz_nummer'     => $trainer->license_number_dosb,
 			'lizenz_title'      => $mail->subject,
 			'lizenz_vorname'    => $trainer->vorname,
 			'lizenz_nachname'   => $trainer->name,

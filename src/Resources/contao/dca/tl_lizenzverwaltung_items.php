@@ -43,7 +43,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'headerFields'            => array('name', 'vorname', 'geburtstag', 'email', 'strasse', 'plz', 'ort'),
 			'panelLayout'             => 'filter;sort,search,limit',
 			'disableGrouping'         => false,
-			'child_record_callback'   => array('tl_lizenzverwaltung_items', 'listLizenzen') 
+			'child_record_callback'   => array('tl_lizenzverwaltung_items', 'listLizenzen')
 		),
 		'global_operations' => array
 		(
@@ -69,7 +69,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 				'href'                => 'table=tl_lizenzverwaltung_mails',
 				'icon'                => 'bundles/contaolizenzverwaltung/images/email.png',
 				'button_callback'     => array('tl_lizenzverwaltung_items', 'toggleEmail')
-			), 
+			),
 			'copy' => array
 			(
 				'label'               => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['copy'],
@@ -111,7 +111,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 		'codex'                       => 'codex_date',
 		'addEnclosure'                => 'enclosure,enclosureInfo',
 		'help'                        => 'help_date'
-	), 
+	),
 
 	// Base fields in table tl_lizenzverwaltung
 	'fields' => array
@@ -168,7 +168,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			(
 				'tl_class'            => 'w50'
 			)
-		), 
+		),
 		// PDF-Link Format DIN A4
 		'view_pdf' => array
 		(
@@ -190,7 +190,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			(
 				'tl_class'            => 'w50'
 			)
-		), 
+		),
 		// PDF-Link Format Card
 		'view_pdfcard' => array
 		(
@@ -212,8 +212,8 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			(
 				'tl_class'            => 'w50'
 			)
-		), 
-		// DOSB-Lizenznummer, z.B. 3535 (korreliert mit der obigen Lizenz) 
+		),
+		// DOSB-Lizenznummer, z.B. 3535 (korreliert mit der obigen Lizenz)
 		'lid' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['lid'],
@@ -341,7 +341,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'inputType'               => 'text',
 			'exclude'                 => true,
 			'flag'                    => 8,
-			'explanation'             => 'lizenzverwaltung_erwerb', 
+			'explanation'             => 'lizenzverwaltung_erwerb',
 			'eval'                    => array
 			(
 				'rgxp'                => 'date',
@@ -385,7 +385,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['gueltigkeit'],
 			'inputType'               => 'text',
-			'explanation'             => 'lizenzverwaltung_verlaengerung', 
+			'explanation'             => 'lizenzverwaltung_verlaengerung',
 			'exclude'                 => true,
 			'flag'                    => 8,
 			'eval'                    => array
@@ -420,7 +420,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['codex_date'],
 			'inputType'               => 'text',
 			'exclude'                 => true,
-			'explanation'             => 'lizenzverwaltung_codex', 
+			'explanation'             => 'lizenzverwaltung_codex',
 			'flag'                    => 8,
 			'eval'                    => array
 			(
@@ -454,7 +454,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['help_date'],
 			'inputType'               => 'text',
 			'exclude'                 => true,
-			'explanation'             => 'lizenzverwaltung_codex', 
+			'explanation'             => 'lizenzverwaltung_codex',
 			'flag'                    => 8,
 			'eval'                    => array
 			(
@@ -488,7 +488,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['setHeute'],
 			'exclude'                 => true,
 			'input_field_callback'    => array('tl_lizenzverwaltung_items', 'setHeute')
-		), 
+		),
 		'addEnclosure' => array
 		(
 			'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['addEnclosure'],
@@ -545,7 +545,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 
 class tl_lizenzverwaltung_items extends \Backend
 {
-	
+
 	var $verbandsmail = array();
 
 	public function toggleEmail($row, $href, $label, $title, $icon, $attributes)
@@ -616,9 +616,9 @@ class tl_lizenzverwaltung_items extends \Backend
 			}
 			$this->redirect($backlink.'?act=error');
 		}
-		
+
 		$this->createInitialVersion('tl_lizenzverwaltung_items', $intId);
-		
+
 		// Trigger the save_callback
 		if (is_array($GLOBALS['TL_DCA']['tl_lizenzverwaltung_items']['fields']['published']['save_callback']))
 		{
@@ -628,7 +628,7 @@ class tl_lizenzverwaltung_items extends \Backend
 				$blnPublished = $this->$callback[0]->$callback[1]($blnPublished, $this);
 			}
 		}
-		
+
 		// Update the database
 		$this->Database->prepare("UPDATE tl_lizenzverwaltung SET tstamp=". time() .", published='" . ($blnPublished ? '' : '1') . "' WHERE id=?")
 					   ->execute($intId);
@@ -651,8 +651,8 @@ class tl_lizenzverwaltung_items extends \Backend
 		{
 			$args[$x] = \Schachbulle\ContaoHelperBundle\Classes\Helper::getDate($args[$x]);
 		}
-		return $args; 
-	} 
+		return $args;
+	}
 
 	public function getLizenznummer(DataContainer $dc)
 	{
@@ -666,12 +666,12 @@ class tl_lizenzverwaltung_items extends \Backend
 		{
 			$status = 'Keine DOSB-Lizenz vorhanden';
 		}
-		
+
 		$string = '
 		<div class="w50 dosb_margin">
 		<div class="tl_text" style="border:0">'.$status.'</div>
 		</div>';
-		
+
 		return $string;
 	}
 
@@ -684,10 +684,14 @@ class tl_lizenzverwaltung_items extends \Backend
 		if($dc->activeRecord->dosb_tstamp)
 		{
 			$antwort = 'Letzter Abruf: '.date('d.m.Y H:i:s', $dc->activeRecord->dosb_tstamp).' ('.$dc->activeRecord->dosb_code.' '.$dc->activeRecord->dosb_antwort.')';
+
+			if($dc->activeRecord->dosb_code != 200) $css = 'color:red;';
+			else $css = '';
+
 			return '
 			<div class="w50 dosb_margin">
 			<div class="tl_text" style="border:0;"><a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_license'][0].'</a></div>
-			<p class="tl_help tl_tip" title="" style="margin-left:7px;">'.$antwort.'</p>
+			<p class="tl_help tl_tip" title="" style="margin-left:7px;'.$css.'">'.$antwort.'</p>
 			</div>';
 		}
 		else
@@ -699,7 +703,7 @@ class tl_lizenzverwaltung_items extends \Backend
 		}
 
 	}
-	
+
 
 	/**
 	 * Button zum PDF-Abruf im DIN-A4-Format anzeigen
@@ -711,7 +715,7 @@ class tl_lizenzverwaltung_items extends \Backend
 	{
 		// Link generieren
 		$link = str_replace('&amp;act=edit', '', \Controller::addToUrl('key=getLizenzPDF&rt='.REQUEST_TOKEN)); // key hinzufügen | edit löschen
-		
+
 		// Letzter Lizenzabruf und Rückgabecode
 		if($dc->activeRecord->dosb_pdf_tstamp)
 		{
@@ -723,10 +727,13 @@ class tl_lizenzverwaltung_items extends \Backend
 		{
 			if($antwort)
 			{
+				if($dc->activeRecord->dosb_pdf_code != 200) $css = 'color:red;';
+				else $css = '';
+
 				return '
 				<div class="w50 dosb_margin">
 				<div class="tl_text" style="border:0;"><a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_pdf'][0].'</a></div>
-				<p class="tl_help tl_tip" title="" style="margin-left:7px;">'.$antwort.'</p>
+				<p class="tl_help tl_tip" title="" style="margin-left:7px;'.$css.'">'.$antwort.'</p>
 				</div>';
 			}
 			else
@@ -738,7 +745,7 @@ class tl_lizenzverwaltung_items extends \Backend
 			}
 		}
 		else return '<div class="w50 dosb_margin"></div>';
-			
+
 	}
 
 	/**
@@ -763,10 +770,13 @@ class tl_lizenzverwaltung_items extends \Backend
 		{
 			if($antwort)
 			{
+				if($dc->activeRecord->dosb_pdfcard_code != 200) $css = 'color:red;';
+				else $css = '';
+
 				return '
 				<div class="w50 dosb_margin">
 				<div class="tl_text" style="border:0;"><a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_pdfcard'][0].'</a></div>
-				<p class="tl_help tl_tip" title="" style="margin-left:7px;">'.$antwort.'</p>
+				<p class="tl_help tl_tip" title="" style="margin-left:7px;'.$css.'">'.$antwort.'</p>
 				</div>';
 			}
 			else
@@ -778,7 +788,7 @@ class tl_lizenzverwaltung_items extends \Backend
 			}
 		}
 		else return '<div class="w50 dosb_margin"></div>';
-			
+
 	}
 
 	/**
@@ -807,13 +817,13 @@ class tl_lizenzverwaltung_items extends \Backend
 			$antwort = 'Letzter Abruf: '.date('d.m.Y H:i:s', $dc->activeRecord->dosb_tstamp).' ('.$dc->activeRecord->dosb_code.' '.$dc->activeRecord->dosb_antwort.')';
 		}
 		else $antwort = '';
-		
+
 		$string = '
 <div class="w50 widget" style="display:none">
 	<a href="#" onclick="AjaxRequest.toggleSubpalette(this, \'sub_login\', \'login\')" onfocus="Backend.getScrollOffset()" class="dosb_button_mini">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['setHeute'][0].'</a>
 	<p class="tl_help tl_tip" title="" style="margin-top:3px;">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['setHeute'][1].'</p>
-</div>'; 
-		
+</div>';
+
 		return $string;
 	}
 
@@ -844,15 +854,15 @@ class tl_lizenzverwaltung_items extends \Backend
 			$temp .= '(noch nicht beim DOSB gemeldet)</span>';
 		}
 		return $temp;
-		
+
 //		return '
-//<div class="cte_type ' . (($arrRow['sent_state'] && $arrRow['sent_date']) ? 'published' : 'unpublished') . '"><strong>' . $arrRow['subject'] . '</strong> - ' . (($arrRow['sent_state'] && $arrRow['sent_date']) ? 'Versendet am '.Date::parse(Config::get('datimFormat'), $arrRow['sent_date']) : 'Nicht versendet'). '</div>'; 
+//<div class="cte_type ' . (($arrRow['sent_state'] && $arrRow['sent_date']) ? 'published' : 'unpublished') . '"><strong>' . $arrRow['subject'] . '</strong> - ' . (($arrRow['sent_state'] && $arrRow['sent_date']) ? 'Versendet am '.Date::parse(Config::get('datimFormat'), $arrRow['sent_date']) : 'Nicht versendet'). '</div>';
 
 	}
-	
+
 	public function getLeitfaden(DataContainer $dc)
 	{
-		$text = 
+		$text =
 		'<div class="long widget">
 		<div class="tl_text" style="border:0;"><a href="bundles/contaolizenzverwaltung/pdf/Leitfaden_LiMS_09.04.2019.pdf" target="_blank" style="color:blue;">Leitfaden zum Lizenzmanagementsystem</a><span> (Version 7.0 vom 09.04.2019)</span></div>
 		<p class="tl_help tl_tip" title="" style="margin-left:7px;">'.$info.'</p>
@@ -893,7 +903,7 @@ class tl_lizenzverwaltung_items extends \Backend
 			// Gültigkeitsregeln des DOSB gelten
 			if($dc->activeRecord->gueltigkeit > $gueltigkeit)
 			{
-				Message::addError('Gültig bis ('.date('d.m.Y', $dc->activeRecord->gueltigkeit).') ist größer als erlaubt. Der DOSB erlaubt nur den '.date('d.m.Y', $gueltigkeit).'!'); 
+				Message::addError('Gültig bis ('.date('d.m.Y', $dc->activeRecord->gueltigkeit).') ist größer als erlaubt. Der DOSB erlaubt nur den '.date('d.m.Y', $gueltigkeit).'!');
 			}
 		}
 		else
@@ -901,10 +911,10 @@ class tl_lizenzverwaltung_items extends \Backend
 			// Kulanzregelung DOSB für Bestandsdaten
 			if($dc->activeRecord->gueltigkeit > $gueltigkeit)
 			{
-				Message::addInfo('Gültig bis ('.date('d.m.Y', $dc->activeRecord->gueltigkeit).') ist größer als erlaubt. Der DOSB erlaubt nur den '.date('d.m.Y', $gueltigkeit).'! Es wird Probleme bei Updates geben.'); 
+				Message::addInfo('Gültig bis ('.date('d.m.Y', $dc->activeRecord->gueltigkeit).') ist größer als erlaubt. Der DOSB erlaubt nur den '.date('d.m.Y', $gueltigkeit).'! Es wird Probleme bei Updates geben.');
 			}
 		}
-		
+
 		// ----------------------------------------------------------------
 		// E-MAIL
 		// ----------------------------------------------------------------
@@ -916,7 +926,7 @@ class tl_lizenzverwaltung_items extends \Backend
 		if(!$result->email && $dc->activeRecord->tstamp)
 		{
 			// Fehlende E-Mail-Adresse bei nicht neuem Datensatz
-			Message::addError('E-Mail-Adresse des Trainers fehlt! Ein automatischer Lizenzversand an ihn ist nicht möglich.'); 
+			Message::addError('E-Mail-Adresse des Trainers fehlt! Ein automatischer Lizenzversand an ihn ist nicht möglich.');
 		}
 
 		return '';
@@ -946,14 +956,14 @@ class tl_lizenzverwaltung_items extends \Backend
 			10 => 4,
 			11 => 4,
 			12 => 4
-		); 
+		);
 
 		$year = date('Y', $value);
 		$quartal = $quartals[date("n", $value)]; // n = Monat 1-12
 
 		//log_message(date('d.m.Y', $value), 'lizenzverwaltung_quartal.log');
 		//log_message($quartal, 'lizenzverwaltung_quartal.log');
-		
+
 		switch($quartal)
 		{
 			case 1:
@@ -1024,14 +1034,14 @@ class tl_lizenzverwaltung_items extends \Backend
 			}
 		}
 		else $antwort = '';
-		
+
 		$string = '
 <div class="clr widget">
 	<h3><label for="ctrl_enclosureInfo">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['enclosureInfo'][0].'</label></h3>
 	'.$antwort.'
 	<p class="tl_help tl_tip" title="" style="margin-top:3px;">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['enclosureInfo'][1].'</p>
-</div>'; 
-		
+</div>';
+
 		return $string;
 	}
 
@@ -1048,7 +1058,7 @@ class tl_lizenzverwaltung_items extends \Backend
 		// Links zum PDF generieren
 		$pdf_server = TL_ROOT.'/'.$lizenzordner->path.'/'.$dc->activeRecord->license_number_dosb.'.pdf';
 		$pdf_download = $lizenzordner->path.'/'.$dc->activeRecord->license_number_dosb.'.pdf';
-		
+
 		// Lizenzstatus
 		if($dc->activeRecord->license_number_dosb && file_exists($pdf_server))
 		{
@@ -1060,7 +1070,7 @@ class tl_lizenzverwaltung_items extends \Backend
 		{
 			$status = 'Kein PDF DIN A4 vorhanden';
 		}
-		
+
 		if($dc->activeRecord->license_number_dosb)
 		{
 			return '
@@ -1097,7 +1107,7 @@ class tl_lizenzverwaltung_items extends \Backend
 		{
 			$status = 'Kein PDF Card vorhanden';
 		}
-		
+
 		if($dc->activeRecord->license_number_dosb)
 		{
 			return '

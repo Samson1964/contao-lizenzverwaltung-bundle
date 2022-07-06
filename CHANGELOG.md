@@ -1,5 +1,12 @@
 # Lizenzverwaltung Changelog
 
+## Version 4.1.6 (2022-07-06)
+
+* Fix: Mailer.php kleine Anpassung
+* Fix: Tags werden in E-Mails nicht ersetzt
+* Fix: Abfrage ob To, CC und BCC befüllt ist, fehlte in Mailer.php
+* Add: Negative Anfragen an den DOSB (Lizenz erstellen/verlängern, PDF-Dateien) werden rot markiert
+
 ## Version 4.1.5 (2022-05-19)
 
 * Fix: Spezialfilter bringt Thüringen und Sachsen-Anhalt durcheinander

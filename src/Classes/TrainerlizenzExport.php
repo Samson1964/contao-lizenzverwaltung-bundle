@@ -250,7 +250,7 @@ class TrainerlizenzExport extends \Backend
 			default:
 		}
 
-		($sql) ? $sql .= " AND tl_lizenzverwaltung_items.published = '1' ORDER BY name,vorname ASC" : $sql = " WHERE tl_lizenzverwaltung_items.published = '1' ORDER BY name,vorname ASC";
+		($sql) ? $sql .= " AND tl_lizenzverwaltung_items.published = '1' AND tl_lizenzverwaltung.published = '1' ORDER BY name,vorname ASC" : $sql = " WHERE tl_lizenzverwaltung_items.published = '1' AND tl_lizenzverwaltung.published = '1' ORDER BY name,vorname ASC";
 
 		$sql = "SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id".$sql;
 		

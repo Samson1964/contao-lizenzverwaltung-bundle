@@ -68,8 +68,8 @@ class Lizenzenliste extends \Module
 		}
 
 		// Lizenzen einlesen
-		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.gueltigkeit >= ? AND tl_lizenzverwaltung_items.published = ? $sql ORDER BY tl_lizenzverwaltung.name ASC, tl_lizenzverwaltung.vorname ASC")
-		                                  ->execute($heute, 1);
+		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.gueltigkeit >= ? AND tl_lizenzverwaltung_items.published = ? AND tl_lizenzverwaltung.published = ? $sql ORDER BY tl_lizenzverwaltung.name ASC, tl_lizenzverwaltung.vorname ASC")
+		                                  ->execute($heute, 1, 1);
 		//$lizenzen = is_array($lizenzen) ? array_intersect($lizenzen, $result->fetchEach('id')) : $result->fetchEach('id');
 
 		$lizenzen = array();

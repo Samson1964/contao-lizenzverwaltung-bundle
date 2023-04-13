@@ -1,5 +1,10 @@
 # Lizenzverwaltung Changelog
 
+## Version 4.1.7 (2023-04-13)
+
+* Fix: Deaktivierte Personen werden in Lizenzliste FE angezeigt
+* Fix: Deaktivierte Personen werden mit exportiert
+
 ## Version 4.1.6 (2022-07-06)
 
 * Fix: Mailer.php kleine Anpassung

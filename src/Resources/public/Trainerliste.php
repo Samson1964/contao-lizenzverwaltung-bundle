@@ -59,8 +59,8 @@ class Trainerliste
 				{
 					echo ".... Lizenzen von Verband ".$objReferenten->verband." werden geladen<br>\n";
 					// Lizenzen des Verbandes laden
-					$objLizenzen = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.verband = ? AND tl_lizenzverwaltung_items.published = ? ORDER BY tl_lizenzverwaltung.name,tl_lizenzverwaltung.vorname ASC")
-					                                       ->execute($objReferenten->verband, 1);
+					$objLizenzen = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.verband = ? AND tl_lizenzverwaltung_items.published = ? AND tl_lizenzverwaltung.published = ? ORDER BY tl_lizenzverwaltung.name,tl_lizenzverwaltung.vorname ASC")
+					                                       ->execute($objReferenten->verband, 1, 1);
 
 					if($objLizenzen->numRows)
 					{

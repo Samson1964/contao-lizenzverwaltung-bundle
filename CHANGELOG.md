@@ -1,5 +1,9 @@
 # Lizenzverwaltung Changelog
 
+## Version 4.2.0 (2023-08-24)
+
+* Change: Gültigkeit der Lizenzen bis zum Jahresende statt bis zum Quartalsende
+
 ## Version 4.1.7 (2023-04-13)
 
 * Fix: Deaktivierte Personen werden in Lizenzliste FE angezeigt

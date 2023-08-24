@@ -961,6 +961,9 @@ class tl_lizenzverwaltung_items extends \Backend
 		$year = date('Y', $value);
 		$quartal = $quartals[date("n", $value)]; // n = Monat 1-12
 
+		// Gültigkeit ab 2023 bis zum Jahresende
+		$quartal = 4;
+
 		//log_message(date('d.m.Y', $value), 'lizenzverwaltung_quartal.log');
 		//log_message($quartal, 'lizenzverwaltung_quartal.log');
 

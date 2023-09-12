@@ -2,8 +2,6 @@
 
 namespace Schachbulle\ContaoLizenzverwaltungBundle\Classes;
 
-if (!defined('TL_ROOT')) die('You cannot access this file directly!');
-
 /**
  * Class dsb_trainerlizenzExport
   */
@@ -170,7 +168,6 @@ class TrainerlizenzExport extends \Backend
 	public function getRecords(\DataContainer $dc)
 	{
 		// Liest die Datensätze der Lizenzverwaltung in ein Array
-
 		// Suchbegriff in aktueller Ansicht laden
 		$search = $dc->Session->get('search');
 		$search = $search[$dc->table]; // Das Array enthält field und value
@@ -201,7 +198,7 @@ class TrainerlizenzExport extends \Backend
 			if($key != 'limit')
 			{
 				($sql) ? $sql .= ' AND' : $sql = ' WHERE';
-				$sql .= " ".$key." = '".$value."'";
+				$sql .= " tl_lizenzverwaltung.".$key." = '".$value."'";
 			}
 		}
 

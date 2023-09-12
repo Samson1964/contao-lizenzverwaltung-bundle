@@ -1,5 +1,9 @@
 # Lizenzverwaltung Changelog
 
+## Version 4.2.1 (2023-09-12)
+
+* Add: tl_module.lizenzverwaltung_endofyear -> Checkbox um Gültigkeit der Lizenzen bis zum Jahresende im Frontend anzuzeigen
+
 ## Version 4.2.0 (2023-08-24)
 
 * Change: Gültigkeit der Lizenzen bis zum Jahresende statt bis zum Quartalsende

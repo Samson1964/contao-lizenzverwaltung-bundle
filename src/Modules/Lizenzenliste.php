@@ -54,8 +54,8 @@ class Lizenzenliste extends \Module
 		$Verband = \Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerbaende(); // Verbände holen
 		$heute = time();
 	
-		// Zu zeigende Lizenzen in SQL-String verpacken
-		$lizenzen = unserialize($this->lizenzverwaltung_typ);
+		$lizenzen = unserialize($this->lizenzverwaltung_typ); // Zu zeigende Lizenzen in SQL-String verpacken
+		$jahresende = $this->lizenzverwaltung_endofyear; // Gültigkeit bis Jahresende (Boolean)
 
 		if(is_array($lizenzen))
 		{
@@ -83,7 +83,7 @@ class Lizenzenliste extends \Module
 					'vorname'     => $result->vorname,
 					'verband'     => $Verband[$result->verband],
 					'lizenz'      => $result->lizenz,
-					'gueltigkeit' => date('d.m.Y', $result->gueltigkeit),
+					'gueltigkeit' => ($jahresende) ? '31.12.'.date('Y', $result->gueltigkeit) : date('d.m.Y', $result->gueltigkeit),
 				);
 			}
 		}

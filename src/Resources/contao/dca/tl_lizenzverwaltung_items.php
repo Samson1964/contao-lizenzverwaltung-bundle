@@ -359,7 +359,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'inputType'               => 'multiColumnWizard',
 			'eval'                    => array
 			(
-				'tl_class'            => 'w50',
+				'tl_class'            => 'long clr',
 				'columnFields'        => array
 				(
 					'datum' => array
@@ -373,7 +373,21 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 							'rgxp'                => 'date',
 							'datepicker'          => true,
 							'maxlength'           => 10,
-							'style'               => 'width:92%'
+							'style'               => 'width:90%'
+						),
+					),
+					'seminar' => array
+					(
+						'label'                   => &$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['verlaengerung_seminar'],
+						'exclude'                 => true,
+						'inputType'               => 'text',
+						'eval'                    => array
+						(
+							'tl_class'            => 'wizard',
+							'rgxp'                => 'date',
+							'datepicker'          => true,
+							'maxlength'           => 10,
+							'style'               => 'width:90%'
 						),
 					),
 				)

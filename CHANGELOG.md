@@ -1,5 +1,9 @@
 # Lizenzverwaltung Changelog
 
+## Version 4.2.2 (2023-10-04)
+
+* Add: tl_lizenzverwaltung_items.verlaengerungen -> Feld für Seminardatum hinzugefügt
+ 
 ## Version 4.2.1 (2023-09-12)
 
 * Add: tl_module.lizenzverwaltung_endofyear -> Checkbox um Gültigkeit der Lizenzen bis zum Jahresende im Frontend anzuzeigen

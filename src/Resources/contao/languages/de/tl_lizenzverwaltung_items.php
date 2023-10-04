@@ -59,7 +59,8 @@ $GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['lizenz']= array('Lizenz', 'Bit
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['lizenzver_legend'] = 'Erstausstellung und Verlängerungen';
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['erwerb']= array('Datum des Lizenzerwerbs', 'Datum des Lizenzerwerbs im Format TT.MM.JJJJ');
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['verlaengerungen'] = array('Verlängerungen','Das Datum der einzelnen Verlängerungen bitte in aufsteigender Reihenfolge im Format TT.MM.JJJJ angeben. Über die Icons rechts können Sie ein Datum auswählen und Datumsfelder hinzufügen, verschieben und löschen.');
-$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['verlaengerung_datum'] = array('','');
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['verlaengerung_datum'] = array('Datum für DOSB','');
+$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['verlaengerung_seminar'] = array('Seminardatum (wird nicht übermittelt)','');
 
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['lizenzbis_legend'] = 'Gültigkeit';
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['gueltigkeit']= array('Gültig bis', 'Datum der Gültigkeit der Lizenz im Format TT.MM.JJJJ. Die Gültigkeit muß mindestens 30 Tage betragen (Differenz zur letzten Verlängerung bzw. zum Erwerbsdatum).');

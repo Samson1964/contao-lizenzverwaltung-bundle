@@ -160,7 +160,9 @@ class Helper extends \Frontend
 		return array
 		(
 			'A'                   => 'A-Trainer Leistungssport',
+			'A-B'                 => 'A-Trainer Breitensport',
 			'B'                   => 'B-Trainer Leistungssport',
+			'B-B'                 => 'B-Trainer Breitensport',
 			'C'                   => 'C-Trainer Leistungssport',
 			'C-B'                 => 'C-Trainer Breitensport',
 			'C-Sonderlizenz'      => 'C-Sonderlizenz',

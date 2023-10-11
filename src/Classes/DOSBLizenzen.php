@@ -23,7 +23,9 @@ class DOSBLizenzen extends \Backend
 		$this->training_course_id = array
 		(
 			'A'              => 515, // T-A/L > Schach
+			'A-B'            => 71011, // T-B/B > Schach
 			'B'              => 514, // T-B/L > Schach
+			'B-B'            => 71010, // T-B/B > Schach
 			'C'              => 513, // T-C/L > Schach
 			'C-B'            => 512, // T-C/B > Schach
 			'C-Sonderlizenz' => 512, // T-C/B > Schach

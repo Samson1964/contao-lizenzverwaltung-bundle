@@ -1,5 +1,9 @@
 # Lizenzverwaltung Changelog
 
+## Version 4.2.3 (2023-10-10)
+
+* Add: Lizenzen B- und A-Trainer Breitensport
+
 ## Version 4.2.2 (2023-10-04)
 
 * Add: tl_lizenzverwaltung_items.verlaengerungen -> Feld für Seminardatum hinzugefügt

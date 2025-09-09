@@ -1,5 +1,10 @@
 # Lizenzverwaltung Changelog
 
+## Version 4.3.1 (2025-09-09)
+
+* Fix: Non-static method \Classes\Helper::getLizenzen() cannot be called statically
+* Fix: Non-static method \Classes\Helper::getVerbaende() cannot be called statically
+
 ## Version 4.3.0 (2024-04-18)
 
 * Change: Haste-Toggler statt des normalen Togglers

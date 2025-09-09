@@ -81,7 +81,7 @@ class Helper extends \Frontend
 
 	}
 
-	public function getVerbaende()
+	public static function getVerbaende()
 	{
 
 		$return = array();
@@ -155,7 +155,7 @@ class Helper extends \Frontend
 		return $verbaende[$verband];
 	}
 
-	public function getLizenzen()
+	public static function getLizenzen()
 	{
 		return array
 		(

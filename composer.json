@@ -10,10 +10,10 @@
         }
     ],
     "require": {
-        "php": "^5.6 || ^7.0",
+        "php": "^5.6 || ^7.0 || ^8.0",
         "contao/core-bundle": "^4",
-        "menatwork/contao-multicolumnwizard-bundle": "*",
         "codefog/contao-haste": "*",
+        "menatwork/contao-multicolumnwizard-bundle": "*",
         "phpoffice/phpspreadsheet": ">=1.11"
     },
     "conflict": {

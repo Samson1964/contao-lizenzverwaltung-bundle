@@ -1,5 +1,10 @@
 # Lizenzverwaltung Changelog
 
+## Version 4.3.0 (2024-04-18)
+
+* Change: Haste-Toggler statt des normalen Togglers
+* Add: Kompatibilität PHP 8
+
 ## Version 4.2.3 (2023-10-10)
 
 * Add: Lizenzen B- und A-Trainer Breitensport

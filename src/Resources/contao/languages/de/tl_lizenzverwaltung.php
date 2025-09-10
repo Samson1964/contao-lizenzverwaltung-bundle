@@ -22,8 +22,6 @@ $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['exportDOSB'] = array('DOSB-Export', 
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['deleteMarker'] = array('Markierungen löschen', 'Markierungen in den Lizenzen löschen');
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['templates'] = array('Mail-Templates', 'E-Mail-Templates verwalten');
 
-$GLOBALS['TL_LANG']['tl_lizenzverwaltung']['deleteMarker_confirm'] = 'Wollen Sie die Markierungen in den Lizenzen wirklich löschen?';
-
 // Standardfunktionen
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['new'] = array('Neue Person', 'Neue Person anlegen');
 $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['editHeader'] = array("Person %s bearbeiten", "Person %s bearbeiten");

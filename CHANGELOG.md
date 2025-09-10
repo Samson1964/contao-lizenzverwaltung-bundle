@@ -1,5 +1,9 @@
 # Lizenzverwaltung Changelog
 
+## Version 4.3.3 (2025-09-10)
+
+* Fix: Warning: Undefined array key "deleteMarker_confirm" in /src/Resources/contao/dca/tl_lizenzverwaltung.php (line 96) -> Sprachvariable ausgelagert in default.php
+
 ## Version 4.3.2 (2025-09-10)
 
 * Fix: Warning: Undefined array key "lizenzverwaltung_absender" in src/Resources/contao/config/config.php (line 13) 

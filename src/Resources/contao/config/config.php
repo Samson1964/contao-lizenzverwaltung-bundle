@@ -10,6 +10,19 @@
  * @license   GNU/LGPL
  * @copyright Frank Hoppe 2014
  */
+
+/**
+ * -------------------------------------------------------------------------
+ * Voreinstellungen Contao-BE System -> Einstellungen
+ * -------------------------------------------------------------------------
+ */
+
+if(!isset($GLOBALS['TL_CONFIG']['lizenzverwaltung_absender'])) $GLOBALS['TL_CONFIG']['lizenzverwaltung_absender'] = '';
+if(!isset($GLOBALS['TL_CONFIG']['lims_host'])) $GLOBALS['TL_CONFIG']['lims_host'] = '';
+if(!isset($GLOBALS['TL_CONFIG']['lims_username'])) $GLOBALS['TL_CONFIG']['lims_username'] = '';
+if(!isset($GLOBALS['TL_CONFIG']['lims_password'])) $GLOBALS['TL_CONFIG']['lims_password'] = '';
+if(!isset($GLOBALS['TL_CONFIG']['lims_link'])) $GLOBALS['TL_CONFIG']['lims_link'] = '';
+
 define('LIZENZVERWALTUNG_ABSENDER', $GLOBALS['TL_CONFIG']['lizenzverwaltung_absender']);
 
 // Zugang LiMS

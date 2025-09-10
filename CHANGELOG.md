@@ -1,5 +1,9 @@
 # Lizenzverwaltung Changelog
 
+## Version 4.3.2 (2025-09-10)
+
+* Fix: Warning: Undefined array key "lizenzverwaltung_absender" in src/Resources/contao/config/config.php (line 13) 
+
 ## Version 4.3.1 (2025-09-09)
 
 * Fix: Non-static method \Classes\Helper::getLizenzen() cannot be called statically

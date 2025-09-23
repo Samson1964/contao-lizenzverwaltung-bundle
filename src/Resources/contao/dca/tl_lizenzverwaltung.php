@@ -486,7 +486,7 @@ class tl_lizenzverwaltung extends \Backend
 			),
 		);
 
-        $strBuffer = '
+$strBuffer = '
 <div class="tl_filter tli_filter tl_subpanel">
 <strong>' . $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter'] . ':</strong> ' . "\n";
 
@@ -500,7 +500,10 @@ class tl_lizenzverwaltung extends \Backend
             // Generate options
             foreach ($arrFilter['options'] as $k => $v)
             {
-                $strOptions .= '  <option value="' . $k . '"' . (($session['filter']['tl_lizenzverwaltungFilter'][$arrFilter['name']] === (string) $k) ? ' selected' : '') . '>' . $v . '</option>' . "\n";
+                if(isset($session['filter']['tl_lizenzverwaltungFilter']))
+                {
+                	$strOptions .= '  <option value="' . $k . '"' . (($session['filter']['tl_lizenzverwaltungFilter'][$arrFilter['name']] === (string) $k) ? ' selected' : '') . '>' . $v . '</option>' . "\n";
+            	}
             }
 
             $strBuffer .= '<select name="' . $arrFilter['name'] . '" id="' . $arrFilter['name'] . '" class="tl_select' . (isset($session['filter']['tl_lizenzverwaltungFilter'][$arrFilter['name']]) ? ' active' : '') . '">

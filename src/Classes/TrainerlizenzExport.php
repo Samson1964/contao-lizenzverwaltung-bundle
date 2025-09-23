@@ -170,9 +170,9 @@ class TrainerlizenzExport extends \Backend
 		// Liest die Datensätze der Lizenzverwaltung in ein Array
 		// Suchbegriff in aktueller Ansicht laden
 		$search = $dc->Session->get('search');
-		$search = $search[$dc->table]; // Das Array enthält field und value
+		$search = &$search[$dc->table]; // Das Array enthält field und value
 		//if($search['field']) $sql = " WHERE ".$search['field']." LIKE '%%".$search['value']."%%'"; // findet auch Umlaute, Suche nach "ba" findet auch "bä"
-		if($search['field'] && $search['value']) $sql = " WHERE LOWER(CAST(".$search['field']." AS CHAR)) REGEXP LOWER('".$search['value']."')"; // Contao-Standard, ohne Umlaute, Suche nach "ba" findet nicht "bä"
+		if(isset($search['field']) && isset($search['value'])) $sql = " WHERE LOWER(CAST(".$search['field']." AS CHAR)) REGEXP LOWER('".$search['value']."')"; // Contao-Standard, ohne Umlaute, Suche nach "ba" findet nicht "bä"
 		else $sql = '';
 
 		// Filter in aktueller Ansicht laden. Beispiel mit Spezialfilter (tli_filter):
@@ -192,19 +192,22 @@ class TrainerlizenzExport extends \Backend
 		// 
 		//       )
 		$filter = $dc->Session->get('filter');
-		$filter = $filter[$dc->table]; // Das Array enthält limit (Wert meistens = 0,30) und alle Feldnamen mit den Werten
-		foreach($filter as $key => $value)
+		$filter = &$filter[$dc->table]; // Das Array enthält limit (Wert meistens = 0,30) und alle Feldnamen mit den Werten
+		if(isset($filter))
 		{
-			if($key != 'limit')
+			foreach($filter as $key => $value)
 			{
-				($sql) ? $sql .= ' AND' : $sql = ' WHERE';
-				$sql .= " tl_lizenzverwaltung.".$key." = '".$value."'";
+				if($key != 'limit')
+				{
+					($sql) ? $sql .= ' AND' : $sql = ' WHERE';
+					$sql .= " tl_lizenzverwaltung.".$key." = '".$value."'";
+				}
 			}
 		}
 
 		// Spezialfilter berücksichtigen
 		$filter = $dc->Session->get('filter');
-		$filter = $filter[$dc->table.'Filter']['tli_filter']; // Wert aus Spezialfilter
+		$filter = &$filter[$dc->table.'Filter']['tli_filter']; // Wert aus Spezialfilter
 		switch($filter)
 		{
 			case '1': // Alle Personen mit gültigen Lizenzen

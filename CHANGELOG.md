@@ -1,5 +1,14 @@
 # Lizenzverwaltung Changelog
 
+## Version 4.3.4 (2025-09-23)
+
+* Fix: Warning: Undefined array key "tl_lizenzverwaltungFilter" in /src/Resources/contao/dca/tl_lizenzverwaltung.php (line 503)
+* Fix: Non-static method Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerband() cannot be called statically in /src/Resources/contao/dca/tl_lizenzverwaltung.php (line 713) 
+* Fix: Non-static method Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerbandMail() cannot be called statically in src/Resources/contao/dca/tl_lizenzverwaltung_items.php (line 585) 
+* Fix: Warning: Undefined variable $info in src/Resources/contao/dca/tl_lizenzverwaltung_items.php (line 834) 
+* Fix: Warning: Undefined array key "lizenzverwaltung_lizenzordner" in src/Resources/contao/dca/tl_lizenzverwaltung_items.php (line 1026) 
+* Fix: Warning: Undefined array key "tl_lizenzverwaltung" in src/Classes/TrainerlizenzExport.php (line 173) 
+
 ## Version 4.3.3 (2025-09-10)
 
 * Fix: Warning: Undefined array key "deleteMarker_confirm" in /src/Resources/contao/dca/tl_lizenzverwaltung.php (line 96) -> Sprachvariable ausgelagert in default.php

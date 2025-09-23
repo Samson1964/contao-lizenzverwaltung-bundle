@@ -63,7 +63,7 @@ class Helper extends \Frontend
 	 * @param verlaengerungen  Serialisiertes Array mit den Timestamps in aufsteigender Reihenfolge
 	 * @return int             Timestamp der letzten Verlängerung oder FALSE
 	 */
-	public function getVerlaengerung($erwerb, $verlaengerungen)
+	public static function getVerlaengerung($erwerb, $verlaengerungen)
 	{
 		$return = false;
 		if($verlaengerungen)
@@ -129,7 +129,7 @@ class Helper extends \Frontend
 		);
 	}
 
-	public function getUntergliederung($kennzeichen)
+	public static function getUntergliederung($kennzeichen)
 	{
 
 		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_verbaende WHERE kennzeichen=? AND published=?")
@@ -149,7 +149,7 @@ class Helper extends \Frontend
 		return $return;
 	}
 
-	public function getVerband($verband)
+	public static function getVerband($verband)
 	{
 		$verbaende = self::getVerbaende();
 		return $verbaende[$verband];
@@ -242,7 +242,7 @@ class Helper extends \Frontend
 	 * =========================
 	 * Liest die Mailadressen der Verbände ein oder gibt die Mailadresse eines Verbands zurück
 	 */
-	public function getVerbandsmails()
+	public static function getVerbandsmails()
 	{
 		static $verbandsmails;
 
@@ -268,7 +268,7 @@ class Helper extends \Frontend
 	 * Funktion getVerbandsmail
 	 * =========================
 	 */
-	public function getVerbandMail($verband)
+	public static function getVerbandMail($verband)
 	{
 		$verbandsliste = self::getVerbandsmails();
 
@@ -280,7 +280,7 @@ class Helper extends \Frontend
 	 * =========================
 	 * Liest die Mailadressen der Verbände ein oder gibt die Mailadresse eines Verbands zurück
 	 */
-	public function getPersonMail($id)
+	public static function getPersonMail($id)
 	{
 		// Person einlesen
 		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung WHERE id = ?")

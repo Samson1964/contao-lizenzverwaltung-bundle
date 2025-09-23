@@ -828,6 +828,7 @@ class tl_lizenzverwaltung_items extends \Backend
 
 	public function getLeitfaden(DataContainer $dc)
 	{
+		$info = ''; // PHP8-Kompatibilität hergestellt, aber woher kommt $info?
 		$text =
 		'<div class="long widget">
 		<div class="tl_text" style="border:0;"><a href="bundles/contaolizenzverwaltung/pdf/Leitfaden_LiMS_09.04.2019.pdf" target="_blank" style="color:blue;">Leitfaden zum Lizenzmanagementsystem</a><span> (Version 7.0 vom 09.04.2019)</span></div>
@@ -1022,6 +1023,7 @@ class tl_lizenzverwaltung_items extends \Backend
 	 */
 	public function viewPDF(\DataContainer $dc)
 	{
+		if(!isset($GLOBALS['TL_CONFIG']['lizenzverwaltung_lizenzordner'])) return false;
 		$lizenzordner = \FilesModel::findByUuid($GLOBALS['TL_CONFIG']['lizenzverwaltung_lizenzordner']);
 
 		// Links zum PDF generieren
@@ -1059,6 +1061,7 @@ class tl_lizenzverwaltung_items extends \Backend
 	 */
 	public function viewPDFCard(\DataContainer $dc)
 	{
+		if(!isset($GLOBALS['TL_CONFIG']['lizenzverwaltung_lizenzordner'])) return false;
 		$lizenzordner = \FilesModel::findByUuid($GLOBALS['TL_CONFIG']['lizenzverwaltung_lizenzordner']);
 
 		// Links zum PDF generieren

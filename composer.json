@@ -2,6 +2,14 @@
     "name": "schachbulle/contao-lizenzverwaltung-bundle",
     "type": "contao-bundle",
     "description": "Lizenzverwaltung des Deutschen Schachbundes für Contao 4. Mit Schnittstelle zum Lizenzmanagement (LiMS) des DOSB.",
+    "keywords": [
+        "contao",
+        "lizenzen",
+        "dsb",
+        "dosb",
+        "lims"
+    ],
+    "homepage": "https://github.com/Samson1964/contao-lizenzverwaltung-bundle",
     "license": "LGPL-3.0-or-later",
     "authors": [
         {

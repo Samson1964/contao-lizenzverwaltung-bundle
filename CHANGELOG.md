@@ -1,5 +1,14 @@
 # Lizenzverwaltung Changelog
 
+## Version 5.0.1 (2026-09-15)
+
+* Fix: Unter Contao 4.13 ließ sich 5.0.0 nicht installieren, wenn die Installation
+  `codefog/contao-haste` 4 fest verlangt („requires codefog/contao-haste ^5.4 … conflicts
+  with your root composer.json require (^4.25)“). Das Bundle nimmt jetzt Haste 4.25 oder
+  5.4: Die Platzhalterersetzung der E-Mails nutzt unter Haste 5 den Dienst `StringParser`
+  und unter Haste 4 wieder `Haste\Util\StringUtil::recursiveReplaceTokensAndTags()`. Unter
+  Contao 5 bleibt es bei Haste 5, weil Haste 4 dort nicht installierbar ist.
+
 ## Version 5.0.0 (2026-09-02)
 
 Diese Fassung läuft unter **Contao 4.13 und Contao 5.3+ mit PHP 8.1 bis 8.4**.

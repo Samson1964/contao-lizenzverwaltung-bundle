@@ -176,12 +176,21 @@ class Helper
 	{
 		$container = System::getContainer();
 
-		if (!$container->has(StringParser::class))
+		// Haste 5: Dienst
+		if (class_exists(StringParser::class) && $container->has(StringParser::class))
 		{
-			return $text;
+			return $container->get(StringParser::class)->recursiveReplaceTokensAndTags($text, $tokens);
 		}
 
-		return $container->get(StringParser::class)->recursiveReplaceTokensAndTags($text, $tokens);
+		// Haste 4: statische Methode. Viele Contao-4.13-Installationen haben
+		// Haste 4 fest in ihrer composer.json stehen, weil andere Erweiterungen
+		// Haste 5 noch nicht vertragen — deshalb werden beide Fassungen bedient.
+		if (class_exists('Haste\Util\StringUtil'))
+		{
+			return \call_user_func(array('Haste\Util\StringUtil', 'recursiveReplaceTokensAndTags'), $text, $tokens);
+		}
+
+		return $text;
 	}
 
 	/**

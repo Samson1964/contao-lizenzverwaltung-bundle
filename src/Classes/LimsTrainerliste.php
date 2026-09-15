@@ -196,39 +196,52 @@ class LimsTrainerliste
 	{
 		$verbaende = $this->abrufenVerbaende();
 		$lizenzen  = array();
-		$offset    = 0;
 
-		for ($seite = 0; $seite < self::MAX_SEITEN; ++$seite)
+		// Ohne organisation_id liefert /lookup die Lizenzen des gesamten DOSB
+		// (am 2026-09-15 über 520.000, fast alle aus anderen Sportarten).
+		// Deshalb je Organisation des Schachbaums einzeln abfragen.
+		foreach (array_keys($verbaende) as $orgId)
 		{
-			$antwort = $this->post('lookup', array
-			(
-				'validation_status' => 1,
-				'offset'            => $offset,
-				'limit'             => self::SEITE_LIZENZEN,
-			));
+			$offset = 0;
 
-			$liste = self::findeListe($antwort, array('licenses', 'licences', 'lizenzen', 'items', 'data', 'result', 'results'));
-
-			foreach ($liste as $roh)
+			for ($seite = 0; $seite < self::MAX_SEITEN; ++$seite)
 			{
-				$lizenz = $this->normalisieren($roh, $verbaende);
+				$antwort = $this->post('lookup', array
+				(
+					'organisation_id'   => $orgId,
+					'validation_status' => 1,
+					'is_obscured'       => 'nein',
+					'offset'            => $offset,
+					'limit'             => self::SEITE_LIZENZEN,
+				));
 
-				if (null !== $lizenz)
+				$liste = self::findeListe($antwort, array('licenses', 'licences', 'lizenzen', 'items', 'data', 'result', 'results'));
+
+				foreach ($liste as $roh)
 				{
-					$lizenzen[] = $lizenz;
+					$lizenz = $this->normalisieren($roh, $verbaende);
+
+					if (null === $lizenz)
+					{
+						continue;
+					}
+
+					// Liefert eine übergeordnete Organisation die Lizenzen ihrer
+					// Untergliederungen mit, käme dieselbe Lizenz mehrfach an
+					$schluessel = $lizenz['schluessel'] ?: 'ohne-'.\count($lizenzen);
+					$lizenzen[$schluessel] = $lizenz;
 				}
-			}
 
-			$offset += \count($liste);
-			$total   = (int) ($antwort['total'] ?? 0);
+				$offset += \count($liste);
 
-			if (!$liste || $offset >= $total)
-			{
-				break;
+				if (!$liste || $offset >= (int) ($antwort['total'] ?? 0))
+				{
+					break;
+				}
 			}
 		}
 
-		return $lizenzen;
+		return array_values($lizenzen);
 	}
 
 	/**
@@ -272,6 +285,7 @@ class LimsTrainerliste
 
 		return array
 		(
+			'schluessel'    => (string) ($roh['license_number_dosb'] ?? $roh['lid'] ?? ''),
 			'nachname'      => $nachname,
 			'vorname'       => $vorname,
 			'verband'       => $verband,

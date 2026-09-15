@@ -81,29 +81,38 @@ class FakeLimsClient extends LimsClient
 		}
 
 		if ('lookup_organisations' === $method) {
+			// Aufbau wie die echte Antwort vom 2026-09-15: name, organisation_id, parent_id
 			$kinder = array(
-				1093 => array(array('id' => '5001', 'title' => 'Landesschachverband Sachsen-Anhalt')),
-				5001 => array(array('id' => '6001', 'title' => 'Schachbezirk Dessau')),
+				1093 => array(array('name' => 'Landesschachverband Sachsen-Anhalt', 'organisation_id' => '5001', 'parent_id' => '1093')),
+				5001 => array(array('name' => 'Schachbezirk Dessau', 'organisation_id' => '6001', 'parent_id' => '5001')),
 			);
 
 			$liste = $kinder[(int) $data['organisation_parent_id']] ?? array();
 
-			return array('code' => 200, 'body' => json_encode(array('size' => \count($liste), 'offset' => 0, 'total' => \count($liste), 'organisations' => $liste)), 'error' => null);
+			return array('code' => 200, 'body' => json_encode(array('size' => \count($liste), 'offset' => 0, 'total' => (string) \count($liste), 'organisations' => $liste)), 'error' => null);
 		}
 
 		if ('lookup' === $method) {
 			$alle = array(
-				array('firstname' => 'Zora', 'lastname' => 'Zeller', 'training_course_id' => 515, 'organisation_id' => 6001, 'valid_until' => mktime(12, 0, 0, 12, 31, 2027)),
-				array('firstname' => 'Ärne', 'lastname' => 'Ätzel', 'training_course_id' => 71011, 'organisation_id' => 9999, 'custom_1' => 'Saarland', 'valid_until' => mktime(12, 0, 0, 12, 31, 2026)),
-				array('firstname' => '', 'lastname' => '', 'training_course_id' => 515, 'organisation_id' => 6001, 'valid_until' => mktime(12, 0, 0, 12, 31, 2027)),
-				array('firstname' => 'Bea', 'lastname' => 'Bauer', 'training_course_id' => 514, 'organisation_id' => 5001, 'valid_until' => mktime(12, 0, 0, 12, 31, 2028)),
-				array('firstname' => 'Anton', 'lastname' => 'Adler', 'training_course_id' => 49337, 'organisation_id' => 1093, 'valid_until' => mktime(12, 0, 0, 6, 30, 2029)),
+				array('lid' => '1', 'license_number_dosb' => 'DSchB-T-A-1', 'firstname' => 'Zora', 'lastname' => 'Zeller', 'training_course_id' => '515', 'organisation_id' => '6001', 'valid_until' => (string) mktime(12, 0, 0, 12, 31, 2027)),
+				array('lid' => '2', 'license_number_dosb' => 'DSchB-T-A-2', 'firstname' => 'Ärne', 'lastname' => 'Ätzel', 'training_course_id' => '71011', 'organisation_id' => '1093', 'custom_1' => 'Saarland', 'valid_until' => (string) mktime(12, 0, 0, 12, 31, 2026)),
+				array('lid' => '3', 'license_number_dosb' => 'DSchB-T-A-3', 'firstname' => '', 'lastname' => '', 'training_course_id' => '515', 'organisation_id' => '6001', 'valid_until' => (string) mktime(12, 0, 0, 12, 31, 2027)),
+				array('lid' => '4', 'license_number_dosb' => 'DSchB-T-B-4', 'firstname' => 'Bea', 'lastname' => 'Bauer', 'training_course_id' => '514', 'organisation_id' => '5001', 'valid_until' => (string) mktime(12, 0, 0, 12, 31, 2028)),
+				array('lid' => '5', 'license_number_dosb' => 'DSchB-AB-5', 'firstname' => 'Anton', 'lastname' => 'Adler', 'training_course_id' => '49337', 'organisation_id' => '1093', 'valid_until' => (string) mktime(12, 0, 0, 6, 30, 2029)),
+				array('lid' => '6', 'license_number_dosb' => 'DSchB-T-A-6', 'firstname' => 'Paul', 'lastname' => 'Pause', 'training_course_id' => '515', 'organisation_id' => '1093', 'valid_until' => (string) mktime(12, 0, 0, 12, 31, 2027)),
+				// Fremde Sportart: darf nie abgefragt werden und nie erscheinen
+				array('lid' => '7', 'license_number_dosb' => 'AFVD-T-A-7', 'firstname' => 'Fremd', 'lastname' => 'Football', 'training_course_id' => '515', 'organisation_id' => '1120', 'valid_until' => (string) mktime(12, 0, 0, 12, 31, 2027)),
 			);
 
-			// Zwei Datensätze je Seite, damit das Blättern geprüft wird
-			$teil = \array_slice($alle, (int) $data['offset'], 2);
+			// Nachbildung: Die Organisation liefert ihre eigenen Lizenzen; der DSB zusätzlich
+			// die aus Sachsen-Anhalt, damit das Zusammenführen doppelter Lizenzen greift
+			$org  = (int) ($data['organisation_id'] ?? 0);
+			$eigene = array_values(array_filter($alle, static fn ($l) => (int) $l['organisation_id'] === $org || (1093 === $org && '5001' === $l['organisation_id'])));
 
-			return array('code' => 200, 'body' => json_encode(array('size' => \count($teil), 'offset' => (int) $data['offset'], 'total' => \count($alle), 'licenses' => $teil)), 'error' => null);
+			// Zwei Datensätze je Seite, damit das Blättern geprüft wird
+			$teil = \array_slice($eigene, (int) $data['offset'], 2);
+
+			return array('code' => 200, 'body' => json_encode(array('size' => \count($teil), 'offset' => (int) $data['offset'], 'total' => (string) \count($eigene), 'licenses' => $teil)), 'error' => null);
 		}
 
 		return array('code' => 404, 'body' => '', 'error' => null);
@@ -139,7 +148,7 @@ $dienst = new LimsTrainerliste($client, $cache);
 pruefe('A-Trainer: Inhalt, Sortierung, anonymisierte übergangen', static function () use ($dienst) {
 	$l = $dienst->getListe('A');
 
-	gleich(array_column($l['eintraege'], 'nachname'), array('Ätzel', 'Zeller'), 'Nachnamen');
+	gleich(array_column($l['eintraege'], 'nachname'), array('Ätzel', 'Pause', 'Zeller'), 'Nachnamen');
 	gleich($l['veraltet'], false, 'veraltet');
 
 	if ($l['stand'] < time() - 5) {
@@ -147,15 +156,30 @@ pruefe('A-Trainer: Inhalt, Sortierung, anonymisierte übergangen', static functi
 	}
 });
 
-pruefe('Verbandsname über zwei Ebenen', static fn () => gleich($dienst->getListe('A')['eintraege'][1]['verband'], 'Schachbezirk Dessau', 'Verband Zeller'));
-pruefe('Rückfall auf custom_1', static fn () => gleich($dienst->getListe('A')['eintraege'][0]['verband'], 'Saarland', 'Verband Ätzel'));
-pruefe('B-Trainer', static fn () => gleich(array_column($dienst->getListe('B')['eintraege'], 'verband'), array('Landesschachverband Sachsen-Anhalt'), 'B-Liste'));
+pruefe('Verbandsname über zwei Ebenen', static fn () => gleich($dienst->getListe('A')['eintraege'][2]['verband'], 'Schachbezirk Dessau', 'Verband Zeller'));
+pruefe('Organisation DSB hat Namen', static fn () => gleich($dienst->getListe('A')['eintraege'][1]['verband'], 'Deutscher Schachbund', 'Verband Pause'));
+pruefe('Verband aus Liste statt custom_1', static fn () => gleich($dienst->getListe('A')['eintraege'][0]['verband'], 'Deutscher Schachbund', 'Verband Ätzel'));
+pruefe('B-Trainer ohne Doppelung', static fn () => gleich(array_column($dienst->getListe('B')['eintraege'], 'verband'), array('Landesschachverband Sachsen-Anhalt'), 'B-Liste'));
+pruefe('Fremde Sportart nie abgefragt', static function () use ($client) {
+	foreach ($client->aufrufe as $a) {
+		if (str_starts_with($a, 'lookup {') && (!str_contains($a, '"organisation_id"') || str_contains($a, '1120'))) {
+			throw new \RuntimeException('Abfrage ohne oder mit fremder Organisation: '.$a);
+		}
+	}
+});
+pruefe('Rückfall auf custom_1 bei unbekannter Organisation', static function () {
+	$l = (new ReflectionMethod(LimsTrainerliste::class, 'normalisieren'));
+	$l->setAccessible(true);
+	$r = $l->invoke(new LimsTrainerliste(new FakeLimsClient(), new ArrayAdapter()), array('lastname' => 'X', 'organisation_id' => '9999', 'custom_1' => 'Saarland'), array());
+	gleich($r['verband'], 'Saarland', 'Verband');
+});
 pruefe('C-Trainer leer', static fn () => gleich($dienst->getListe('C')['eintraege'], array(), 'C-Liste'));
 pruefe('DOSB-Ausbilder', static fn () => gleich(array_column($dienst->getListe('AB')['eintraege'], 'gueltig_bis'), array(mktime(12, 0, 0, 6, 30, 2029)), 'AB-Liste'));
 pruefe('Unbekannte Art', static fn () => gleich($dienst->getListe('XY')['eintraege'], array(), 'XY'));
 
-pruefe('Geblättert: drei lookup-Seiten beim ersten Abruf', static function () use ($client) {
-	gleich(\count(array_filter($client->aufrufe, static fn ($a) => str_starts_with($a, 'lookup {'))), 3, 'lookup-Aufrufe');
+pruefe('Geblättert: je Organisation, DSB über zwei Seiten', static function () use ($client) {
+	// DSB: 4 Lizenzen = 2 Seiten; Sachsen-Anhalt: 1 Seite; Dessau: 1 Seite
+	gleich(\count(array_filter($client->aufrufe, static fn ($a) => str_starts_with($a, 'lookup {'))), 4, 'lookup-Aufrufe');
 });
 
 pruefe('Cache: weitere Listen lösen keinen Abruf aus', static function () use ($client, $dienst) {
@@ -171,7 +195,7 @@ pruefe('Fehlschlag: Reserve wird ausgeliefert', static function () use ($client,
 	$client->kaputt = false;
 
 	gleich($l['veraltet'], true, 'veraltet');
-	gleich(array_column($l['eintraege'], 'nachname'), array('Ätzel', 'Zeller'), 'Reserve');
+	gleich(array_column($l['eintraege'], 'nachname'), array('Ätzel', 'Pause', 'Zeller'), 'Reserve');
 });
 
 pruefe('Fehlschlag ohne Reserve: leer, kein Absturz', static function () {
@@ -238,7 +262,7 @@ pruefe('Modul rendert Template im Frontend', static function () use ($container,
 
 	$html = (new Schachbulle\ContaoLizenzverwaltungBundle\Modules\LimsTrainerliste($model))->generate();
 
-	foreach (array('Liste der A-Trainer', 'Zeller', 'Schachbezirk Dessau', '31.12.2027', 'Ätzel', 'Saarland', 'Zuletzt aktualisiert: '.date('d.m.Y')) as $muss) {
+	foreach (array('Liste der A-Trainer', 'Zeller', 'Schachbezirk Dessau', '31.12.2027', 'Ätzel', 'Deutscher Schachbund', 'Zuletzt aktualisiert: '.date('d.m.Y')) as $muss) {
 		if (!str_contains($html, $muss)) {
 			throw new \RuntimeException('fehlt im HTML: '.$muss."\n".$html);
 		}

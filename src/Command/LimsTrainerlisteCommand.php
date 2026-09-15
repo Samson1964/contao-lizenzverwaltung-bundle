@@ -131,7 +131,7 @@ class LimsTrainerlisteCommand extends Command
 	 */
 	private function zeigeRohdaten(SymfonyStyle $io): void
 	{
-		foreach (array('lookup' => array('validation_status' => 1, 'limit' => 2), 'lookup_organisations' => array('organisation_parent_id' => LimsClient::ORGANISATION_DSB, 'limit' => 2)) as $methode => $daten)
+		foreach (array('lookup' => array('organisation_id' => LimsClient::ORGANISATION_DSB, 'validation_status' => 1, 'is_obscured' => 'nein', 'limit' => 2), 'lookup_organisations' => array('organisation_parent_id' => LimsClient::ORGANISATION_DSB, 'limit' => 2)) as $methode => $daten)
 		{
 			$r = $this->client->request($methode, $daten, 60);
 

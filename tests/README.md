@@ -78,7 +78,13 @@ Template gerendert.
 php <pfad-zum-bundle>/tests/pruefstand-lims.php
 ```
 
-Erwartet: 18 Prüfungen bestanden, keine Meldungen.
+Erwartet: 21 Prüfungen bestanden, keine Meldungen.
+
+Die nachgebildeten Antworten folgen dem Aufbau, den das echte LiMS am 2026-09-15
+lieferte: Lizenzen unter `licenses`, Organisationen unter `organisations` mit `name`,
+`organisation_id` und `parent_id`, Zahlen als Zeichenketten. Eine Lizenz einer fremden
+Sportart ist eingebaut und darf nie abgefragt werden — `/lookup` ohne `organisation_id`
+liefert die Lizenzen des gesamten DOSB.
 
 ## Konsolenbefehl
 

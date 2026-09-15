@@ -1,5 +1,15 @@
 # Lizenzverwaltung Changelog
 
+## Version 5.0.2 (2026-09-15)
+
+* Fix: `lizenzverwaltung:lims-trainerliste` und das Modul „Trainerliste aus dem LiMS“
+  blieben scheinbar hängen. `/lookup` ohne `organisation_id` liefert nicht die Lizenzen des
+  DSB, sondern die des gesamten DOSB — beim ersten echten Abruf über 520.000, fast alle aus
+  anderen Sportarten. Abgefragt wird jetzt je Organisation im Baum unterhalb des DSB
+  (Organisation 1093), und nur vollständige Lizenzen (`is_obscured=nein`). Doppelt
+  gelieferte Lizenzen werden über die DOSB-Lizenznummer zusammengeführt.
+* Change: `--rohdaten` fragt `/lookup` jetzt ebenfalls mit der Organisation des DSB ab.
+
 ## Version 5.0.1 (2026-09-15)
 
 * Fix: Unter Contao 4.13 ließ sich 5.0.0 nicht installieren, wenn die Installation

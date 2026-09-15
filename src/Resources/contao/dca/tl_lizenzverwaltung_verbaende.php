@@ -1,18 +1,20 @@
 <?php
 
 /**
- * Contao Open Source CMS
+ * Lizenzverwaltung für den Deutschen Schachbund
  *
- * Copyright (c) 2005-2014 Leo Feyer
- *
- * @package News
- * @link    https://contao.org
- * @license http://www.gnu.org/licenses/lgpl-3.0.html LGPL
+ * @copyright  Frank Hoppe 2014 - 2026
+ * @author     Frank Hoppe <webmaster@schachbund.de>
+ * @license    LGPL-3.0-or-later
  */
 
+use Contao\Backend;
+use Contao\DataContainer;
+use Contao\DC_Table;
+use Contao\StringUtil;
 
 /**
- * Table tl_lizenzverwaltung_verbaende
+ * Tabelle tl_lizenzverwaltung_verbaende
  */
 $GLOBALS['TL_DCA']['tl_lizenzverwaltung_verbaende'] = array
 (
@@ -20,7 +22,8 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_verbaende'] = array
 	// Config
 	'config' => array
 	(
-		'dataContainer'               => 'Table',
+		// Der Kurzname 'Table' gibt es unter Contao 5 nicht mehr, der FQCN in beiden
+		'dataContainer'               => DC_Table::class,
 		'switchToEdit'                => true, 
 		'enableVersioning'            => true,
 		'sql' => array
@@ -219,46 +222,47 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_verbaende'] = array
  * @author     Leo Feyer <https://contao.org>
  * @package    News
  */
-class tl_lizenzverwaltung_verbaende extends \Backend
+class tl_lizenzverwaltung_verbaende extends Backend
 {
-
 	/**
-	 * Import the back end user object
+	 * Erzeugt das Objekt.
+	 *
+	 * Der öffentliche Konstruktor ist Pflicht: Unter Contao 4.13 ist
+	 * `Backend::__construct()` nur protected. Der frühere Aufruf
+	 * `$this->import('BackendUser', 'User')` ist entfallen — er bricht unter
+	 * Contao 5 ab, weil es dort keine globalen Klassenaliasse mehr gibt, und
+	 * das importierte Objekt wurde ohnehin nirgends benutzt.
 	 */
 	public function __construct()
 	{
 		parent::__construct();
-		$this->import('BackendUser', 'User');
 	}
 
-    /**
-     * Add an image to each record
-     * @param array
-     * @param string
-     * @param DataContainer
-     * @param array
-     * @return string
-     */
-	public function getRecord($row, $label, \DataContainer $dc, $args)
+	/**
+	 * Ergänzt die Übersichtszeile um die untergeordneten Organisationen.
+	 *
+	 * @param array<string,mixed> $row   Der Verbandsdatensatz
+	 * @param string              $label Der bereits erzeugte Beschriftungstext
+	 * @param DataContainer       $dc    Der Data Container
+	 * @param array<int,string>   $args  Die sichtbaren Spaltenwerte; Index 2 nimmt
+	 *                                   die Untergliederung auf
+	 *
+	 * @return array<int,string> Die ergänzten Spaltenwerte; ohne hinterlegte
+	 *                           Untergliederung steht dort ein Strich
+	 */
+	public function getRecord($row, $label, DataContainer $dc, $args)
 	{
-		// Weiterleitungen ergänzen
-		if($row['organisation'])
+		$forwarder = StringUtil::deserialize($row['organisation'] ?? null, true);
+
+		$daten = array();
+
+		foreach ($forwarder as $item)
 		{
-			$forwarder = unserialize($row['organisation']);
-			$daten = array();
-			foreach($forwarder as $item)
-			{
-				$daten[] = '<span>'.$item['organisation_name'].' ['.$item['organisation_id'].']</span>';
-			}
-			$args[2] = implode('<br>', $daten);
+			$daten[] = '<span>'.StringUtil::specialchars((string) ($item['organisation_name'] ?? '')).' ['.StringUtil::specialchars((string) ($item['organisation_id'] ?? '')).']</span>';
 		}
-		else
-		{
-			$args[2] = '-';
-		}
+
+		$args[2] = $daten ? implode('<br>', $daten) : '-';
 
 		return $args;
-
 	}
-
 }

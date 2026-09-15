@@ -1,217 +1,231 @@
 <?php
 
-namespace Schachbulle\ContaoLizenzverwaltungBundle\Classes;
+declare(strict_types=1);
 
 /**
- * Class Mailer
-  */
-class Mailer extends \Backend
+ * Lizenzverwaltung für den Deutschen Schachbund
+ *
+ * @copyright  Frank Hoppe 2014 - 2026
+ * @author     Frank Hoppe <webmaster@schachbund.de>
+ * @license    LGPL-3.0-or-later
+ */
+
+namespace Schachbulle\ContaoLizenzverwaltungBundle\Classes;
+
+use Contao\Backend;
+use Contao\Config;
+use Contao\Controller;
+use Contao\Database;
+use Contao\DataContainer;
+use Contao\Email;
+use Contao\FilesModel;
+use Contao\Input;
+use Contao\Message;
+use Contao\StringUtil;
+
+/**
+ * Vorschau und Versand der Lizenz-E-Mails.
+ *
+ * Die Klasse bedient den Schlüssel "send" des Backend-Moduls. Beim ersten
+ * Aufruf zeigt sie eine Vorschau samt Empfängerfeldern, beim zweiten — mit
+ * gültigem Einmal-Token — verschickt sie die Mail und vermerkt den Versand am
+ * Datensatz.
+ */
+class Mailer extends Backend
 {
+	/**
+	 * Schlüssel des Einmal-Tokens in der Sitzung.
+	 */
+	private const SESSION_TOKEN = 'tl_lizenzverwaltung_send';
 
 	/**
-	 * Versenden einer E-Mail
+	 * Formatierung, die der versendeten Mail als Stilblock vorangestellt wird.
 	 */
-
-	public function send(\DataContainer $dc)
-	{
-		$css = '<style>
+	private const MAIL_CSS = '<style>
 	* { font-family:Calibri,Verdana,sans-serif,Arial; font-size:16px; }
 </style>';
 
-		// E-Mail-Datensatz einlesen
-		$mail = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_mails WHERE id = ?")
-		                                ->execute($dc->id);
-		// Template-Datensatz einlesen
-		$tpl = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_templates WHERE id = ?")
-		                                ->execute($mail->template);
-		// Lizenz und Personen-Datensatz einlesen
-		$trainer = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
-		                                   ->execute($mail->pid);
-		// Referenten-Datensätze einlesen
-		$referenten = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_referenten WHERE verband = ? AND published = ?")
-		                                      ->execute($trainer->verband, 1);
-		// Datensätze mit DSB-Referenten einlesen
-		$dsbreferenten = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_referenten WHERE verband = ? AND published = ?")
-		                                         ->execute('S', 1);
+	/**
+	 * Erzeugt das Objekt.
+	 *
+	 * Der öffentliche Konstruktor ist Pflicht: Unter Contao 4.13 ist
+	 * `Backend::__construct()` nur protected.
+	 */
+	public function __construct()
+	{
+		parent::__construct();
+	}
 
-		$preview = $this->getPreview($dc->id, $mail->pid, $mail->template); // HTML-Vorschau erstellen
-		$preview_css = $this->getPreview($dc->id, $mail->pid, $mail->template, true, $css); // HTML/CSS-Version erstellen
-		$preview_body = $this->getPreview($dc->id, $mail->pid, $mail->template, false); // Body-Vorschau erstellen
+	/**
+	 * Zeigt die Versandmaske an und verschickt die E-Mail.
+	 *
+	 * Der Versand ist durch ein Einmal-Token in der Sitzung abgesichert: Die
+	 * Maske legt es an, das abgeschickte Formular muss es mitbringen, und
+	 * unmittelbar nach dem Versand wird es gelöscht. Ein versehentliches
+	 * Neuladen verschickt die Mail deshalb kein zweites Mal.
+	 *
+	 * @param DataContainer $dc Der Data Container; ausgewertet wird daraus die
+	 *                          ID des E-Mail-Datensatzes in tl_lizenzverwaltung_mails
+	 *
+	 * @return string Der HTML-Code der Versandmaske. Nach erfolgreichem Versand
+	 *                kehrt die Methode nicht zurück, sondern leitet zur
+	 *                Mailübersicht der Lizenz zurück.
+	 *
+	 * @throws \Exception Wenn eine der eingetragenen Adressen ungültig ist
+	 */
+	public function send(DataContainer $dc): string
+	{
+		$mail    = $this->fetchRow('tl_lizenzverwaltung_mails', (int) $dc->id);
+		$tpl     = $this->fetchRow('tl_lizenzverwaltung_templates', (int) $mail->template);
+		$trainer = $this->fetchLizenz((int) $mail->pid);
 
-		$lizenzordner = \FilesModel::findByUuid($GLOBALS['TL_CONFIG']['lizenzverwaltung_lizenzordner']);
+		$referenten = Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_referenten WHERE verband = ? AND published = ?")
+		                                     ->execute($trainer->verband, 1);
 
-		// Lizenz-PDF DIN A4 vorhanden?
-		$lizenzfilenameA4 = false;
-		if($trainer->license_number_dosb)
+		$dsbreferenten = Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_referenten WHERE verband = ? AND published = ?")
+		                                        ->execute('S', 1);
+
+		$preview_css  = $this->getPreview((int) $dc->id, (int) $mail->pid, (int) $mail->template, true, self::MAIL_CSS);
+		$preview_body = $this->getPreview((int) $dc->id, (int) $mail->pid, (int) $mail->template, false);
+
+		$lizenzfilenameA4   = $this->findLizenzPdf($trainer, '', (bool) $mail->insertLizenz);
+		$lizenzfilenameCard = $this->findLizenzPdf($trainer, '-card', (bool) $mail->insertLizenzCard);
+
+		$absender = (string) Config::get('lizenzverwaltung_absender');
+		$session  = Helper::getSession();
+
+		// Versandlauf: nur mit gültigem Einmal-Token aus der Maske
+		if (Input::get('token') && null !== $session && Input::get('token') === $session->get(self::SESSION_TOKEN))
 		{
-			$lizenzfilenameA4 = TL_ROOT.'/'.$lizenzordner->path.'/'.$trainer->license_number_dosb.'.pdf';
-			if(!$mail->insertLizenz || !file_exists($lizenzfilenameA4))
+			$session->remove(self::SESSION_TOKEN);
+
+			$to  = $this->parseAddresses(Input::get('an'));
+			$cc  = $this->parseAddresses(Input::get('cc'));
+			$bcc = $this->parseAddresses(Input::get('bcc'));
+
+			foreach (array_merge($to, $cc, $bcc) as $email)
 			{
-				$lizenzfilenameA4 = false;
+				if (!self::validateEmail($email))
+				{
+					throw new \Exception(sprintf($GLOBALS['TL_LANG']['Lizenzverwaltung']['emailCorrupt'] ?? 'Ungültige E-Mail-Adresse: %s', $email));
+				}
 			}
+
+			$objEmail = new Email();
+
+			if ($lizenzfilenameA4)
+			{
+				$objEmail->attachFile($lizenzfilenameA4);
+			}
+
+			if ($lizenzfilenameCard)
+			{
+				$objEmail->attachFile($lizenzfilenameCard);
+			}
+
+			// Absender liegt als "Name <adresse>" in den Einstellungen
+			preg_match('~(?:([^<]*?)\s*)?<(.*)>~', $absender, $arrFrom);
+
+			$objEmail->from     = $arrFrom[2] ?? $absender;
+			$objEmail->fromName = $arrFrom[1] ?? '';
+			$objEmail->subject  = $mail->subject;
+			$objEmail->logFile  = 'lizenzverwaltung_email.log';
+			$objEmail->html     = $preview_css;
+
+			if ($cc)
+			{
+				$objEmail->sendCc($cc);
+			}
+
+			if ($bcc)
+			{
+				$objEmail->sendBcc($bcc);
+			}
+
+			if ($objEmail->sendTo($to))
+			{
+				Database::getInstance()->prepare("UPDATE tl_lizenzverwaltung_mails %s WHERE id = ?")
+				                       ->set(array
+				                       (
+				                           'sent_date'  => time(),
+				                           'sent_state' => 1,
+				                           'sent_text'  => $preview_body,
+				                       ))
+				                       ->execute($dc->id);
+
+				Message::addConfirmation('E-Mail versendet');
+
+				Controller::redirect(Helper::getBackendRoute().'?do='.Input::get('do').'&table='.Input::get('table').'&id='.$mail->pid);
+			}
+
+			Message::addError('Die E-Mail konnte nicht versendet werden.');
 		}
 
-		// Lizenz-PDF Karte vorhanden?
-		$lizenzfilenameCard = false;
-		if($trainer->license_number_dosb)
+		// Empfängerfelder vorbelegen
+		$email_an  = $trainer->email ? StringUtil::specialchars($trainer->vorname.' '.$trainer->name.' <'.$trainer->email.'>') : '';
+		$email_cc  = '';
+		$email_bcc = '';
+
+		if ($mail->copyVerband)
 		{
-			$lizenzfilenameCard = TL_ROOT.'/'.$lizenzordner->path.'/'.$trainer->license_number_dosb.'-card.pdf';
-			if(!$mail->insertLizenzCard || !file_exists($lizenzfilenameCard))
+			$adressen = array();
+
+			while ($referenten->next())
 			{
-				$lizenzfilenameCard = false;
+				$adressen[] = $referenten->vorname.' '.$referenten->nachname.' <'.$referenten->email.'>';
 			}
+
+			$email_cc = StringUtil::specialchars(implode(', ', $adressen));
 		}
 
-		// E-Mail versenden
-		if(\Input::get('token') != '' && \Input::get('token') == $this->Session->get('tl_lizenzverwaltung_send'))
+		if ($mail->copyDSB)
 		{
+			$adressen = array($absender);
 
-			$this->Session->set('tl_lizenzverwaltung_send', null);
-			$objEmail = new \Email();
-
-			if($lizenzfilenameA4) $objEmail->attachFile($lizenzfilenameA4); // Lizenz-PDF DIN A4 anhängen
-			if($lizenzfilenameCard) $objEmail->attachFile($lizenzfilenameCard); // Lizenz-PDF Karte anhängen
-
-			// Absender "Name <email>" in ein Array $arrFrom aufteilen
-			preg_match('~(?:([^<]*?)\s*)?<(.*)>~', LIZENZVERWALTUNG_ABSENDER, $arrFrom);
-
-			// Empfänger-Adressen in ein Array packen
-			$to = explode(',', html_entity_decode(\Input::get('an')));
-			$cc = explode(',', html_entity_decode(\Input::get('cc')));
-			$bcc = explode(',', html_entity_decode(\Input::get('bcc')));
-
-			// Führende und abschließende Leerzeichen entfernen, und leere Elemente entfernen
-			$to = array_filter(array_map('trim', $to));
-			$cc = array_filter(array_map('trim', $cc));
-			$bcc = array_filter(array_map('trim', $bcc));
-
-			// Adressen validieren, Exception bei ungültiger Adresse
-			if($to && is_array($to))
+			while ($dsbreferenten->next())
 			{
-				foreach($to as $email)
-				{
-					if(!self::validateEmail($email))
-					{
-						throw new \Exception(sprintf($GLOBALS['TL_LANG']['Lizenzverwaltung']['emailCorrupt'], $email));
-					}
-				}
-			}
-			if($cc && is_array($cc))
-			{
-				foreach($cc as $email)
-				{
-					if(!self::validateEmail($email))
-					{
-						throw new \Exception(sprintf($GLOBALS['TL_LANG']['Lizenzverwaltung']['emailCorrupt'], $email));
-					}
-				}
-			}
-			print_r($bcc);
-			if($bcc && is_array($bcc))
-			{
-				foreach($bcc as $email)
-				{
-					if(!self::validateEmail($email))
-					{
-						throw new \Exception(sprintf($GLOBALS['TL_LANG']['Lizenzverwaltung']['emailCorrupt'], $email));
-					}
-				}
+				$adressen[] = $dsbreferenten->vorname.' '.$dsbreferenten->nachname.' <'.$dsbreferenten->email.'>';
 			}
 
-			$objEmail->from = $arrFrom[2];
-			$objEmail->fromName = $arrFrom[1];
-			$objEmail->subject = $mail->subject;
-			$objEmail->logFile = 'lizenzverwaltung_email.log';
-			$objEmail->html = $preview_css;
-			if($cc[0]) $objEmail->sendCc($cc);
-			if($bcc[0]) $objEmail->sendBcc($bcc);
-			$status = $objEmail->sendTo($to);
-			if($status)
-			{
-				// Versanddatum in Datenbank eintragen
-				$set = array
-				(
-					'sent_date'  => time(),
-					'sent_state' => 1,
-					'sent_text'  => $preview_body
-				);
-				$trainer = \Database::getInstance()->prepare("UPDATE tl_lizenzverwaltung_mails %s WHERE id = ?")
-				                                   ->set($set)
-				                                   ->execute($dc->id);
-				// Email-Versand bestätigen und weiterleiten
-				\Message::addConfirmation('E-Mail versendet');
-				// Zurücklink generieren, ab C4 ist das ein symbolischer Link zu "contao"
-				if (version_compare(VERSION, '4.0', '>='))
-				{
-					$backlink = \System::getContainer()->get('router')->generate('contao_backend');
-				}
-				else
-				{
-					$backlink = 'contao/main.php';
-				}
-				\Controller::redirect($backlink.'?do='.\Input::get('do').'&table='.\Input::get('table').'&id='.$mail->pid);
-			}
-			exit;
+			$email_bcc = StringUtil::specialchars(implode(', ', $adressen));
 		}
 
-		// E-Mail-Empfänger festlegen
-		// 1. Lizenzinhaber
-		$trainer->email ? $email_an = htmlentities($trainer->vorname.' '.$trainer->name.' <'.$trainer->email.'>') : $email_an = '';
-		// 2. Referenten, die informiert werden wollen
-		if($mail->copyVerband && $referenten->numRows > 0)
-		{
-			$email_cc = '';
-			while($referenten->next())
-			{
-				$email_cc .= htmlentities($referenten->vorname.' '.$referenten->nachname.' <'.$referenten->email.'>, ');
-			}
-			if($email_cc) $email_cc = substr($email_cc, 0, -2); // Letztes ", " entfernen
-		}
-		// 3. Kopie an Verantwortliche in DSB-GS und andere DSB-Referenten
-		if($mail->copyDSB)
-		{
-			$email_bcc = htmlentities(LIZENZVERWALTUNG_ABSENDER);
-			if($dsbreferenten->numRows > 0)
-			{
-				while($dsbreferenten->next())
-				{
-					$email_bcc .= htmlentities(', '.$dsbreferenten->vorname.' '.$dsbreferenten->nachname.' <'.$dsbreferenten->email.'>');
-				}
-			}
-		}
+		$strToken = bin2hex(random_bytes(16));
 
-		$strToken = md5(uniqid(mt_rand(), true));
-		$this->Session->set('tl_lizenzverwaltung_send', $strToken);
+		if (null !== $session)
+		{
+			$session->set(self::SESSION_TOKEN, $strToken);
+		}
 
 		return
 		'<div id="tl_buttons">
-<a href="'.$this->getReferer(true).'" class="header_back" title="'.specialchars($GLOBALS['TL_LANG']['MSC']['backBTTitle']).'" accesskey="b">'.$GLOBALS['TL_LANG']['MSC']['backBT'].'</a>
+<a href="'.$this->getReferer(true).'" class="header_back" title="'.StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['backBTTitle'] ?? '').'" accesskey="b">'.($GLOBALS['TL_LANG']['MSC']['backBT'] ?? 'Zurück').'</a>
 </div>
-'.\Message::generate().'
-<form action="'.TL_SCRIPT.'" id="tl_lizenzverwaltung_send" class="tl_form" method="get">
+'.Message::generate().'
+<form action="'.Helper::getBackendRoute().'" id="tl_lizenzverwaltung_send" class="tl_form" method="get">
 <div class="tl_formbody_edit tl_lizenzverwaltung_send">
-<input type="hidden" name="do" value="' . \Input::get('do') . '">
-<input type="hidden" name="table" value="' . \Input::get('table') . '">
-<input type="hidden" name="key" value="' . \Input::get('key') . '">
-<input type="hidden" name="id" value="' . \Input::get('id') . '">
-<input type="hidden" name="token" value="' . $strToken . '">
+<input type="hidden" name="do" value="'.StringUtil::specialchars((string) Input::get('do')).'">
+<input type="hidden" name="table" value="'.StringUtil::specialchars((string) Input::get('table')).'">
+<input type="hidden" name="key" value="'.StringUtil::specialchars((string) Input::get('key')).'">
+<input type="hidden" name="id" value="'.StringUtil::specialchars((string) Input::get('id')).'">
+<input type="hidden" name="token" value="'.$strToken.'">
 <div class="tl_preview">
 <table class="prev_header">
   <tr class="row_0">
     <td class="col_0"><b>Absender:</b></td>
-    <td class="col_1">' . htmlentities(LIZENZVERWALTUNG_ABSENDER) . '</td>
+    <td class="col_1">'.StringUtil::specialchars($absender).'</td>
   </tr>
   <tr class="row_1">
     <td class="col_0"><b>Betreff:</b></td>
-    <td class="col_1">' . $mail->subject . '</td>
+    <td class="col_1">'.StringUtil::specialchars((string) $mail->subject).'</td>
   </tr>
   <tr class="row_2">
     <td class="col_0"><b>E-Mail-Template:</b></td>
-    <td class="col_1">' . $tpl->name . '</td>
+    <td class="col_1">'.StringUtil::specialchars((string) $tpl->name).'</td>
   </tr>
 </table>
 </div>
-<div class="tl_preview">' .$preview_body. '</div>
+<div class="tl_preview">'.$preview_body.'</div>
 
 <div class="tl_tbox">
 <div class="long widget">
@@ -244,25 +258,27 @@ class Mailer extends \Backend
 </div>
 </div>
 </form>';
-
 	}
 
-
-	public function getPreview($mail_id, $trainer_id, $template, $header = true, $css = false)
+	/**
+	 * Baut die Vorschau einer Lizenz-E-Mail aus Vorlage und Datensatz.
+	 *
+	 * @param int    $mail_id    Datensatz-ID in tl_lizenzverwaltung_mails
+	 * @param int    $trainer_id Datensatz-ID in tl_lizenzverwaltung_items
+	 * @param int    $template   Datensatz-ID in tl_lizenzverwaltung_templates
+	 * @param bool   $header     true liefert das vollständige HTML-Dokument,
+	 *                           false nur den Inhalt des body-Elements
+	 * @param string $css        Stilblock, der als Platzhalter ##css## eingesetzt wird
+	 *
+	 * @return string Der ersetzte Text. Enthält die Vorlage kein body-Element,
+	 *                kommt bei `$header = false` eine leere Zeichenkette zurück.
+	 */
+	public function getPreview(int $mail_id, int $trainer_id, int $template, bool $header = true, string $css = ''): string
 	{
-		// Template-Datensatz einlesen
-		$tpl = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_templates WHERE id = ?")
-		                               ->execute($template);
+		$tpl     = $this->fetchRow('tl_lizenzverwaltung_templates', $template);
+		$mail    = $this->fetchRow('tl_lizenzverwaltung_mails', $mail_id);
+		$trainer = $this->fetchLizenz($trainer_id);
 
-		// Mail-Datensatz einlesen
-		$mail = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_mails WHERE id = ?")
-		                                ->execute($mail_id);
-
-		// Lizenz- und Personen-Datensatz einlesen
-		$trainer = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
-		                                   ->execute($trainer_id);
-
-		// Token-Ersetzung
 		$arrTokens = array
 		(
 			'css'               => $css,
@@ -273,36 +289,126 @@ class Mailer extends \Backend
 			'lizenz_nachname'   => $trainer->name,
 			'lizenz_geschlecht' => $trainer->geschlecht,
 			'lizenz_content'    => $mail->content,
-			'lizenz_signatur'   => $mail->signatur ? $GLOBALS['TL_CONFIG']['lizenzverwaltung_mailsignatur'] : '',
+			'lizenz_signatur'   => $mail->signatur ? Config::get('lizenzverwaltung_mailsignatur') : '',
 		);
 
-		$content = $tpl->template;
-		$content = \StringUtil::restoreBasicEntities($content); // [nbsp] und Co. ersetzen
-		$content = \Haste\Util\StringUtil::recursiveReplaceTokensAndTags($content, $arrTokens);
+		// [nbsp] und Co. zurückwandeln, bevor die Platzhalter greifen
+		$content = Helper::replaceTokens(StringUtil::restoreBasicEntities((string) $tpl->template), $arrTokens);
 
-		if($header)
+		if ($header)
 		{
-			// Mit HTML-Header zurückgeben
 			return $content;
 		}
-		else
+
+		return preg_match('/<body>(.*)<\/body>/s', $content, $matches) ? $matches[1] : '';
+	}
+
+	/**
+	 * Prüft, ob eine E-Mail-Adresse gültig ist.
+	 *
+	 * Adressen dürfen in der Form "Name <adresse>" vorliegen; geprüft wird
+	 * dann nur der Teil in den spitzen Klammern.
+	 *
+	 * @param string $email Die zu prüfende Adresse
+	 *
+	 * @return bool true, wenn die Adresse gültig ist
+	 */
+	public static function validateEmail(string $email): bool
+	{
+		preg_match('~(?:([^<]*?)\s*)?<(.*)>~', $email, $result);
+
+		if (isset($result[2]))
 		{
-			// Nur Body-Tag zurückgeben
-			preg_match('/<body>(.*)<\/body>/s', $content, $matches); // Body extrahieren
-			return $matches[1];
+			$email = $result[2];
 		}
 
+		return false !== filter_var($email, FILTER_VALIDATE_EMAIL);
 	}
 
-	function validateEmail($email)
+	/**
+	 * Zerlegt ein Eingabefeld in eine Liste von E-Mail-Adressen.
+	 *
+	 * @param mixed $value Der Feldwert; mehrere Adressen sind durch Komma getrennt
+	 *
+	 * @return array<int,string> Die Adressen ohne umschließende Leerzeichen;
+	 *                           leere Einträge fallen weg, die Schlüssel sind
+	 *                           lückenlos durchnummeriert
+	 */
+	private function parseAddresses($value): array
 	{
-		// Prüfen ob Email im Format "Name <Adresse>" vorliegt, ggfs. $email ändern vor der Validierung
-		preg_match('~(?:([^<]*?)\s*)?<(.*)>~', $email, $result);
-		
-		if(isset($result[2])) $email = $result[2];
-		
-		return filter_var($email, FILTER_VALIDATE_EMAIL);
+		if (!$value)
+		{
+			return array();
+		}
 
+		return array_values(array_filter(array_map('trim', explode(',', html_entity_decode((string) $value)))));
 	}
 
+	/**
+	 * Liest einen einzelnen Datensatz.
+	 *
+	 * @param string $table Tabellenname
+	 * @param int    $id    Datensatz-ID
+	 *
+	 * @return object Das Zeilenobjekt; bei unbekannter ID liefert Contao ein
+	 *                Objekt, dessen Felder alle null sind
+	 */
+	private function fetchRow(string $table, int $id): object
+	{
+		return Database::getInstance()->prepare("SELECT * FROM $table WHERE id = ?")
+		                              ->limit(1)
+		                              ->execute($id);
+	}
+
+	/**
+	 * Liest eine Lizenz samt der zugehörigen Person.
+	 *
+	 * @param int $id Datensatz-ID in tl_lizenzverwaltung_items
+	 *
+	 * @return object Das Zeilenobjekt aus dem Verbund beider Tabellen
+	 */
+	private function fetchLizenz(int $id): object
+	{
+		return Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
+		                              ->limit(1)
+		                              ->execute($id);
+	}
+
+	/**
+	 * Sucht die Lizenzurkunde eines Trainers im Lizenzordner.
+	 *
+	 * @param object $trainer  Zeilenobjekt mit dem Feld license_number_dosb
+	 * @param string $suffix   Dateizusatz vor der Endung, leer für DIN A4
+	 * @param bool   $anhaengen Ob die Datei laut Einstellung überhaupt
+	 *                          mitgeschickt werden soll
+	 *
+	 * @return string|null Der absolute Pfad zur PDF-Datei, oder null wenn keine
+	 *                     Lizenznummer vorliegt, kein Lizenzordner gewählt ist,
+	 *                     die Datei fehlt oder sie nicht mitgeschickt werden soll
+	 */
+	private function findLizenzPdf(object $trainer, string $suffix, bool $anhaengen): ?string
+	{
+		if (!$anhaengen || !$trainer->license_number_dosb)
+		{
+			return null;
+		}
+
+		$uuid = $GLOBALS['TL_CONFIG']['lizenzverwaltung_lizenzordner'] ?? '';
+
+		if (!$uuid)
+		{
+			return null;
+		}
+
+		$ordner = FilesModel::findByUuid($uuid);
+
+		if (null === $ordner)
+		{
+			return null;
+		}
+
+		$datei = Helper::getProjectDir().'/'.$ordner->path.'/'.$trainer->license_number_dosb.$suffix.'.pdf';
+
+		return file_exists($datei) ? $datei : null;
+	}
 }

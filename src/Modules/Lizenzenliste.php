@@ -1,98 +1,121 @@
 <?php
 
+declare(strict_types=1);
+
 /**
- * Contao Open Source CMS
+ * Lizenzverwaltung für den Deutschen Schachbund
  *
- * Copyright (c) 2005-2014 Leo Feyer
- *
- * @package   DeWIS
- * @author    Frank Hoppe
- * @license   GNU/LGPL
- * @copyright Frank Hoppe 2014
+ * @copyright  Frank Hoppe 2014 - 2026
+ * @author     Frank Hoppe <webmaster@schachbund.de>
+ * @license    LGPL-3.0-or-later
  */
 
 namespace Schachbulle\ContaoLizenzverwaltungBundle\Modules;
 
-class Lizenzenliste extends \Module
-{
+use Contao\BackendTemplate;
+use Contao\Database;
+use Contao\Module;
+use Contao\StringUtil;
+use Contao\System;
+use Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper;
 
+/**
+ * Frontend-Modul mit der Liste der gültigen Lizenzen.
+ *
+ * Angezeigt werden nur veröffentlichte Personen mit veröffentlichten Lizenzen,
+ * deren Gültigkeit noch nicht abgelaufen ist. Welche Lizenzarten erscheinen,
+ * legt die Moduleinstellung fest.
+ */
+class Lizenzenliste extends Module
+{
 	/**
-	 * Template
+	 * Name des Frontend-Templates.
+	 *
 	 * @var string
 	 */
 	protected $strTemplate = 'mod_lizenzenliste';
-	
+
 	/**
-	 * Display a wildcard in the back end
-	 * @return string
+	 * Erzeugt die Ausgabe des Moduls.
+	 *
+	 * Im Backend erscheint statt der Liste ein Platzhalter, damit die
+	 * Modulübersicht nicht die komplette Lizenzliste rendert. Die Konstante
+	 * TL_MODE, mit der das früher geprüft wurde, gibt es unter Contao 5 nicht
+	 * mehr — der Scope-Matcher leistet dasselbe in beiden Fassungen.
+	 *
+	 * @return string Der HTML-Code des Moduls
 	 */
 	public function generate()
 	{
-		if (TL_MODE == 'BE')
+		if ($this->isBackend())
 		{
-			$objTemplate = new \BackendTemplate('be_wildcard');
+			$objTemplate = new BackendTemplate('be_wildcard');
 
 			$objTemplate->wildcard = '### LISTE DER LIZENZEN ###';
-			$objTemplate->title = $this->name;
-			$objTemplate->id = $this->id;
+			$objTemplate->title    = $this->name;
+			$objTemplate->id       = $this->id;
 
 			return $objTemplate->parse();
 		}
-		else
-		{
-		}
 
-		return parent::generate(); // Weitermachen mit dem Modul
+		return parent::generate();
 	}
 
 	/**
-	 * Generate the module
+	 * Füllt das Template mit den Lizenzdaten.
+	 *
+	 * @return void Setzt die Template-Variablen lizenzview und trainer. Die
+	 *              Variablen headline und hl setzt bereits Module::generate(),
+	 *              sie werden hier nicht noch einmal belegt.
 	 */
 	protected function compile()
 	{
-		
-		$Verband = \Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerbaende(); // Verbände holen
-		$heute = time();
-	
-		$lizenzen = unserialize($this->lizenzverwaltung_typ); // Zu zeigende Lizenzen in SQL-String verpacken
-		$jahresende = $this->lizenzverwaltung_endofyear; // Gültigkeit bis Jahresende (Boolean)
+		$verbaende  = Helper::getVerbaende();
+		$jahresende = (bool) $this->lizenzverwaltung_endofyear;
 
-		if(is_array($lizenzen))
+		$arten = StringUtil::deserialize($this->lizenzverwaltung_typ, true);
+
+		$bedingung = '';
+		$parameter = array(time(), 1, 1);
+
+		if ($arten)
 		{
-			$sql = 'AND (tl_lizenzverwaltung_items.lizenz = \''.$lizenzen[0].'\'';
-			for($x = 1; $x < count($lizenzen); $x++)
-			{
-				$sql .= ' OR tl_lizenzverwaltung_items.lizenz = \''.$lizenzen[$x].'\'';
-			}
-			$sql .= ')';
+			// Je Lizenzart ein Platzhalter, damit die Werte gebunden bleiben
+			$bedingung = ' AND tl_lizenzverwaltung_items.lizenz IN ('.implode(', ', array_fill(0, \count($arten), '?')).')';
+			$parameter = array_merge($parameter, array_values($arten));
 		}
 
-		// Lizenzen einlesen
-		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.gueltigkeit >= ? AND tl_lizenzverwaltung_items.published = ? AND tl_lizenzverwaltung.published = ? $sql ORDER BY tl_lizenzverwaltung.name ASC, tl_lizenzverwaltung.vorname ASC")
-		                                  ->execute($heute, 1, 1);
-		//$lizenzen = is_array($lizenzen) ? array_intersect($lizenzen, $result->fetchEach('id')) : $result->fetchEach('id');
+		$result = Database::getInstance()->prepare("SELECT tl_lizenzverwaltung.name, tl_lizenzverwaltung.vorname, tl_lizenzverwaltung_items.verband, tl_lizenzverwaltung_items.lizenz, tl_lizenzverwaltung_items.gueltigkeit FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.gueltigkeit >= ? AND tl_lizenzverwaltung_items.published = ? AND tl_lizenzverwaltung.published = ?".$bedingung." ORDER BY tl_lizenzverwaltung.name ASC, tl_lizenzverwaltung.vorname ASC")
+		                                 ->execute(...$parameter);
 
 		$lizenzen = array();
-		if($result->numRows)
+
+		while ($result->next())
 		{
-			while($result->next())
-			{
-				$lizenzen[] = array
-				(
-					'nachname'    => $result->name,
-					'vorname'     => $result->vorname,
-					'verband'     => $Verband[$result->verband],
-					'lizenz'      => $result->lizenz,
-					'gueltigkeit' => ($jahresende) ? '31.12.'.date('Y', $result->gueltigkeit) : date('d.m.Y', $result->gueltigkeit),
-				);
-			}
+			$lizenzen[] = array
+			(
+				'nachname'    => $result->name,
+				'vorname'     => $result->vorname,
+				'verband'     => $verbaende[$result->verband] ?? '',
+				'lizenz'      => $result->lizenz,
+				'gueltigkeit' => $jahresende ? '31.12.'.date('Y', (int) $result->gueltigkeit) : date('d.m.Y', (int) $result->gueltigkeit),
+			);
 		}
-			
+
 		$this->Template->lizenzview = $this->lizenzverwaltung_typview;
-		$this->Template->headline = $this->headline;
-		$this->Template->hl = $this->hl;
-		$this->Template->trainer = $lizenzen;
-		
+		$this->Template->trainer    = $lizenzen;
 	}
 
+	/**
+	 * Stellt fest, ob die Anfrage aus dem Backend kommt.
+	 *
+	 * @return bool true im Backend, false im Frontend und wenn gar kein Request
+	 *              vorliegt (Kommandozeile)
+	 */
+	private function isBackend(): bool
+	{
+		$request = System::getContainer()->get('request_stack')->getCurrentRequest();
+
+		return null !== $request && System::getContainer()->get('contao.routing.scope_matcher')->isBackendRequest($request);
+	}
 }

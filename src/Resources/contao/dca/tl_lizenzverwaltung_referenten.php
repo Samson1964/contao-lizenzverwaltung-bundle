@@ -1,6 +1,19 @@
 <?php
 
 /**
+ * Lizenzverwaltung für den Deutschen Schachbund
+ *
+ * @copyright  Frank Hoppe 2014 - 2026
+ * @author     Frank Hoppe <webmaster@schachbund.de>
+ * @license    LGPL-3.0-or-later
+ */
+
+use Contao\Backend;
+use Contao\Database;
+use Contao\DataContainer;
+use Contao\DC_Table;
+
+/**
  * Tabelle tl_lizenzverwaltung_referenten
  */
 $GLOBALS['TL_DCA']['tl_lizenzverwaltung_referenten'] = array
@@ -9,7 +22,8 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_referenten'] = array
 	// Konfiguration
 	'config' => array
 	(
-		'dataContainer'               => 'Table',
+		// Der Kurzname 'Table' gibt es unter Contao 5 nicht mehr, der FQCN in beiden
+		'dataContainer'               => DC_Table::class,
 		'switchToEdit'                => true,
 		'enableVersioning'            => true,
 		'sql' => array
@@ -101,9 +115,15 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_referenten'] = array
 	),
 
 	// Paletten
+	// Palette
+	//
+	// Das frühere Palettenfeld "untergliederung" ist entfallen: Es gibt kein
+	// Feld dieses Namens. Contao ging bislang stillschweigend darüber hinweg,
+	// angezeigt wurde nie etwas. Die Untergliederung eines Verbands steht in
+	// tl_lizenzverwaltung_verbaende.
 	'palettes' => array
 	(
-		'default'                     => '{verband_legend},verband,funktion,untergliederung;{person_legend},nachname,vorname,titel;{email_legend},email;{adresse_legend:hide},plz,ort,strasse;{telefon_legend:hide},telefon1,telefon2,telefax1,telefax2;{info_legend:hide},info;{sent_legend},sent_info,sent_date;{publish_legend},published'
+		'default'                     => '{verband_legend},verband,funktion;{person_legend},nachname,vorname,titel;{email_legend},email;{adresse_legend:hide},plz,ort,strasse;{telefon_legend:hide},telefon1,telefon2,telefax1,telefax2;{info_legend:hide},info;{sent_legend},sent_info,sent_date;{publish_legend},published'
 	),
 
 	// Felder
@@ -346,26 +366,45 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_referenten'] = array
 );
 
 /**
- * Class tl_member_aktivicon
+ * Rückrufe des Data Containers tl_lizenzverwaltung_referenten.
  */
 class tl_lizenzverwaltung_referenten extends Backend
 {
-
-	public function getLizenzversand(DataContainer $dc)
+	/**
+	 * Erzeugt das Objekt.
+	 *
+	 * Der öffentliche Konstruktor ist Pflicht: Unter Contao 4.13 ist
+	 * `Backend::__construct()` nur protected.
+	 */
+	public function __construct()
 	{
+		parent::__construct();
+	}
 
-		// Letzter Lizenzversand
-		if($dc->activeRecord->sent_date)
-		{
-			$content = 'Letzter Versand: '.date('d.m.Y H:i:s', $dc->activeRecord->sent_date);
-		}
-		else $content = 'Letzter Versand: -';
+	/**
+	 * Zeigt an, wann der Referent zuletzt eine Lizenzliste erhalten hat.
+	 *
+	 * Gelesen wird über die Datenbank statt über `$dc->activeRecord`, das ab
+	 * Contao 5 als veraltet gilt.
+	 *
+	 * @param DataContainer $dc Der Data Container
+	 *
+	 * @return string Der HTML-Code des Anzeigefeldes; ohne bisherigen Versand
+	 *                steht dort ein Strich
+	 */
+	public function getLizenzversand(DataContainer $dc): string
+	{
+		$record = Database::getInstance()->prepare("SELECT sent_date FROM tl_lizenzverwaltung_referenten WHERE id = ?")
+		                                 ->limit(1)
+		                                 ->execute($dc->id);
+
+		$content = $record->sent_date
+			? 'Letzter Versand: '.date('d.m.Y H:i:s', (int) $record->sent_date)
+			: 'Letzter Versand: -';
 
 		return '
 <div class="w50">
 	<div class="tl_checkbox_single_container">'.$content.'</div>
-</div>'; 
-
+</div>';
 	}
-
 }

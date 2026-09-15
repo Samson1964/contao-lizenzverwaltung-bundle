@@ -1,32 +1,96 @@
 <?php
 
-namespace Schachbulle\ContaoLizenzverwaltungBundle\Classes;
+declare(strict_types=1);
 
 /**
- * Class dsb_trainerlizenzExport
-  */
-class TrainerlizenzExport extends \Backend
+ * Lizenzverwaltung für den Deutschen Schachbund
+ *
+ * @copyright  Frank Hoppe 2014 - 2026
+ * @author     Frank Hoppe <webmaster@schachbund.de>
+ * @license    LGPL-3.0-or-later
+ */
+
+namespace Schachbulle\ContaoLizenzverwaltungBundle\Classes;
+
+use Contao\Backend;
+use Contao\Controller;
+use Contao\Database;
+use Contao\DataContainer;
+use Contao\Input;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+
+/**
+ * Export der Lizenzen als Excel-Datei.
+ *
+ * Die Klasse bedient den Schlüssel "exportXLS" des Backend-Moduls. Exportiert
+ * wird genau das, was in der Übersicht gerade zu sehen ist: Suche, Filter und
+ * der Spezialfilter der Lizenzverwaltung werden aus dem Sitzungsspeicher des
+ * Backends übernommen.
+ */
+class TrainerlizenzExport extends Backend
 {
+	/**
+	 * Spaltenüberschriften der Exportdatei in der Reihenfolge der Spalten A bis X.
+	 *
+	 * @var array<int,string>
+	 */
+	private const KOPFZEILE = array
+	(
+		'Name', 'Vorname', 'Titel', 'Geburtsdatum', 'Geschlecht', 'PLZ', 'Ort', 'Straße',
+		'E-Mail', 'Verband', 'DOSB-Lizenz', 'DSB-Lizenz', 'Lizenz-Art', 'Gültig bis',
+		'Lizenz-Erwerb', 'Letzte Verlängerung', 'Codex', 'Codex-Datum', 'Erste Hilfe',
+		'Erste-Hilfe-Datum', 'Letzte Änderung', 'Bemerkung', 'Veröffentlicht', 'Zeitstempel',
+	);
 
 	/**
-	 * Funktion exportTrainer_XLS
-	 * @param object
-	 * @return string
+	 * Feldnamen der Datensätze in der Reihenfolge der Kopfzeile.
+	 *
+	 * @var array<int,string>
 	 */
+	private const SPALTEN = array
+	(
+		'name', 'vorname', 'titel', 'geburtstag', 'geschlecht', 'plz', 'ort', 'strasse',
+		'email', 'verband', 'lizenznummer_dosb', 'lizenznummer', 'lizenz', 'gueltigkeit',
+		'erwerb', 'verlaengerungen', 'codex', 'codex_date', 'help', 'help_date',
+		'letzteAenderung', 'bemerkung', 'published', 'tstamp',
+	);
 
-	public function exportTrainer_XLS(\DataContainer $dc)
+	/**
+	 * Erzeugt das Objekt.
+	 *
+	 * Der öffentliche Konstruktor ist Pflicht: Unter Contao 4.13 ist
+	 * `Backend::__construct()` nur protected.
+	 */
+	public function __construct()
 	{
-		if ($this->Input->get('key') != 'exportXLS')
+		parent::__construct();
+	}
+
+	/**
+	 * Erzeugt die Excel-Datei und schickt sie an den Browser.
+	 *
+	 * @param DataContainer $dc Der Data Container der Lizenzübersicht; daraus
+	 *                          werden Tabellenname und Filterzustand gelesen
+	 *
+	 * @return string Leere Zeichenkette, wenn ein anderer Schlüssel anliegt.
+	 *                Sonst wird die Datei ausgeliefert und die Ausführung
+	 *                beendet — die Methode kehrt dann nicht zurück.
+	 */
+	public function exportTrainer_XLS(DataContainer $dc): string
+	{
+		if (Input::get('key') !== 'exportXLS')
 		{
 			return '';
 		}
 
-		$arrExport = self::getRecords($dc); // Lizenzen auslesen
+		$arrExport = $this->getRecords($dc);
 
-		// Neues Excel-Objekt erstellen
-		$spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+		$spreadsheet = new Spreadsheet();
 
-		// Dokument-Eigenschaften setzen
 		$spreadsheet->getProperties()->setCreator('ContaoLizenzverwaltungBundle')
 		            ->setLastModifiedBy('ContaoLizenzverwaltungBundle')
 		            ->setTitle('Lizenzen Deutscher Schachbund')
@@ -35,279 +99,310 @@ class TrainerlizenzExport extends \Backend
 		            ->setKeywords('export lizenzen dsb schachbund')
 		            ->setCategory('Export Lizenzen DSB');
 
-		// Tabellenblätter definieren
-		$sheets = array('Lizenzen');
-		$styleArray = [
-		    'font' => [
-		        'bold' => true,
-		    ],
-		    'alignment' => [
-		        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-		    ],
-		    'borders' => [
-		        'bottom' => [
-		            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-		        ],
-		    ],
-		    'fill' => [
-		        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_GRADIENT_LINEAR,
-		        'rotation' => 90,
-		        'startColor' => [
-		            'argb' => 'FFA0A0A0',
-		        ],
-		        'endColor' => [
-		            'argb' => 'FFFFFFFF',
-		        ],
-		    ],
-		];
-		$styleArray2 = [
-		    'alignment' => [
-		        'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
-		    ],
-		];
-
-		// Preise-Tabelle anlegen und füllen
-		$spreadsheet->createSheet();
-		$spreadsheet->setActiveSheetIndex(0);
-		foreach(range('A','Y') as $columnID)
-		{
-			$spreadsheet->getActiveSheet()->getColumnDimension($columnID)->setAutoSize(true);
-		}
-		$spreadsheet->getActiveSheet()->getStyle('A1:X1')->applyFromArray($styleArray);
-		$spreadsheet->getActiveSheet()->getStyle('A2:X1000')->applyFromArray($styleArray2);
-		$spreadsheet->getActiveSheet()->setTitle('Lizenzen')
-		            ->setCellValue('A1', 'Name')
-		            ->setCellValue('B1', 'Vorname')
-		            ->setCellValue('C1', 'Titel')
-		            ->setCellValue('D1', 'Geburtsdatum')
-		            ->setCellValue('E1', 'Geschlecht')
-		            ->setCellValue('F1', 'PLZ')
-		            ->setCellValue('G1', 'Ort')
-		            ->setCellValue('H1', 'Straße')
-		            ->setCellValue('I1', 'E-Mail')
-		            ->setCellValue('J1', 'Verband')
-		            ->setCellValue('K1', 'DOSB-Lizenz')
-		            ->setCellValue('L1', 'DSB-Lizenz')
-		            ->setCellValue('M1', 'Lizenz-Art')
-		            ->setCellValue('N1', 'Gültig bis')
-		            ->setCellValue('O1', 'Lizenz-Erwerb')
-		            ->setCellValue('P1', 'Letzte Verlängerung')
-		            ->setCellValue('Q1', 'Codex')
-		            ->setCellValue('R1', 'Codex-Datum')
-		            ->setCellValue('S1', 'Erste Hilfe')
-		            ->setCellValue('T1', 'Erste-Hilfe-Datum')
-		            ->setCellValue('U1', 'Letzte Änderung')
-		            ->setCellValue('V1', 'Bemerkung')
-		            ->setCellValue('W1', 'Veröffentlicht')
-		            ->setCellValue('X1', 'Zeitstempel');
-
-		// Daten schreiben
-		$zeile = 2;
-		foreach($arrExport as $item)
-		{
-			$spreadsheet->getActiveSheet()
-			            ->setCellValue('A'.$zeile, $item['name'])
-			            ->setCellValue('B'.$zeile, $item['vorname'])
-			            ->setCellValue('C'.$zeile, $item['titel'])
-			            ->setCellValue('D'.$zeile, $item['geburtstag'])
-			            ->setCellValue('E'.$zeile, $item['geschlecht'])
-			            ->setCellValue('F'.$zeile, $item['plz'])
-			            ->setCellValue('G'.$zeile, $item['ort'])
-			            ->setCellValue('H'.$zeile, $item['strasse'])
-			            ->setCellValue('I'.$zeile, $item['email'])
-			            ->setCellValue('J'.$zeile, $item['verband'])
-			            ->setCellValue('K'.$zeile, $item['lizenznummer_dosb'])
-			            ->setCellValue('L'.$zeile, $item['lizenznummer'])
-			            ->setCellValue('M'.$zeile, $item['lizenz'])
-			            ->setCellValue('N'.$zeile, $item['gueltigkeit'])
-			            ->setCellValue('O'.$zeile, $item['erwerb'])
-			            ->setCellValue('P'.$zeile, $item['verlaengerungen'])
-			            ->setCellValue('Q'.$zeile, $item['codex'])
-			            ->setCellValue('R'.$zeile, $item['codex_date'])
-			            ->setCellValue('S'.$zeile, $item['help'])
-			            ->setCellValue('T'.$zeile, $item['help_date'])
-			            ->setCellValue('U'.$zeile, $item['letzteAenderung'])
-			            ->setCellValue('V'.$zeile, $item['bemerkung'])
-			            ->setCellValue('W'.$zeile, $item['published'])
-			            ->setCellValue('X'.$zeile, $item['tstamp']);
-			$zeile++;
-		}
-
-		$spreadsheet->setActiveSheetIndex(0);
-		$spreadsheet->getActiveSheet()->freezePane('A1'); // Keine Ahnung, ob damit die Zelle aktiviert wird, um eine Markierung aufzuheben
-
-		// Überflüssiges Tabellenblatt 'Worksheet 1' löschen
-		$sheetIndex = $spreadsheet->getIndex(
-		    $spreadsheet->getSheetByName('Worksheet 1')
+		$styleKopf = array
+		(
+			'font'      => array('bold' => true),
+			'alignment' => array('horizontal' => Alignment::HORIZONTAL_CENTER),
+			'borders'   => array('bottom' => array('borderStyle' => Border::BORDER_THIN)),
+			'fill'      => array
+			(
+				'fillType'   => Fill::FILL_GRADIENT_LINEAR,
+				'rotation'   => 90,
+				'startColor' => array('argb' => 'FFA0A0A0'),
+				'endColor'   => array('argb' => 'FFFFFFFF'),
+			),
 		);
-		$spreadsheet->removeSheetByIndex($sheetIndex);		
+
+		$styleDaten = array
+		(
+			'alignment' => array('horizontal' => Alignment::HORIZONTAL_LEFT),
+		);
+
+		$sheet = $spreadsheet->getActiveSheet();
+		$sheet->setTitle('Lizenzen');
+
+		foreach (range('A', 'X') as $columnID)
+		{
+			$sheet->getColumnDimension($columnID)->setAutoSize(true);
+		}
+
+		// Die Datenformatierung reicht bis zur letzten belegten Zeile, mindestens aber bis Zeile 2
+		$letzteZeile = max(2, \count($arrExport) + 1);
+
+		$sheet->getStyle('A1:X1')->applyFromArray($styleKopf);
+		$sheet->getStyle('A2:X'.$letzteZeile)->applyFromArray($styleDaten);
+
+		foreach (self::KOPFZEILE as $i => $titel)
+		{
+			$sheet->setCellValue(array($i + 1, 1), $titel);
+		}
+
+		$zeile = 2;
+
+		foreach ($arrExport as $item)
+		{
+			foreach (self::SPALTEN as $i => $feld)
+			{
+				$sheet->setCellValue(array($i + 1, $zeile), $item[$feld]);
+			}
+
+			++$zeile;
+		}
+
+		// Kopfzeile beim Blättern stehen lassen
+		$sheet->freezePane('A2');
+
+		$spreadsheet->setActiveSheetIndex(0);
 
 		$dateiname = 'Lizenzen_'.date('Ymd-Hi').'.xls';
 
-		$writer = new \PhpOffice\PhpSpreadsheet\Writer\Xls($spreadsheet);
-		//$writer->save('bundles/contaolizenzverwaltung/'.$dateiname); // Auf Server speichern
-
-		// Redirect output to a client’s web browser (Xls)
 		header('Content-Type: application/vnd.ms-excel');
 		header('Content-Disposition: attachment;filename="'.$dateiname.'"');
 		header('Cache-Control: max-age=0');
-		// If you're serving to IE 9, then the following may be needed
-		header('Cache-Control: max-age=1');
+		header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+		header('Last-Modified: '.gmdate('D, d M Y H:i:s').' GMT');
+		header('Pragma: public');
 
-		// If you're serving to IE over SSL, then the following may be needed
-		header('Expires: Mon, 26 Jul 1997 05:00:00 GMT'); // Date in the past
-		header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT'); // always modified
-		header('Cache-Control: cache, must-revalidate'); // HTTP/1.1
-		header('Pragma: public'); // HTTP/1.0
+		IOFactory::createWriter($spreadsheet, 'Xls')->save('php://output');
 
-		$writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xls');
-		$writer->save('php://output'); // An Browser schicken
-
+		// Ohne den harten Abbruch würde Contao seine Backend-Seite an die
+		// Excel-Datei anhängen und sie damit unlesbar machen
+		exit;
 	}
 
-	public function getRecords(\DataContainer $dc)
+	/**
+	 * Liest die zu exportierenden Datensätze aus der Datenbank.
+	 *
+	 * Suche, Standardfilter und der Spezialfilter der Lizenzverwaltung stehen
+	 * im Sitzungsspeicher des Backends und werden hier in eine Bedingung
+	 * übersetzt. Werte gehen dabei als gebundene Parameter in die Abfrage; das
+	 * Suchfeld und die Filterfelder werden gegen die im DCA definierten
+	 * Feldnamen geprüft, weil ein Spaltenname sich nicht binden lässt.
+	 *
+	 * @param DataContainer $dc Der Data Container der Lizenzübersicht
+	 *
+	 * @return array<int,array<string,mixed>> Die aufbereiteten Datensätze; leer,
+	 *                                        wenn nichts auf die Bedingung passt
+	 */
+	public function getRecords(DataContainer $dc): array
 	{
-		// Liest die Datensätze der Lizenzverwaltung in ein Array
-		// Suchbegriff in aktueller Ansicht laden
-		$search = $dc->Session->get('search');
-		$search = &$search[$dc->table]; // Das Array enthält field und value
-		//if($search['field']) $sql = " WHERE ".$search['field']." LIKE '%%".$search['value']."%%'"; // findet auch Umlaute, Suche nach "ba" findet auch "bä"
-		if(isset($search['field']) && isset($search['value'])) $sql = " WHERE LOWER(CAST(".$search['field']." AS CHAR)) REGEXP LOWER('".$search['value']."')"; // Contao-Standard, ohne Umlaute, Suche nach "ba" findet nicht "bä"
-		else $sql = '';
+		$table   = (string) $dc->table;
+		$session = Helper::getBackendSessionBag();
 
-		// Filter in aktueller Ansicht laden. Beispiel mit Spezialfilter (tli_filter):
-		//
-		// [filter] => Array
-		//       (
-		//           [tl_lizenzverwaltungFilter] => Array
-		//               (
-		//                   [tli_filter] => V2
-		//               )
-		// 
-		//           [tl_lizenzverwaltung] => Array
-		//               (
-		//                   [limit] => 0,30
-		//                   [geschlecht] => w
-		//               )
-		// 
-		//       )
-		$filter = $dc->Session->get('filter');
-		$filter = &$filter[$dc->table]; // Das Array enthält limit (Wert meistens = 0,30) und alle Feldnamen mit den Werten
-		if(isset($filter))
+		$bedingungen = array();
+		$parameter   = array();
+
+		if (null !== $session)
 		{
-			foreach($filter as $key => $value)
-			{
-				if($key != 'limit')
-				{
-					($sql) ? $sql .= ' AND' : $sql = ' WHERE';
-					$sql .= " tl_lizenzverwaltung.".$key." = '".$value."'";
-				}
-			}
+			$this->applySearch($session->get('search')[$table] ?? null, $bedingungen, $parameter);
+			$this->applyFilter($session->get('filter')[$table] ?? null, $table, $bedingungen, $parameter);
+			$this->applySpecialFilter($session->get('filter')[$table.'Filter']['tli_filter'] ?? null, $bedingungen, $parameter);
 		}
 
-		// Spezialfilter berücksichtigen
-		$filter = $dc->Session->get('filter');
-		$filter = &$filter[$dc->table.'Filter']['tli_filter']; // Wert aus Spezialfilter
-		switch($filter)
-		{
-			case '1': // Alle Personen mit gültigen Lizenzen
-				($sql) ? $sql .= ' AND' : $sql = ' WHERE';
-				$sql .= " tl_lizenzverwaltung_items.gueltigkeit >= ".time();
-				break;
+		$bedingungen[] = "tl_lizenzverwaltung_items.published = '1'";
+		$bedingungen[] = "tl_lizenzverwaltung.published = '1'";
 
-			case '2': // Alle Personen mit ungültigen Lizenzen
-				($sql) ? $sql .= ' AND' : $sql = ' WHERE';
-				$sql .= " tl_lizenzverwaltung_items.gueltigkeit < ".time();
-				break;
+		$sql = "SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE "
+		     . implode(' AND ', $bedingungen)
+		     . " ORDER BY name, vorname ASC";
 
-			case '3': // Alle Personen mit markierten Lizenzen
-				($sql) ? $sql .= ' AND' : $sql = ' WHERE';
-				$sql .= " tl_lizenzverwaltung_items.marker = 1";
-				break;
+		Helper::log('Excel-Export mit: '.$sql);
 
-			case 'VS': // Lizenzen Deutscher Schachbund
-			case 'V1': // Lizenzen Baden
-			case 'V2': // Lizenzen Bayern
-			case 'V3': // Lizenzen Berlin
-			case 'VD': // Lizenzen Brandenburg
-			case 'VB': // Lizenzen Bremen
-			case 'V4': // Lizenzen Hamburg
-			case 'V5': // Lizenzen Hessen
-			case 'VE': // Lizenzen Mecklenburg-Vorpommern
-			case 'V7': // Lizenzen Niedersachsen
-			case 'V6': // Lizenzen Nordrhein-Westfalen
-			case 'V8': // Lizenzen Rheinland-Pfalz
-			case 'V9': // Lizenzen Saarland
-			case 'VF': // Lizenzen Sachsen
-			case 'VG': // Lizenzen Sachsen-Anhalt
-			case 'VA': // Lizenzen Schleswig-Holstein
-			case 'VH': // Lizenzen Thüringen
-			case 'VC': // Lizenzen Württemberg'
-				($sql) ? $sql .= ' AND' : $sql = ' WHERE';
-				$sql .= " tl_lizenzverwaltung_items.verband = '".substr($filter,1,1)."'";
-				break;
+		$records = Database::getInstance()->prepare($sql)->execute(...$parameter);
 
-			default:
-		}
+		$verbandsname = Helper::getVerbaende();
 
-		($sql) ? $sql .= " AND tl_lizenzverwaltung_items.published = '1' AND tl_lizenzverwaltung.published = '1' ORDER BY name,vorname ASC" : $sql = " WHERE tl_lizenzverwaltung_items.published = '1' AND tl_lizenzverwaltung.published = '1' ORDER BY name,vorname ASC";
-
-		$sql = "SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id".$sql;
-		
-		log_message('Excel-Export mit: '.$sql, 'lizenzverwaltung.log');
-		// Datensätze laden
-		$records = \Database::getInstance()->prepare($sql)
-		                                   ->execute();
-
-		$verbandsname = \Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerbaende(); // Verbandskurzzeichen und -namen laden
-
-		// Datensätze umwandeln
 		$arrExport = array();
-		if($records->numRows)
+
+		while ($records->next())
 		{
-			while($records->next()) 
-			{
-				$arrExport[] = array
-				(
-					'vorname'           => $records->vorname,
-					'name'              => $records->name,
-					'lizenznummer_dosb' => $records->license_number_dosb,
-					'lizenznummer'      => $records->lizenznummer,
-					'lizenz'            => $records->lizenz,
-					'gueltigkeit'       => $this->getDate($records->gueltigkeit),
-					'geburtstag'        => $this->getDate($records->geburtstag),
-					'geschlecht'        => $records->geschlecht,
-					'strasse'           => $records->strasse,
-					'plz'               => $records->plz,
-					'ort'               => $records->ort,
-					'erwerb'            => $this->getDate($records->erwerb),
-					'verlaengerungen'   => $this->getDate(\Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerlaengerung($records->erwerb, $records->verlaengerungen)),
-					'codex'             => $records->codex,
-					'codex_date'        => $this->getDate($records->codex_date),
-					'help'              => $records->help,
-					'help_date'         => $this->getDate($records->help_date),
-					'letzteAenderung'   => $this->getDate($records->letzteAenderung),
-					'bemerkung'         => strip_tags($records->bemerkung),
-					'published'         => $records->published,
-					'titel'             => $records->titel,
-					'email'             => $records->email,
-					'verband'           => $verbandsname[$records->verband],
-					'tstamp'            => date("d.m.Y H:i:s",$records->tstamp)
-				);
-			}
+			$arrExport[] = array
+			(
+				'vorname'           => $records->vorname,
+				'name'              => $records->name,
+				'lizenznummer_dosb' => $records->license_number_dosb,
+				'lizenznummer'      => $records->lizenznummer,
+				'lizenz'            => $records->lizenz,
+				'gueltigkeit'       => $this->getDate($records->gueltigkeit),
+				'geburtstag'        => $this->getDate($records->geburtstag),
+				'geschlecht'        => $records->geschlecht,
+				'strasse'           => $records->strasse,
+				'plz'               => $records->plz,
+				'ort'               => $records->ort,
+				'erwerb'            => $this->getDate($records->erwerb),
+				'verlaengerungen'   => $this->getDate(Helper::getVerlaengerung($records->erwerb, $records->verlaengerungen)),
+				'codex'             => $records->codex,
+				'codex_date'        => $this->getDate($records->codex_date),
+				'help'              => $records->help,
+				'help_date'         => $this->getDate($records->help_date),
+				'letzteAenderung'   => $this->getDate($records->letzteAenderung),
+				'bemerkung'         => strip_tags((string) $records->bemerkung),
+				'published'         => $records->published,
+				'titel'             => $records->titel,
+				'email'             => $records->email,
+				'verband'           => $verbandsname[$records->verband] ?? '',
+				'tstamp'            => $records->tstamp ? date('d.m.Y H:i:s', (int) $records->tstamp) : '',
+			);
 		}
+
 		return $arrExport;
 	}
 
 	/**
-	 * Datumswert aus Datenbank umwandeln
-	 * @param mixed
-	 * @return mixed
+	 * Übernimmt den Suchbegriff der Übersicht in die Abfrage.
+	 *
+	 * Contao sucht mit REGEXP über den als Text gelesenen Spaltenwert; das wird
+	 * hier nachgebildet, damit der Export dieselbe Treffermenge liefert wie die
+	 * Liste.
+	 *
+	 * @param array<string,mixed>|null $search      Der Eintrag aus dem Sitzungsspeicher
+	 *                                              mit den Schlüsseln field und value
+	 * @param array<int,string>        $bedingungen Wird um die Bedingung ergänzt
+	 * @param array<int,mixed>         $parameter   Wird um den Suchwert ergänzt
+	 *
+	 * @return void Ist kein oder ein unbekanntes Feld gewählt, passiert nichts
 	 */
-	public function getDate($varValue)
+	private function applySearch(?array $search, array &$bedingungen, array &$parameter): void
 	{
-		return trim($varValue) ? date('d.m.Y', $varValue) : '';
+		if (empty($search['field']) || !isset($search['value']) || '' === (string) $search['value'])
+		{
+			return;
+		}
+
+		$field = $this->qualifyField((string) $search['field']);
+
+		if (null === $field)
+		{
+			return;
+		}
+
+		$bedingungen[] = "LOWER(CAST($field AS CHAR)) REGEXP LOWER(?)";
+		$parameter[]   = $search['value'];
 	}
 
+	/**
+	 * Übernimmt die Filter der Übersicht in die Abfrage.
+	 *
+	 * @param array<string,mixed>|null $filter      Der Eintrag aus dem Sitzungsspeicher;
+	 *                                              der Schlüssel "limit" wird übergangen,
+	 *                                              weil der Export nie seitenweise erfolgt
+	 * @param string                   $table       Name der Haupttabelle
+	 * @param array<int,string>        $bedingungen Wird um die Bedingungen ergänzt
+	 * @param array<int,mixed>         $parameter   Wird um die Filterwerte ergänzt
+	 *
+	 * @return void Unbekannte Feldnamen werden stillschweigend übergangen
+	 */
+	private function applyFilter(?array $filter, string $table, array &$bedingungen, array &$parameter): void
+	{
+		if (!$filter)
+		{
+			return;
+		}
+
+		foreach ($filter as $key => $value)
+		{
+			if ('limit' === $key)
+			{
+				continue;
+			}
+
+			$field = $this->qualifyField((string) $key, $table);
+
+			if (null === $field)
+			{
+				continue;
+			}
+
+			$bedingungen[] = "$field = ?";
+			$parameter[]   = $value;
+		}
+	}
+
+	/**
+	 * Übernimmt den Spezialfilter der Lizenzverwaltung in die Abfrage.
+	 *
+	 * Die Werte 1 bis 3 filtern nach Gültigkeit und Markierung; ein Wert, der
+	 * mit "V" beginnt, filtert nach dem Verband, dessen Kennzeichen an zweiter
+	 * Stelle steht.
+	 *
+	 * @param string|null       $filter      Der gewählte Wert
+	 * @param array<int,string> $bedingungen Wird um die Bedingung ergänzt
+	 * @param array<int,mixed>  $parameter   Wird um den Wert ergänzt
+	 *
+	 * @return void Bei unbekanntem Wert passiert nichts
+	 */
+	private function applySpecialFilter(?string $filter, array &$bedingungen, array &$parameter): void
+	{
+		if (!$filter)
+		{
+			return;
+		}
+
+		switch ($filter)
+		{
+			case '1': // Alle Personen mit gültigen Lizenzen
+				$bedingungen[] = 'tl_lizenzverwaltung_items.gueltigkeit >= ?';
+				$parameter[]   = time();
+				break;
+
+			case '2': // Alle Personen mit ungültigen Lizenzen
+				$bedingungen[] = 'tl_lizenzverwaltung_items.gueltigkeit < ?';
+				$parameter[]   = time();
+				break;
+
+			case '3': // Alle Personen mit markierten Lizenzen
+				$bedingungen[] = 'tl_lizenzverwaltung_items.marker = ?';
+				$parameter[]   = 1;
+				break;
+
+			default:
+				if ('V' === substr($filter, 0, 1) && \strlen($filter) === 2)
+				{
+					$bedingungen[] = 'tl_lizenzverwaltung_items.verband = ?';
+					$parameter[]   = substr($filter, 1, 1);
+				}
+		}
+	}
+
+	/**
+	 * Prüft einen Feldnamen und stellt den Tabellennamen voran.
+	 *
+	 * Spaltennamen lassen sich nicht als Parameter binden, deshalb muss der
+	 * Name gegen die im DCA definierten Felder geprüft werden, bevor er in die
+	 * Abfrage geht.
+	 *
+	 * @param string $field Der zu prüfende Feldname
+	 * @param string $table Die Tabelle, in der zuerst gesucht wird
+	 *
+	 * @return string|null Der qualifizierte Name wie "tl_lizenzverwaltung.name",
+	 *                     oder null wenn das Feld in keiner der beiden Tabellen
+	 *                     der Abfrage vorkommt
+	 */
+	private function qualifyField(string $field, string $table = 'tl_lizenzverwaltung'): ?string
+	{
+		foreach (array($table, 'tl_lizenzverwaltung', 'tl_lizenzverwaltung_items') as $candidate)
+		{
+			Controller::loadDataContainer($candidate);
+
+			if (isset($GLOBALS['TL_DCA'][$candidate]['fields'][$field]['sql']))
+			{
+				return $candidate.'.'.$field;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Wandelt einen Zeitstempel aus der Datenbank in ein lesbares Datum.
+	 *
+	 * @param mixed $varValue Zeitstempel als Zahl oder Zeichenkette
+	 *
+	 * @return string Das Datum als TT.MM.JJJJ, oder eine leere Zeichenkette bei
+	 *                leerem Wert
+	 */
+	public function getDate($varValue): string
+	{
+		return trim((string) $varValue) ? date('d.m.Y', (int) $varValue) : '';
+	}
 }
-?>

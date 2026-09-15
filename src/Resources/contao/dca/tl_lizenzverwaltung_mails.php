@@ -1,16 +1,24 @@
 <?php
 
 /**
- * Contao Open Source CMS
+ * Lizenzverwaltung für den Deutschen Schachbund
  *
- * Copyright (c) 2005-2015 Leo Feyer
- *
- * @license LGPL-3.0+
+ * @copyright  Frank Hoppe 2014 - 2026
+ * @author     Frank Hoppe <webmaster@schachbund.de>
+ * @license    LGPL-3.0-or-later
  */
 
+use Contao\Backend;
+use Contao\Config;
+use Contao\Database;
+use Contao\Date;
+use Contao\DataContainer;
+use Contao\DC_Table;
+use Contao\StringUtil;
+use Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper;
 
 /**
- * Table tl_lizenzverwaltung_mails
+ * Tabelle tl_lizenzverwaltung_mails
  */
 $GLOBALS['TL_DCA']['tl_lizenzverwaltung_mails'] = array
 (
@@ -18,7 +26,8 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_mails'] = array
 	// Config
 	'config' => array
 	(
-		'dataContainer'               => 'Table',
+		// Der Kurzname 'Table' gibt es unter Contao 5 nicht mehr, der FQCN in beiden
+		'dataContainer'               => DC_Table::class,
 		'ptable'                      => 'tl_lizenzverwaltung_items',
 		'enableVersioning'            => true,
 		'sql' => array
@@ -95,9 +104,13 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_mails'] = array
 	),
 
 	// Palettes
+	//
+	// Das frühere Palettenfeld "send" ist entfallen: Es gibt kein Feld dieses
+	// Namens, "send" ist die Operation in der Übersicht. Contao ging bislang
+	// stillschweigend darüber hinweg, angezeigt wurde nie etwas.
 	'palettes' => array
 	(
-		'default'                     => '{text_legend},subject,content;{template_legend},template,signatur,preview;{mail_legend},insertLizenz,insertLizenzCard,copyVerband,copyDSB,send'
+		'default'                     => '{text_legend},subject,content;{template_legend},template,signatur,preview;{mail_legend},insertLizenz,insertLizenzCard,copyVerband,copyDSB'
 	),
 
 	// Fields
@@ -268,149 +281,169 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_mails'] = array
 
 
 /**
- * Provide miscellaneous methods that are used by the data configuration array.
- *
- * @author Leo Feyer <https://github.com/leofeyer>
+ * Rückrufe des Data Containers tl_lizenzverwaltung_mails.
  */
 class tl_lizenzverwaltung_mails extends Backend
 {
-
 	/**
-	 * Import the back end user object
+	 * Erzeugt das Objekt.
+	 *
+	 * Der öffentliche Konstruktor ist Pflicht: Unter Contao 4.13 ist
+	 * `Backend::__construct()` nur protected. Der frühere Aufruf
+	 * `$this->import('BackendUser', 'User')` ist entfallen — er bricht unter
+	 * Contao 5 ab, weil es dort keine globalen Klassenaliasse mehr gibt, und
+	 * das importierte Objekt wurde ohnehin nirgends benutzt.
 	 */
 	public function __construct()
 	{
 		parent::__construct();
-		$this->import('BackendUser', 'User');
 	}
 
-
 	/**
-	 * List records
+	 * Beschriftet eine E-Mail in der Übersicht der Lizenz.
 	 *
-	 * @param array $arrRow
+	 * Angezeigt werden Betreff, Versandzustand und — solange die Mail noch
+	 * nicht versendet wurde — eine Vorschau des Textes aus der gewählten
+	 * Vorlage.
 	 *
-	 * @return string
+	 * @param array<string,mixed> $arrRow Der E-Mail-Datensatz
+	 *
+	 * @return string Der HTML-Code der Zeile
 	 */
 	public function listEmails($arrRow)
 	{
-		// Template aus Datenbank laden
-		$tpl = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_templates WHERE id=?")
-		                               ->execute($arrRow['template']);
+		$versendet = $arrRow['sent_state'] && $arrRow['sent_date'];
 
-		// Lizenz- und Personen-Datensatz einlesen
-		$lizenz = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
-		                                  ->execute($arrRow['pid']);
+		$kopf = '
+<div class="cte_type '.($versendet ? 'published' : 'unpublished').'"><strong>'.StringUtil::specialchars((string) $arrRow['subject']).'</strong> - '
+      . ($versendet ? 'Versendet am '.Date::parse(Config::get('datimFormat'), $arrRow['sent_date']) : 'Nicht versendet').'</div>';
 
-		if($tpl->numRows)
+		// Ist der versendete Text gespeichert, erübrigt sich die Vorschau.
+		// Geprüft wurde hier früher das Feld "sendText", das es nie gab —
+		// die Vorschau lief deshalb auch bei bereits versendeten Mails.
+		if ($arrRow['sent_text'] ?? false)
 		{
-			preg_match('/<body>(.*)<\/body>/s', $tpl->template, $matches); // Body extrahieren
-			$content = \StringUtil::restoreBasicEntities($matches[1]); // [nbsp] und Co. ersetzen
-			$arrTokens = array
-			(
-				'css'               => '',
-				'lizenz_vorname'    => $lizenz->vorname,
-				'lizenz_nachname'   => $lizenz->name,
-				'lizenz_geschlecht' => $lizenz->geschlecht,
-				'lizenz_art'        => $result->lizenz,
-				'lizenz_nummer'     => $lizenz->license_number_dosb,
-				'lizenz_content'    => $arrRow['content'],
-				'lizenz_signatur'   => $arrRow['signatur'] ? $GLOBALS['TL_CONFIG']['lizenzverwaltung_mailsignatur'] : '',
-			);
-			$content = \Haste\Util\StringUtil::recursiveReplaceTokensAndTags($content, $arrTokens);
-		}
-		else
-		{
-			// Kein Template gefunden
-			$content = 'Kein Template gefunden!';
+			return $kopf."\n";
 		}
 
-		return '
-<div class="cte_type ' . (($arrRow['sent_state'] && $arrRow['sent_date']) ? 'published' : 'unpublished') . '"><strong>' . $arrRow['subject'] . '</strong> - ' . (($arrRow['sent_state'] && $arrRow['sent_date']) ? 'Versendet am '.Date::parse(Config::get('datimFormat'), $arrRow['sent_date']) : 'Nicht versendet'). '</div>
-<div class="limit_height' . (!Config::get('doNotCollapse') ? ' h128' : '') . '">' . (!$arrRow['sendText'] ? '
-' . \StringUtil::insertTagToSrc($content) . '<hr>' : '' ) . '
-</div>' . "\n";
+		$lizenz  = $this->fetchLizenz((int) $arrRow['pid']);
+		$content = $this->renderTemplate((int) $arrRow['template'], $lizenz, (string) $arrRow['content'], (bool) $arrRow['signatur']);
 
+		// Die Klasse limit_height gilt unter Contao 5 als veraltet; der
+		// Ersatz list.sorting.limitHeight fehlt in 4.13 vollständig, für
+		// beide Fassungen bleibt sie der einzige gemeinsame Weg
+		return $kopf.'
+<div class="limit_height'.(!Config::get('doNotCollapse') ? ' h128' : '').'">
+'.StringUtil::insertTagToSrc($content).'<hr>
+</div>'."\n";
 	}
 
-
-	public function getTemplates(\DataContainer $dc)
+	/**
+	 * Liefert die Auswahlliste der veröffentlichten E-Mail-Vorlagen.
+	 *
+	 * @param DataContainer $dc Der Data Container; wird nicht ausgewertet
+	 *
+	 * @return array<int|string,string> Zuordnung Vorlagen-ID => Name samt
+	 *                                  Beschreibung; leer, wenn keine Vorlage
+	 *                                  veröffentlicht ist
+	 */
+	public function getTemplates(DataContainer $dc): array
 	{
-
-		// Neue Templates laden
-		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_templates WHERE published = ?")
-		                                  ->execute(1);
+		$result = Database::getInstance()->prepare("SELECT id, name, description FROM tl_lizenzverwaltung_templates WHERE published = ? ORDER BY name")
+		                                 ->execute(1);
 
 		$options = array();
-		while($result->next())
+
+		while ($result->next())
 		{
 			$options[$result->id] = $result->name.($result->description ? ' ('.$result->description.')' : '');
 		}
-		
+
 		return $options;
-
-		if(version_compare(VERSION.BUILD, '2.9.0', '>=') && version_compare(VERSION.BUILD, '4.8.0', '<'))
-		{
-			// Den 2. Parameter gibt es nur ab Contao 2.9 bis 4.7
-			$options = $this->getTemplateGroup('mail_lizenzverwaltung_', $dc->activeRecord->id);
-		}
-		else
-		{
-			// Ohne 2. Parameter bis Contao 2.8 und ab Contao 4.8
-			$options = $this->getTemplateGroup('mail_lizenzverwaltung_');
-		}
-
-
 	}
 
-	public function getPreview(\DataContainer $dc)
+	/**
+	 * Zeigt eine Vorschau der E-Mail im Bearbeitungsformular.
+	 *
+	 * @param DataContainer $dc Der Data Container
+	 *
+	 * @return string Der HTML-Code des Anzeigefeldes
+	 */
+	public function getPreview(DataContainer $dc): string
 	{
-		// Templatestatus
-		if($dc->activeRecord->template)
-		{
-			// Lizenz- und Personen-Datensatz einlesen
-			$lizenz = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
-			                                  ->execute($dc->activeRecord->pid);
+		$record = Database::getInstance()->prepare("SELECT pid, template, content, signatur FROM tl_lizenzverwaltung_mails WHERE id = ?")
+		                                 ->limit(1)
+		                                 ->execute($dc->id);
 
-			// Template aus Datenbank laden
-			$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_templates WHERE id=?")
-			                                  ->execute($dc->activeRecord->template);
-			if($result->numRows)
-			{
-				preg_match('/<body>(.*)<\/body>/s', $result->template, $matches); // Body extrahieren
-				$content = \StringUtil::restoreBasicEntities($matches[1]); // [nbsp] und Co. ersetzen
-				$arrTokens = array
-				(
-					'css'               => '',
-					'lizenz_vorname'    => $lizenz->vorname,
-					'lizenz_nachname'   => $lizenz->name,
-					'lizenz_geschlecht' => $lizenz->geschlecht,
-					'lizenz_art'        => $result->lizenz,
-					'lizenz_nummer'     => $lizenz->license_number_dosb,
-					'lizenz_content'    => $dc->activeRecord->content,
-					'lizenz_signatur'   => $dc->activeRecord->signatur ? $GLOBALS['TL_CONFIG']['lizenzverwaltung_mailsignatur'] : '',
-				);
-				$content = \Haste\Util\StringUtil::recursiveReplaceTokensAndTags($content, $arrTokens);
-				$content = '<div class="tl_preview">'.$content.'</div>';
-			}
-			else
-			{
-				// Kein Template gefunden
-				$content = '<div class="tl_preview">Kein Template gefunden!</div>';
-			}
-		}
-		else
+		if (!$record->template)
 		{
 			$content = 'Keine Vorlage ausgewählt';
 		}
+		else
+		{
+			$lizenz = $this->fetchLizenz((int) $record->pid);
+			$inhalt = $this->renderTemplate((int) $record->template, $lizenz, (string) $record->content, (bool) $record->signatur);
 
-		$string = '
+			$content = '<div class="tl_preview">'.($inhalt ?: 'Kein Template gefunden!').'</div>';
+		}
+
+		return '
 <div class="long clr widget">
-	<h3><label>'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_mails']['preview'][0].'</label></h3>
+	<h3><label>'.($GLOBALS['TL_LANG']['tl_lizenzverwaltung_mails']['preview'][0] ?? 'Vorschau').'</label></h3>
 	'.$content.'
 </div>';
-
-		return $string;
 	}
 
+	/**
+	 * Setzt eine E-Mail-Vorlage mit den Daten einer Lizenz zusammen.
+	 *
+	 * Aus der Vorlage wird nur der Inhalt des body-Elements verwendet, weil
+	 * die Vorschau innerhalb der Backend-Seite steht und kein vollständiges
+	 * HTML-Dokument enthalten darf.
+	 *
+	 * @param int    $template Datensatz-ID in tl_lizenzverwaltung_templates
+	 * @param object $lizenz   Zeilenobjekt aus dem Verbund von Lizenz und Person
+	 * @param string $inhalt   Der redaktionelle Text der E-Mail
+	 * @param bool   $signatur Ob die Signatur aus den Einstellungen angehängt wird
+	 *
+	 * @return string Der zusammengesetzte Text, oder eine leere Zeichenkette
+	 *                wenn es die Vorlage nicht gibt oder sie kein body-Element hat
+	 */
+	private function renderTemplate(int $template, object $lizenz, string $inhalt, bool $signatur): string
+	{
+		$tpl = Database::getInstance()->prepare("SELECT template FROM tl_lizenzverwaltung_templates WHERE id = ?")
+		                              ->limit(1)
+		                              ->execute($template);
+
+		if (!$tpl->numRows || !preg_match('/<body>(.*)<\/body>/s', (string) $tpl->template, $matches))
+		{
+			return '';
+		}
+
+		return Helper::replaceTokens(StringUtil::restoreBasicEntities($matches[1]), array
+		(
+			'css'               => '',
+			'lizenz_vorname'    => $lizenz->vorname,
+			'lizenz_nachname'   => $lizenz->name,
+			'lizenz_geschlecht' => $lizenz->geschlecht,
+			'lizenz_art'        => $lizenz->lizenz,
+			'lizenz_nummer'     => $lizenz->license_number_dosb,
+			'lizenz_content'    => $inhalt,
+			'lizenz_signatur'   => $signatur ? Config::get('lizenzverwaltung_mailsignatur') : '',
+		));
+	}
+
+	/**
+	 * Liest eine Lizenz samt der zugehörigen Person.
+	 *
+	 * @param int $id Datensatz-ID in tl_lizenzverwaltung_items
+	 *
+	 * @return object Das Zeilenobjekt aus dem Verbund beider Tabellen
+	 */
+	private function fetchLizenz(int $id): object
+	{
+		return Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
+		                              ->limit(1)
+		                              ->execute($id);
+	}
 }

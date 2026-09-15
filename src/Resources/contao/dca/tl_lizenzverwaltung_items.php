@@ -1,25 +1,37 @@
 <?php
 
 /**
- * Contao Open Source CMS
+ * Lizenzverwaltung für den Deutschen Schachbund
  *
- * Copyright (c) 2005-2017 Leo Feyer
- *
- * @package   Trainerlizenzen
- * @author    Frank Hoppe <webmaster@schachbund.de>
- * @license   http://www.gnu.org/licenses/lgpl-3.0.html LGPL
- * @copyright Frank Hoppe 2014 - 2017
+ * @copyright  Frank Hoppe 2014 - 2026
+ * @author     Frank Hoppe <webmaster@schachbund.de>
+ * @license    LGPL-3.0-or-later
  */
 
+use Contao\Backend;
+use Contao\Config;
+use Contao\Controller;
+use Contao\Database;
+use Contao\DataContainer;
+use Contao\DC_Table;
+use Contao\FilesModel;
+use Contao\Image;
+use Contao\Message;
+use Contao\StringUtil;
+use Contao\System;
+use Schachbulle\ContaoHelperBundle\Classes\Helper as ContaoHelper;
+use Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper;
+
 /**
- * Table tl_lizenzverwaltung
+ * Tabelle tl_lizenzverwaltung_items
  */
 $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 (
 	// Config
 	'config' => array
 	(
-		'dataContainer'               => 'Table',
+		// Der Kurzname 'Table' gibt es unter Contao 5 nicht mehr, der FQCN in beiden
+		'dataContainer'               => DC_Table::class,
 		'ptable'                      => 'tl_lizenzverwaltung',
 		'ctable'                      => array('tl_lizenzverwaltung_mails'),
 		'enableVersioning'            => true,
@@ -308,7 +320,9 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'exclude'                 => true,
 			'flag'                    => 11,
 			'sql'                     => "varchar(3) NOT NULL default ''",
-			'options'                 => Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerbaende(),
+			// Als Rückruf statt als feste Liste: Sonst läuft die Datenbankabfrage
+			// bei jedem Laden der DCA, auch wenn das Feld gar nicht gezeigt wird
+			'options_callback'        => static fn () => Helper::getVerbaende(),
 			'eval'                    => array
 			(
 				'mandatory'           => true,
@@ -338,7 +352,7 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 			'inputType'               => 'select',
 			'exclude'                 => true,
 			'sorting'                 => true,
-			'options'                 => Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getLizenzen(),
+			'options_callback'        => static fn () => Helper::getLizenzen(),
 			'eval'                    => array
 			(
 				'chosen'              => true,
@@ -571,25 +585,51 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_items'] = array
 	),
 );
 
-class tl_lizenzverwaltung_items extends \Backend
+
+/**
+ * Rückrufe des Data Containers tl_lizenzverwaltung_items.
+ */
+class tl_lizenzverwaltung_items extends Backend
 {
+	/**
+	 * Erzeugt das Objekt.
+	 *
+	 * Der öffentliche Konstruktor ist Pflicht: Unter Contao 4.13 ist
+	 * `Backend::__construct()` nur protected.
+	 */
+	public function __construct()
+	{
+		parent::__construct();
+	}
 
-	var $verbandsmail = array();
-
+	/**
+	 * Zeichnet den Knopf zum E-Mail-Postfach einer Lizenz.
+	 *
+	 * Das Symbol zeigt an, wie weit die Adressen für einen Versand reichen:
+	 * grün, wenn sowohl der Trainer als auch der Verbandsreferent eine Adresse
+	 * hat, gelb bei nur einer von beiden, grau wenn keine hinterlegt ist.
+	 *
+	 * @param array<string,mixed> $row        Der Datensatz
+	 * @param string              $href       Ziel der Operation
+	 * @param string              $label      Beschriftung des Knopfes
+	 * @param string              $title      Titel des Knopfes
+	 * @param string              $icon       Vorgabesymbol aus der DCA
+	 * @param string              $attributes Zusätzliche HTML-Attribute
+	 *
+	 * @return string Der HTML-Code des Knopfes
+	 */
 	public function toggleEmail($row, $href, $label, $title, $icon, $attributes)
 	{
-		$this->import('BackendUser', 'User');
-
 		$href .= '&amp;id='.$row['id'];
 
-		$verband_email = \Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerbandMail($row['verband']);
-		$person_email = \Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getPersonMail($row['pid']);
+		$verband_email = Helper::getVerbandMail((string) $row['verband']);
+		$person_email  = Helper::getPersonMail($row['pid']);
 
-		if($person_email && $verband_email)
+		if ($person_email && $verband_email)
 		{
 			$icon = 'bundles/contaolizenzverwaltung/images/email.png';
 		}
-		elseif($person_email || $verband_email)
+		elseif ($person_email || $verband_email)
 		{
 			$icon = 'bundles/contaolizenzverwaltung/images/email_gelb.png';
 		}
@@ -598,498 +638,482 @@ class tl_lizenzverwaltung_items extends \Backend
 			$icon = 'bundles/contaolizenzverwaltung/images/email_grau.png';
 		}
 
-		return '<a href="'.$this->addToUrl($href).'" title="'.specialchars($title).'"'.$attributes.'>'.\Image::getHtml($icon, $label).'</a> ';
+		return '<a href="'.$this->addToUrl($href).'" title="'.StringUtil::specialchars($title).'"'.$attributes.'>'.Image::getHtml($icon, $label).'</a> ';
 	}
 
 	/**
-	 * Add an image to each record
-	 * @param array         $row (Assoziatives Array mit allen Werten des aktuellen Datensatzes)
-	 * @param string        $label (Wert des erstes sichtbaren Wertes des aktuellen Datensatzes)
-	 * @param DataContainer $dc
-	 * @param array         $args (Numerisches Array mit den sichtbaren Werten des aktuellen Datensatzes)
+	 * Wandelt die Datumsspalten der Übersicht in ein lesbares Format.
 	 *
-	 * @return array
+	 * @param array<string,mixed> $row   Der Datensatz
+	 * @param string              $label Der bereits erzeugte Beschriftungstext
+	 * @param DataContainer       $dc    Der Data Container
+	 * @param array<int,string>   $args  Die sichtbaren Spaltenwerte
+	 *
+	 * @return array<int,string> Die umgewandelten Spaltenwerte
 	 */
 	public function convertDate($row, $label, DataContainer $dc, $args)
 	{
-
-		for($x=0;$x<count($args);$x++)
+		foreach ($args as $x => $wert)
 		{
-			$args[$x] = \Schachbulle\ContaoHelperBundle\Classes\Helper::getDate($args[$x]);
+			$args[$x] = ContaoHelper::getDate($wert);
 		}
+
 		return $args;
 	}
 
-	public function getLizenznummer(DataContainer $dc)
+	/**
+	 * Zeigt die DOSB-Lizenznummer samt Verweis ins LiMS an.
+	 *
+	 * @param DataContainer $dc Der Data Container
+	 *
+	 * @return string Der HTML-Code des Anzeigefeldes; ohne Lizenznummer ein Hinweistext
+	 */
+	public function getLizenznummer(DataContainer $dc): string
 	{
+		$record = $this->fetch($dc, array('license_number_dosb', 'lid'));
+		$link   = rtrim((string) Config::get('lims_link'), '/');
 
-		// Lizenzstatus
-		if($dc->activeRecord->license_number_dosb)
+		if ($record->license_number_dosb && $link)
 		{
-			$status = '<b>'.$dc->activeRecord->license_number_dosb.'&nbsp;&nbsp;</b><a href="'.LIMS_LINK.'dosb_license/'.$dc->activeRecord->lid.'" target="_blank" class="dosb_button_mini">Ansehen</a>';
+			$status = '<b>'.StringUtil::specialchars((string) $record->license_number_dosb).'&nbsp;&nbsp;</b>'
+			        . '<a href="'.StringUtil::specialchars($link.'/dosb_license/'.$record->lid).'" target="_blank" rel="noopener" class="dosb_button_mini">Ansehen</a>';
+		}
+		elseif ($record->license_number_dosb)
+		{
+			$status = '<b>'.StringUtil::specialchars((string) $record->license_number_dosb).'</b>';
 		}
 		else
 		{
 			$status = 'Keine DOSB-Lizenz vorhanden';
 		}
 
-		$string = '
+		return '
 		<div class="w50 dosb_margin">
 		<div class="tl_text" style="border:0">'.$status.'</div>
 		</div>';
-
-		return $string;
 	}
 
-	public function getLizenzbutton(DataContainer $dc)
+	/**
+	 * Zeigt den Knopf zum Erstellen oder Verlängern der Lizenz.
+	 *
+	 * @param DataContainer $dc Der Data Container
+	 *
+	 * @return string Der HTML-Code des Knopfes samt Angabe zum letzten Abruf
+	 */
+	public function getLizenzbutton(DataContainer $dc): string
 	{
-		// Link generieren
-		$link = str_replace('&amp;act=edit', '', \Controller::addToUrl('key=getLizenz&rt='.REQUEST_TOKEN)); // key hinzufügen | edit löschen
+		$record = $this->fetch($dc, array('dosb_tstamp', 'dosb_code', 'dosb_antwort'));
 
-		// Letzter Lizenzabruf und Rückgabecode
-		if($dc->activeRecord->dosb_tstamp)
+		return $this->renderAbrufButton(
+			'getLizenz',
+			$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_license'][0] ?? 'Lizenz erstellen',
+			(int) $record->dosb_tstamp,
+			(int) $record->dosb_code,
+			(string) $record->dosb_antwort
+		);
+	}
+
+	/**
+	 * Zeigt den Knopf zum PDF-Abruf im DIN-A4-Format.
+	 *
+	 * @param DataContainer $dc Der Data Container
+	 *
+	 * @return string Der HTML-Code des Knopfes; ohne DOSB-Lizenznummer nur ein
+	 *                leeres Feld, damit das Spaltenraster erhalten bleibt
+	 */
+	public function getLizenzPDF(DataContainer $dc): string
+	{
+		$record = $this->fetch($dc, array('license_number_dosb', 'dosb_pdf_tstamp', 'dosb_pdf_code', 'dosb_pdf_antwort'));
+
+		if (!$record->license_number_dosb)
 		{
-			$antwort = 'Letzter Abruf: '.date('d.m.Y H:i:s', $dc->activeRecord->dosb_tstamp).' ('.$dc->activeRecord->dosb_code.' '.$dc->activeRecord->dosb_antwort.')';
+			return '<div class="w50 dosb_margin"></div>';
+		}
 
-			if($dc->activeRecord->dosb_code != 200) $css = 'color:red;';
-			else $css = '';
+		return $this->renderAbrufButton(
+			'getLizenzPDF',
+			$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_pdf'][0] ?? 'PDF abrufen',
+			(int) $record->dosb_pdf_tstamp,
+			(int) $record->dosb_pdf_code,
+			(string) $record->dosb_pdf_antwort
+		);
+	}
 
-			return '
+	/**
+	 * Zeigt den Knopf zum PDF-Abruf im Kartenformat.
+	 *
+	 * @param DataContainer $dc Der Data Container
+	 *
+	 * @return string Der HTML-Code des Knopfes; ohne DOSB-Lizenznummer nur ein leeres Feld
+	 */
+	public function getLizenzPDFCard(DataContainer $dc): string
+	{
+		$record = $this->fetch($dc, array('license_number_dosb', 'dosb_pdfcard_tstamp', 'dosb_pdfcard_code', 'dosb_pdfcard_antwort'));
+
+		if (!$record->license_number_dosb)
+		{
+			return '<div class="w50 dosb_margin"></div>';
+		}
+
+		return $this->renderAbrufButton(
+			'getLizenzPDFCard',
+			$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_pdfcard'][0] ?? 'PDF-Karte abrufen',
+			(int) $record->dosb_pdfcard_tstamp,
+			(int) $record->dosb_pdfcard_code,
+			(string) $record->dosb_pdfcard_antwort
+		);
+	}
+
+	/**
+	 * Baut einen Abrufknopf samt Angabe zum letzten Abruf.
+	 *
+	 * @param string $key      Schlüssel des Backend-Moduls, etwa "getLizenzPDF"
+	 * @param string $label    Beschriftung des Knopfes
+	 * @param int    $tstamp   Zeitpunkt des letzten Abrufs; 0 wenn noch keiner erfolgte
+	 * @param int    $code     HTTP-Code des letzten Abrufs
+	 * @param string $antwort  Antworttext des letzten Abrufs
+	 *
+	 * @return string Der HTML-Code; die Angabe zum letzten Abruf wird rot
+	 *                dargestellt, wenn der Code nicht 200 war
+	 */
+	private function renderAbrufButton(string $key, string $label, int $tstamp, int $code, string $antwort): string
+	{
+		// key hinzufügen, act=edit löschen
+		$link = str_replace('&amp;act=edit', '', Controller::addToUrl('key='.$key.'&amp;rt='.Helper::getRequestToken()));
+
+		$hinweis = '';
+
+		if ($tstamp)
+		{
+			$css     = 200 === $code ? '' : 'color:red;';
+			$hinweis = '
+			<p class="tl_help tl_tip" title="" style="margin-left:7px;'.$css.'">Letzter Abruf: '
+			         . date('d.m.Y H:i:s', $tstamp).' ('.$code.' '.StringUtil::specialchars($antwort).')</p>';
+		}
+
+		return '
 			<div class="w50 dosb_margin">
-			<div class="tl_text" style="border:0;"><a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_license'][0].'</a></div>
-			<p class="tl_help tl_tip" title="" style="margin-left:7px;'.$css.'">'.$antwort.'</p>
+			<div class="tl_text" style="border:0;"><a href="'.$link.'" class="dosb_button">'.$label.'</a></div>'.$hinweis.'
 			</div>';
-		}
-		else
-		{
-			return '
-			<div class="w50 dosb_margin">
-			<div class="tl_text" style="border:0;"><a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_license'][0].'</a></div>
-			</div>';
-		}
-
-	}
-
-
-	/**
-	 * Button zum PDF-Abruf im DIN-A4-Format anzeigen
-	 * @param DataContainer $dc
-	 *
-	 * @return string HTML-Code
-	 */
-	public function getLizenzPDF(DataContainer $dc)
-	{
-		// Link generieren
-		$link = str_replace('&amp;act=edit', '', \Controller::addToUrl('key=getLizenzPDF&rt='.REQUEST_TOKEN)); // key hinzufügen | edit löschen
-
-		// Letzter Lizenzabruf und Rückgabecode
-		if($dc->activeRecord->dosb_pdf_tstamp)
-		{
-			$antwort = 'Letzter Abruf: '.date('d.m.Y H:i:s', $dc->activeRecord->dosb_pdf_tstamp).' ('.$dc->activeRecord->dosb_pdf_code.' '.$dc->activeRecord->dosb_pdf_antwort.')';
-		}
-		else $antwort = '';
-
-		if($dc->activeRecord->license_number_dosb)
-		{
-			if($antwort)
-			{
-				if($dc->activeRecord->dosb_pdf_code != 200) $css = 'color:red;';
-				else $css = '';
-
-				return '
-				<div class="w50 dosb_margin">
-				<div class="tl_text" style="border:0;"><a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_pdf'][0].'</a></div>
-				<p class="tl_help tl_tip" title="" style="margin-left:7px;'.$css.'">'.$antwort.'</p>
-				</div>';
-			}
-			else
-			{
-				return '
-				<div class="w50 dosb_margin">
-				<div class="tl_text" style="border:0;"><a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_pdf'][0].'</a></div>
-				</div>';
-			}
-		}
-		else return '<div class="w50 dosb_margin"></div>';
-
 	}
 
 	/**
-	 * Button zum PDF-Abruf im Karten-Format anzeigen
-	 * @param DataContainer $dc
+	 * Platzhalterfeld für das Setzen des heutigen Änderungsdatums.
 	 *
-	 * @return string HTML-Code
-	 */
-	public function getLizenzPDFCard(DataContainer $dc)
-	{
-		// Link generieren
-		$link = str_replace('&amp;act=edit', '', \Controller::addToUrl('key=getLizenzPDFCard&rt='.REQUEST_TOKEN)); // key hinzufügen | edit löschen
-
-		// Letzter Lizenzabruf und Rückgabecode
-		if($dc->activeRecord->dosb_pdfcard_tstamp)
-		{
-			$antwort = 'Letzter Abruf: '.date('d.m.Y H:i:s', $dc->activeRecord->dosb_pdfcard_tstamp).' ('.$dc->activeRecord->dosb_pdfcard_code.' '.$dc->activeRecord->dosb_pdfcard_antwort.')';
-		}
-		else $antwort = '';
-
-		if($dc->activeRecord->license_number_dosb)
-		{
-			if($antwort)
-			{
-				if($dc->activeRecord->dosb_pdfcard_code != 200) $css = 'color:red;';
-				else $css = '';
-
-				return '
-				<div class="w50 dosb_margin">
-				<div class="tl_text" style="border:0;"><a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_pdfcard'][0].'</a></div>
-				<p class="tl_help tl_tip" title="" style="margin-left:7px;'.$css.'">'.$antwort.'</p>
-				</div>';
-			}
-			else
-			{
-				return '
-				<div class="w50 dosb_margin">
-				<div class="tl_text" style="border:0;"><a href="'.$link.'" class="dosb_button">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['button_pdfcard'][0].'</a></div>
-				</div>';
-			}
-		}
-		else return '<div class="w50 dosb_margin"></div>';
-
-	}
-
-	/**
-	 * Setzt das aktuelle Datum beim Änderungsdatum
-	 * (Noch nicht weitergebaut, deshalb display:none; Unklar wwas aufgerufen werden soll und wie man das Feld per Button ändert.)
-	 * @param DataContainer $dc
+	 * Das Feld ist per Stil ausgeblendet und ohne Funktion; es steht seit
+	 * jeher als Entwurf in der Palette. Belassen, damit die Palette nicht
+	 * bricht.
 	 *
-	 * @return array
+	 * @param DataContainer $dc Der Data Container; wird nicht ausgewertet
+	 *
+	 * @return string Der HTML-Code des ausgeblendeten Feldes
 	 */
-	public function setHeute(DataContainer $dc)
+	public function setHeute(DataContainer $dc): string
 	{
-		// Zurücklink generieren, ab C4 ist das ein symbolischer Link zu "contao"
-		if (version_compare(VERSION, '4.0', '>='))
-		{
-			$link = \System::getContainer()->get('router')->generate('contao_backend');
-		}
-		else
-		{
-			$link = 'contao/main.php';
-		}
-		$link .= '?do=lizenzverwaltung&amp;table=tl_lizenzverwaltung_items&amp;key=getLizenz&amp;id=' . $dc->activeRecord->id . '&amp;rt=' . REQUEST_TOKEN;
-
-		// Letzter Lizenzabruf und Rückgabecode
-		if($dc->activeRecord->dosb_tstamp)
-		{
-			$antwort = 'Letzter Abruf: '.date('d.m.Y H:i:s', $dc->activeRecord->dosb_tstamp).' ('.$dc->activeRecord->dosb_code.' '.$dc->activeRecord->dosb_antwort.')';
-		}
-		else $antwort = '';
-
-		$string = '
+		return '
 <div class="w50 widget" style="display:none">
-	<a href="#" onclick="AjaxRequest.toggleSubpalette(this, \'sub_login\', \'login\')" onfocus="Backend.getScrollOffset()" class="dosb_button_mini">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['setHeute'][0].'</a>
-	<p class="tl_help tl_tip" title="" style="margin-top:3px;">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['setHeute'][1].'</p>
+	<span class="dosb_button_mini">'.($GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['setHeute'][0] ?? '').'</span>
+	<p class="tl_help tl_tip" title="" style="margin-top:3px;">'.($GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['setHeute'][1] ?? '').'</p>
 </div>';
-
-		return $string;
 	}
 
 	/**
-	 * List records
+	 * Beschriftet eine Lizenz in der Übersicht der Person.
 	 *
-	 * @param array $arrRow
+	 * @param array<string,mixed> $row Der Lizenzdatensatz
 	 *
-	 * @return string
+	 * @return string Der HTML-Code der Zeile; abgelaufene Lizenzen rot, gültige grün
 	 */
 	public function listLizenzen($row)
 	{
-		// Farbliche Hervorhebung der Gültigkeit
-		if($row['gueltigkeit'] < time()) $temp = '<span style="color: red;">';
-		else $temp = '<span style="color: green;">';
+		$temp = $row['gueltigkeit'] < time() ? '<span style="color: red;">' : '<span style="color: green;">';
 
-		$temp .= $row['marker'] ? '<img src="bundles/contaolizenzverwaltung/images/marker.png" title="Lizenz ist markiert"> ' : '';
-		$temp .= '<b>'.$row['lizenz'].'</b> ';
-		$temp .= date('d.m.Y', $row['gueltigkeit']).' ';
-		$temp .= '- '.\Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerband($row['verband']).' ';
-		if($row['license_number_dosb'])
+		$temp .= $row['marker'] ? '<img src="bundles/contaolizenzverwaltung/images/marker.png" alt="" title="Lizenz ist markiert"> ' : '';
+		$temp .= '<b>'.StringUtil::specialchars((string) $row['lizenz']).'</b> ';
+		$temp .= date('d.m.Y', (int) $row['gueltigkeit']).' ';
+		$temp .= '- '.Helper::getVerband((string) $row['verband']).' ';
+
+		if ($row['license_number_dosb'])
 		{
-			$temp .= '(DOSB-Lizenz <i>'.$row['license_number_dosb'].'</i> ';
-			$temp .= 'abgerufen am '.date('d.m.Y H:i', $row['dosb_tstamp']).' - Code: '.$row['dosb_code'].' '.$row['dosb_antwort'].')</span>';
+			$temp .= '(DOSB-Lizenz <i>'.StringUtil::specialchars((string) $row['license_number_dosb']).'</i> ';
+			$temp .= 'abgerufen am '.date('d.m.Y H:i', (int) $row['dosb_tstamp']).' - Code: '.$row['dosb_code'].' '.StringUtil::specialchars((string) $row['dosb_antwort']).')</span>';
 		}
 		else
 		{
 			$temp .= '(noch nicht beim DOSB gemeldet)</span>';
 		}
+
 		return $temp;
-
-//		return '
-//<div class="cte_type ' . (($arrRow['sent_state'] && $arrRow['sent_date']) ? 'published' : 'unpublished') . '"><strong>' . $arrRow['subject'] . '</strong> - ' . (($arrRow['sent_state'] && $arrRow['sent_date']) ? 'Versendet am '.Date::parse(Config::get('datimFormat'), $arrRow['sent_date']) : 'Nicht versendet'). '</div>';
-
 	}
 
-	public function getLeitfaden(DataContainer $dc)
+	/**
+	 * Zeigt den Verweis auf den Leitfaden zum Lizenzmanagementsystem.
+	 *
+	 * @param DataContainer $dc Der Data Container; wird nicht ausgewertet
+	 *
+	 * @return string Der HTML-Code des Anzeigefeldes
+	 */
+	public function getLeitfaden(DataContainer $dc): string
 	{
-		$info = ''; // PHP8-Kompatibilität hergestellt, aber woher kommt $info?
-		$text =
-		'<div class="long widget">
-		<div class="tl_text" style="border:0;"><a href="bundles/contaolizenzverwaltung/pdf/Leitfaden_LiMS_09.04.2019.pdf" target="_blank" style="color:blue;">Leitfaden zum Lizenzmanagementsystem</a><span> (Version 7.0 vom 09.04.2019)</span></div>
-		<p class="tl_help tl_tip" title="" style="margin-left:7px;">'.$info.'</p>
+		return '
+		<div class="long widget">
+		<div class="tl_text" style="border:0;"><a href="bundles/contaolizenzverwaltung/pdf/Leitfaden_LiMS_09.04.2019.pdf" target="_blank" rel="noopener" style="color:blue;">Leitfaden zum Lizenzmanagementsystem</a><span> (Version 7.0 vom 09.04.2019)</span></div>
 		</div>';
-
-		return $text;
 	}
 
-	public function getVerification(DataContainer $dc)
+	/**
+	 * Warnt vor Werten, die der DOSB nicht annehmen wird.
+	 *
+	 * Geprüft wird das Gültigkeitsdatum gegen die Fristen des DOSB (zwei Jahre
+	 * bei A-Lizenzen, sonst vier, jeweils ab der letzten Verlängerung und bis
+	 * zum Jahresende gerundet) sowie das Vorhandensein einer E-Mail-Adresse.
+	 * Bei einer bereits vergebenen DOSB-Lizenznummer ist ein zu spätes Datum
+	 * ein Fehler, sonst nur ein Hinweis: Bestandsdaten dürfen abweichen.
+	 *
+	 * @param DataContainer $dc Der Data Container
+	 *
+	 * @return string Immer eine leere Zeichenkette; die Meldungen erscheinen
+	 *                über Contaos Meldungsbereich
+	 */
+	public function getVerification(DataContainer $dc): string
 	{
+		$record = $this->fetch($dc, array('erwerb', 'verlaengerungen', 'lizenz', 'license_number_dosb', 'gueltigkeit', 'tstamp', 'pid'));
 
-		// ----------------------------------------------------------------
-		// GÜLTIGKEIT DER LIZENZ
-		// ----------------------------------------------------------------
-		// Letztes Verlängerungsdatum ermitteln
-		$verlaengerung = \Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerlaengerung($dc->activeRecord->erwerb, $dc->activeRecord->verlaengerungen);
+		$verlaengerung = Helper::getVerlaengerung($record->erwerb, $record->verlaengerungen);
 
-		// Zulässiges Gültigkeitsdatum feststellen
-		switch(substr($dc->activeRecord->lizenz,0,1))
+		$gueltigkeit = match (substr((string) $record->lizenz, 0, 1))
 		{
-			case 'A': // 2 Jahre ab Ausstellungsdatum - 1 Tag
-				//echo "|$verlaengerung|";
-				$gueltigkeit = strtotime('+2 years', $verlaengerung) - 86400;
-				$gueltigkeit = $this->getQuartalsende($gueltigkeit);
-				break;
-			case 'B': // 4 Jahre ab Ausstellungsdatum - 1 Tag
-			case 'C':
-				$gueltigkeit = strtotime('+4 years', $verlaengerung) - 86400;
-				$gueltigkeit = $this->getQuartalsende($gueltigkeit);
-				break;
-			default:
-				$gueltigkeit = 0;
-		}
+			'A'      => $this->getQuartalsende(strtotime('+2 years', $verlaengerung) - 86400),
+			'B', 'C' => $this->getQuartalsende(strtotime('+4 years', $verlaengerung) - 86400),
+			default  => 0,
+		};
 
-		// Gültigkeitsdatum überprüfen
-		if($dc->activeRecord->license_number_dosb)
+		if ($record->gueltigkeit > $gueltigkeit)
 		{
-			// Gültigkeitsregeln des DOSB gelten
-			if($dc->activeRecord->gueltigkeit > $gueltigkeit)
+			$text = 'Gültig bis ('.date('d.m.Y', (int) $record->gueltigkeit).') ist größer als erlaubt. Der DOSB erlaubt nur den '.date('d.m.Y', $gueltigkeit).'!';
+
+			if ($record->license_number_dosb)
 			{
-				Message::addError('Gültig bis ('.date('d.m.Y', $dc->activeRecord->gueltigkeit).') ist größer als erlaubt. Der DOSB erlaubt nur den '.date('d.m.Y', $gueltigkeit).'!');
+				Message::addError($text);
 			}
-		}
-		else
-		{
-			// Kulanzregelung DOSB für Bestandsdaten
-			if($dc->activeRecord->gueltigkeit > $gueltigkeit)
+			else
 			{
-				Message::addInfo('Gültig bis ('.date('d.m.Y', $dc->activeRecord->gueltigkeit).') ist größer als erlaubt. Der DOSB erlaubt nur den '.date('d.m.Y', $gueltigkeit).'! Es wird Probleme bei Updates geben.');
+				Message::addInfo($text.' Es wird Probleme bei Updates geben.');
 			}
 		}
 
-		// ----------------------------------------------------------------
-		// E-MAIL
-		// ----------------------------------------------------------------
+		$person = Database::getInstance()->prepare("SELECT email FROM tl_lizenzverwaltung WHERE id = ?")
+		                                 ->limit(1)
+		                                 ->execute($record->pid);
 
-		// Lizenz- und Personen-Datensatz einlesen
-		$result = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items LEFT JOIN tl_lizenzverwaltung ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.id = ?")
-		                                  ->execute($dc->activeRecord->id);
-
-		if(!$result->email && $dc->activeRecord->tstamp)
+		if (!$person->email && $record->tstamp)
 		{
-			// Fehlende E-Mail-Adresse bei nicht neuem Datensatz
 			Message::addError('E-Mail-Adresse des Trainers fehlt! Ein automatischer Lizenzversand an ihn ist nicht möglich.');
 		}
 
 		return '';
-
 	}
-
 
 	/**
-	 * Ermittelt das Quartalsende als Timestamp für einen beliebigen Zeitstempel
-	 * @param timestamp     $value (beliebiger Zeitstempel)
+	 * Rundet einen Zeitstempel auf das Ende des Kalenderjahres auf.
 	 *
-	 * @return timestamp
+	 * Bis 2022 endeten Lizenzen zum Quartalsende; seit 2023 gilt einheitlich
+	 * das Jahresende. Die Methode heißt aus Rücksicht auf bestehende Aufrufe
+	 * weiterhin so.
+	 *
+	 * @param int $value Beliebiger Zeitstempel
+	 *
+	 * @return int Zeitstempel des 31. Dezember desselben Jahres, 0 Uhr
 	 */
-	public function getQuartalsende($value)
+	public function getQuartalsende(int $value): int
 	{
-		$quartals = array
-		(
-			 1 => 1,
-			 2 => 1,
-			 3 => 1,
-			 4 => 2,
-			 5 => 2,
-			 6 => 2,
-			 7 => 3,
-			 8 => 3,
-			 9 => 3,
-			10 => 4,
-			11 => 4,
-			12 => 4
-		);
-
-		$year = date('Y', $value);
-		$quartal = $quartals[date("n", $value)]; // n = Monat 1-12
-
-		// Gültigkeit ab 2023 bis zum Jahresende
-		$quartal = 4;
-
-		//log_message(date('d.m.Y', $value), 'lizenzverwaltung_quartal.log');
-		//log_message($quartal, 'lizenzverwaltung_quartal.log');
-
-		switch($quartal)
-		{
-			case 1:
-				return mktime(0, 0, 0, 3, 31, $year);
-			case 2:
-				return mktime(0, 0, 0, 6, 30, $year);
-			case 3:
-				return mktime(0, 0, 0, 9, 30, $year);
-			case 4:
-				return mktime(0, 0, 0, 12, 31, $year);
-			default:
-				return 0;
-		}
+		return (int) mktime(0, 0, 0, 12, 31, (int) date('Y', $value));
 	}
 
-
-	public function getDate($value)
+	/**
+	 * Wandelt ein Datum der Form JJJJMMTT in einen Zeitstempel.
+	 *
+	 * @param string $value Das Datum als achtstellige Zeichenkette
+	 *
+	 * @return int Der Zeitstempel für 0 Uhr des Tages
+	 */
+	public function getDate($value): int
 	{
-		return mktime(0, 0, 0, substr($value, 4, 2), substr($value, 6, 2), substr($value, 0, 4));
+		return (int) mktime(0, 0, 0, (int) substr($value, 4, 2), (int) substr($value, 6, 2), (int) substr($value, 0, 4));
 	}
 
-	public function viewEnclosureInfo(DataContainer $dc)
+	/**
+	 * Zeigt die dem Datensatz angehängten Dateien an.
+	 *
+	 * @param DataContainer $dc Der Data Container
+	 *
+	 * @return string Der HTML-Code des Anzeigefeldes
+	 */
+	public function viewEnclosureInfo(DataContainer $dc): string
 	{
-		// Zurücklink generieren, ab C4 ist das ein symbolischer Link zu "contao"
-		if (version_compare(VERSION, '4.0', '>='))
-		{
-			$link = \System::getContainer()->get('router')->generate('contao_backend');
-		}
-		else
-		{
-			$link = 'contao/main.php';
-		}
-		$link .= '?do=lizenzverwaltung&amp;table=tl_lizenzverwaltung_items&amp;key=getLizenz&amp;id=' . $dc->activeRecord->id . '&amp;rt=' . REQUEST_TOKEN;
+		$record  = $this->fetch($dc, array('enclosure'));
+		$dateien = StringUtil::deserialize($record->enclosure, true);
 
-		// Letzter Lizenzabruf und Rückgabecode
-		if($dc->activeRecord->enclosure)
+		$antwort = '';
+
+		if ($dateien)
 		{
-			$info = unserialize($dc->activeRecord->enclosure);
-			if(is_array($info))
+			$antwort = '<ul>';
+
+			foreach ($dateien as $item)
 			{
-				$content = '<ul>';
-				foreach($info as $item)
+				$objFile = FilesModel::findByUuid($item);
+
+				if (null === $objFile)
 				{
-					$content .= '<li style="clear:both;">';
-					// Suche nach UUID
-					$objFile = \FilesModel::findByUuid($item); // FilesModel Objekt
-					$arrMeta = $objFile ? deserialize($objFile->meta) : array(); // Metadaten extrahieren
-					// Dateityp feststellen und Vorschauausgabe vorbereiten
-					switch($objFile->extension)
-					{
-						case 'jpg':
-						case 'png':
-						case 'gif':
-							$lightbox = "onclick=\"Backend.openModalIframe({'width':735,'height':405,'title':'Großansicht','url':".$objFile->path."})\"";
-							$content .= '<a href="'.$objFile->path.'" '.$lightbox.'><img src="'.\Image::get($objFile->path, 80, 80, 'crop').'" style="float:left; margin-right:5px; margin-bottom:5px;"></a> ';
-							break;
-						default:
-							$content .= '';
-					}
-					$content .= $objFile->path.'<br>';
-					$content .= '<i>'.$arrMeta['de']['title'].'</i>';
-					$content .= '</li>';
-					//$antwort .= print_r($objFile, true);
+					continue;
 				}
-				$content .= '<li style="clear:both;"></li>';
-				$content .= '</ul>';
-				$antwort .= $content;
+
+				$arrMeta = StringUtil::deserialize($objFile->meta, true);
+
+				$antwort .= '<li style="clear:both;">';
+
+				if (\in_array($objFile->extension, array('jpg', 'jpeg', 'png', 'gif', 'webp'), true))
+				{
+					$vorschau = $this->getThumbnail($objFile->path);
+
+					if ('' !== $vorschau)
+					{
+						$antwort .= '<a href="'.StringUtil::specialchars($objFile->path).'"><img src="'.StringUtil::specialchars($vorschau).'" alt="" style="float:left; margin-right:5px; margin-bottom:5px;"></a> ';
+					}
+				}
+
+				$antwort .= StringUtil::specialchars($objFile->path).'<br>';
+				$antwort .= '<i>'.StringUtil::specialchars((string) ($arrMeta['de']['title'] ?? '')).'</i>';
+				$antwort .= '</li>';
+			}
+
+			$antwort .= '<li style="clear:both;"></li></ul>';
+		}
+
+		return '
+<div class="clr widget">
+	<h3><label for="ctrl_enclosureInfo">'.($GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['enclosureInfo'][0] ?? 'Angehängte Dateien').'</label></h3>
+	'.$antwort.'
+	<p class="tl_help tl_tip" title="" style="margin-top:3px;">'.($GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['enclosureInfo'][1] ?? '').'</p>
+</div>';
+	}
+
+	/**
+	 * Zeigt den Verweis auf die gespeicherte Lizenzurkunde im DIN-A4-Format.
+	 *
+	 * @param DataContainer $dc Der Data Container
+	 *
+	 * @return string Der HTML-Code des Anzeigefeldes
+	 */
+	public function viewPDF(DataContainer $dc): string
+	{
+		return $this->renderPdfLink($dc, '', 'PDF DIN A4 anzeigen', 'Zeigt die auf dem DSB-Server gespeicherte Lizenzurkunde an.', 'Kein PDF DIN A4 vorhanden');
+	}
+
+	/**
+	 * Zeigt den Verweis auf die gespeicherte Lizenzurkunde im Kartenformat.
+	 *
+	 * @param DataContainer $dc Der Data Container
+	 *
+	 * @return string Der HTML-Code des Anzeigefeldes
+	 */
+	public function viewPDFCard(DataContainer $dc): string
+	{
+		return $this->renderPdfLink($dc, '-card', 'PDF Karte anzeigen', 'Zeigt die auf dem DSB-Server gespeicherte Lizenzurkunde im Format Card an.', 'Kein PDF Card vorhanden');
+	}
+
+	/**
+	 * Baut den Verweis auf eine im Lizenzordner abgelegte Urkunde.
+	 *
+	 * @param DataContainer $dc      Der Data Container
+	 * @param string        $suffix  Dateizusatz vor der Endung, leer für DIN A4
+	 * @param string        $label   Beschriftung des Verweises
+	 * @param string        $title   Titel des Verweises
+	 * @param string        $fehlt   Text, wenn die Datei nicht vorhanden ist
+	 *
+	 * @return string Der HTML-Code; ohne DOSB-Lizenznummer ein leeres Feld,
+	 *                damit das Spaltenraster erhalten bleibt
+	 */
+	private function renderPdfLink(DataContainer $dc, string $suffix, string $label, string $title, string $fehlt): string
+	{
+		$record = $this->fetch($dc, array('license_number_dosb'));
+
+		if (!$record->license_number_dosb)
+		{
+			return '<div class="w50 dosb_margin"></div>';
+		}
+
+		$uuid   = $GLOBALS['TL_CONFIG']['lizenzverwaltung_lizenzordner'] ?? '';
+		$ordner = $uuid ? FilesModel::findByUuid($uuid) : null;
+
+		$status = $fehlt;
+		$info   = '';
+
+		if (null !== $ordner)
+		{
+			$relativ = $ordner->path.'/'.$record->license_number_dosb.$suffix.'.pdf';
+			$absolut = Helper::getProjectDir().'/'.$relativ;
+
+			if (file_exists($absolut))
+			{
+				$status = '<a href="'.StringUtil::specialchars($relativ).'" target="_blank" rel="noopener" title="'.StringUtil::specialchars($title).'" class="dosb_button_mini">'.$label.'</a>';
+				$info   = 'Datum: '.date('d.m.Y H:i:s', (int) filemtime($absolut));
 			}
 		}
-		else $antwort = '';
 
-		$string = '
-<div class="clr widget">
-	<h3><label for="ctrl_enclosureInfo">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['enclosureInfo'][0].'</label></h3>
-	'.$antwort.'
-	<p class="tl_help tl_tip" title="" style="margin-top:3px;">'.$GLOBALS['TL_LANG']['tl_lizenzverwaltung_items']['enclosureInfo'][1].'</p>
-</div>';
-
-		return $string;
-	}
-
-	/**
-	 * Link zum PDF im DIN-A4-Format anzeigen
-	 * @param DataContainer $dc
-	 *
-	 * @return string HTML-Code
-	 */
-	public function viewPDF(\DataContainer $dc)
-	{
-		if(!isset($GLOBALS['TL_CONFIG']['lizenzverwaltung_lizenzordner'])) return false;
-		$lizenzordner = \FilesModel::findByUuid($GLOBALS['TL_CONFIG']['lizenzverwaltung_lizenzordner']);
-
-		// Links zum PDF generieren
-		$pdf_server = TL_ROOT.'/'.$lizenzordner->path.'/'.$dc->activeRecord->license_number_dosb.'.pdf';
-		$pdf_download = $lizenzordner->path.'/'.$dc->activeRecord->license_number_dosb.'.pdf';
-
-		// Lizenzstatus
-		if($dc->activeRecord->license_number_dosb && file_exists($pdf_server))
-		{
-			$pdf_datum = date('d.m.Y H:i:s', filemtime($pdf_server));
-			$status = '<a href="'.$pdf_download.'" target="_blank" title="Zeigt die auf dem DSB-Server gespeicherte Lizenzurkunde an." class="dosb_button_mini">PDF DIN A4 anzeigen</a>';
-			$info = 'Datum: '.$pdf_datum;
-		}
-		else
-		{
-			$status = 'Kein PDF DIN A4 vorhanden';
-		}
-
-		if($dc->activeRecord->license_number_dosb)
-		{
-			return '
+		return '
 			<div class="w50 dosb_margin">
 			<div class="tl_text" style="border:0;">'.$status.'</div>
 			<p class="tl_help tl_tip" title="" style="margin-left:7px;">'.$info.'</p>
 			</div>';
-		}
-		else return '<div class="w50 dosb_margin"></div>';
 	}
 
 	/**
-	 * Link zum PDF im Karten-Format anzeigen
-	 * @param DataContainer $dc
+	 * Erzeugt ein Vorschaubild zu einer Datei.
 	 *
-	 * @return string HTML-Code
+	 * `Image::get()` gibt es unter Contao 5 nicht mehr; der Bilddienst
+	 * `contao.image.factory` heißt dagegen in beiden Fassungen gleich.
+	 *
+	 * @param string $path Pfad der Datei, relativ zum Projektverzeichnis
+	 *
+	 * @return string Die Adresse des Vorschaubildes, oder eine leere
+	 *                Zeichenkette wenn es sich nicht erzeugen ließ
 	 */
-	public function viewPDFCard(\DataContainer $dc)
+	private function getThumbnail(string $path): string
 	{
-		if(!isset($GLOBALS['TL_CONFIG']['lizenzverwaltung_lizenzordner'])) return false;
-		$lizenzordner = \FilesModel::findByUuid($GLOBALS['TL_CONFIG']['lizenzverwaltung_lizenzordner']);
-
-		// Links zum PDF generieren
-		$pdf_server = TL_ROOT.'/'.$lizenzordner->path.'/'.$dc->activeRecord->license_number_dosb.'-card.pdf';
-		$pdf_download = $lizenzordner->path.'/'.$dc->activeRecord->license_number_dosb.'-card.pdf';
-
-		// Lizenzstatus
-		if($dc->activeRecord->license_number_dosb && file_exists($pdf_server))
+		try
 		{
-			$pdf_datum = date('d.m.Y H:i:s', filemtime($pdf_server));
-			$status = '<a href="'.$pdf_download.'" target="_blank" title="Zeigt die auf dem DSB-Server gespeicherte Lizenzurkunde im Format Card an." class="dosb_button_mini">PDF Karte anzeigen</a>';
-			$info = 'Datum: '.$pdf_datum;
-		}
-		else
-		{
-			$status = 'Kein PDF Card vorhanden';
-		}
+			$projectDir = Helper::getProjectDir();
 
-		if($dc->activeRecord->license_number_dosb)
-		{
-			return '
-			<div class="w50 dosb_margin">
-			<div class="tl_text" style="border:0;">'.$status.'</div>
-			<p class="tl_help tl_tip" title="" style="margin-left:7px;">'.$info.'</p>
-			</div>';
+			return System::getContainer()->get('contao.image.factory')
+			             ->create($projectDir.'/'.$path, array(80, 80, 'crop'))
+			             ->getUrl($projectDir);
 		}
-		else return '<div class="w50 dosb_margin"></div>';
+		catch (\Throwable $e)
+		{
+			return '';
+		}
 	}
 
-
+	/**
+	 * Liest die genannten Felder des gerade bearbeiteten Datensatzes.
+	 *
+	 * Gelesen wird über die Datenbank statt über `$dc->activeRecord`: Diese
+	 * Eigenschaft gilt ab Contao 5 als veraltet und ist im
+	 * `input_field_callback` nicht in jedem Fall gefüllt. `$dc->id` liefert in
+	 * beiden Fassungen die Datensatz-ID.
+	 *
+	 * @param DataContainer     $dc     Der Data Container
+	 * @param array<int,string> $felder Die zu lesenden Spaltennamen
+	 *
+	 * @return object Das Zeilenobjekt; ohne Datensatz-ID ein Objekt, dessen
+	 *                Felder alle null sind
+	 */
+	private function fetch(DataContainer $dc, array $felder): object
+	{
+		return Database::getInstance()->prepare("SELECT ".implode(', ', $felder)." FROM tl_lizenzverwaltung_items WHERE id = ?")
+		                              ->limit(1)
+		                              ->execute($dc->id);
+	}
 }

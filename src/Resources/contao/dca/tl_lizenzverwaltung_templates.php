@@ -1,18 +1,18 @@
 <?php
 
 /**
- * Contao Open Source CMS
+ * Lizenzverwaltung für den Deutschen Schachbund
  *
- * Copyright (c) 2005-2014 Leo Feyer
- *
- * @package News
- * @link    https://contao.org
- * @license http://www.gnu.org/licenses/lgpl-3.0.html LGPL
+ * @copyright  Frank Hoppe 2014 - 2026
+ * @author     Frank Hoppe <webmaster@schachbund.de>
+ * @license    LGPL-3.0-or-later
  */
 
+use Contao\Backend;
+use Contao\DC_Table;
 
 /**
- * Table tl_lizenzverwaltung_templates
+ * Tabelle tl_lizenzverwaltung_templates
  */
 $GLOBALS['TL_DCA']['tl_lizenzverwaltung_templates'] = array
 (
@@ -20,7 +20,8 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_templates'] = array
 	// Config
 	'config' => array
 	(
-		'dataContainer'               => 'Table',
+		// Der Kurzname 'Table' gibt es unter Contao 5 nicht mehr, der FQCN in beiden
+		'dataContainer'               => DC_Table::class,
 		'switchToEdit'                => true, 
 		'enableVersioning'            => true,
 		'sql' => array
@@ -201,14 +202,17 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung_templates'] = array
  */
 class tl_lizenzverwaltung_templates extends Backend
 {
-
 	/**
-	 * Import the back end user object
+	 * Erzeugt das Objekt.
+	 *
+	 * Der öffentliche Konstruktor ist Pflicht: Unter Contao 4.13 ist
+	 * `Backend::__construct()` nur protected. Der frühere Aufruf
+	 * `$this->import('BackendUser', 'User')` ist entfallen — er bricht unter
+	 * Contao 5 ab, weil es dort keine globalen Klassenaliasse mehr gibt, und
+	 * das importierte Objekt wurde ohnehin nirgends benutzt.
 	 */
 	public function __construct()
 	{
 		parent::__construct();
-		$this->import('BackendUser', 'User');
 	}
-
 }

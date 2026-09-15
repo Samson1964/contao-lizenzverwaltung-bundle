@@ -1,25 +1,35 @@
 <?php
 
 /**
- * Contao Open Source CMS
+ * Lizenzverwaltung für den Deutschen Schachbund
  *
- * Copyright (c) 2005-2017 Leo Feyer
- *
- * @package   Trainerlizenzen
- * @author    Frank Hoppe <webmaster@schachbund.de>
- * @license   http://www.gnu.org/licenses/lgpl-3.0.html LGPL
- * @copyright Frank Hoppe 2014 - 2017
+ * @copyright  Frank Hoppe 2014 - 2026
+ * @author     Frank Hoppe <webmaster@schachbund.de>
+ * @license    LGPL-3.0-or-later
  */
 
+use Contao\Backend;
+use Contao\Config;
+use Contao\Database;
+use Contao\DataContainer;
+use Contao\DC_Table;
+use Contao\FilesModel;
+use Contao\Input;
+use Contao\StringUtil;
+use Contao\System;
+use Schachbulle\ContaoHelperBundle\Classes\Helper as ContaoHelper;
+use Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper;
+
 /**
- * Table tl_lizenzverwaltung
+ * Tabelle tl_lizenzverwaltung
  */
 $GLOBALS['TL_DCA']['tl_lizenzverwaltung'] = array
 (
 	// Config
 	'config' => array
 	(
-		'dataContainer'               => 'Table',
+		// Der Kurzname 'Table' gibt es unter Contao 5 nicht mehr, der FQCN in beiden
+		'dataContainer'               => DC_Table::class,
 		'ctable'                      => array('tl_lizenzverwaltung_items'),
 		'enableVersioning'            => true,
 		'onload_callback' => array
@@ -439,302 +449,382 @@ $GLOBALS['TL_DCA']['tl_lizenzverwaltung'] = array
 	),
 );
 
-class tl_lizenzverwaltung extends \Backend
+
+/**
+ * Rückrufe des Data Containers tl_lizenzverwaltung.
+ */
+class tl_lizenzverwaltung extends Backend
 {
-
-	var $verbandsmail = array();
-
-	public function generateAdvancedFilter(DataContainer $dc)
+	/**
+	 * Erzeugt das Objekt.
+	 *
+	 * Der öffentliche Konstruktor ist Pflicht: Unter Contao 4.13 ist
+	 * `Backend::__construct()` nur protected, die Klasse ließe sich dort sonst
+	 * von außerhalb der Contao-Klassenhierarchie nicht erzeugen.
+	 */
+	public function __construct()
 	{
-
-		if(\Input::get('id') > 0) return '';
-
-		$session = \Session::getInstance()->getData();
-
-		// Filters
-		$arrFilters = array
-		(
-			'tli_filter'   => array
-			(
-				'name'    => 'tli_filter',
-				'label'   => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_extended'],
-				'options' => array
-				(
-					'1'   => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_active_licenses'],
-					'2'   => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_inactive_licenses'],
-					'3'   => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_marked_licenses'],
-					'4'   => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_unsentmails'],
-					'VS'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_S'],
-					'V1'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_1'],
-					'V2'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_2'],
-					'V3'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_3'],
-					'VD'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_D'],
-					'VB'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_B'],
-					'V4'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_4'],
-					'V5'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_5'],
-					'VE'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_E'],
-					'V7'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_7'],
-					'V6'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_6'],
-					'V8'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_8'],
-					'V9'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_9'],
-					'VF'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_F'],
-					'VH'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_H'],
-					'VA'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_A'],
-					'VG'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_G'],
-					'VC'  => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_C'],
-				)
-			),
-		);
-
-$strBuffer = '
-<div class="tl_filter tli_filter tl_subpanel">
-<strong>' . $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter'] . ':</strong> ' . "\n";
-
-        // Generate filters
-        foreach ($arrFilters as $arrFilter)
-        {
-            $strOptions = '
-  <option value="' . $arrFilter['name'] . '">' . $arrFilter['label'] . '</option>
-  <option value="' . $arrFilter['name'] . '">---</option>' . "\n";
-
-            // Generate options
-            foreach ($arrFilter['options'] as $k => $v)
-            {
-                if(isset($session['filter']['tl_lizenzverwaltungFilter']))
-                {
-                	$strOptions .= '  <option value="' . $k . '"' . (($session['filter']['tl_lizenzverwaltungFilter'][$arrFilter['name']] === (string) $k) ? ' selected' : '') . '>' . $v . '</option>' . "\n";
-            	}
-            }
-
-            $strBuffer .= '<select name="' . $arrFilter['name'] . '" id="' . $arrFilter['name'] . '" class="tl_select' . (isset($session['filter']['tl_lizenzverwaltungFilter'][$arrFilter['name']]) ? ' active' : '') . '">
-' . $strOptions . '
-</select>' . "\n";
-        }
-
-        return $strBuffer . '</div>';
-
+		parent::__construct();
 	}
 
-	public function applyAdvancedFilter()
+	/**
+	 * Baut den Spezialfilter über der Lizenzliste.
+	 *
+	 * Der Filter erscheint als eigenes Feld in der Filterleiste
+	 * (`panelLayout` => 'myfilter;...') und erlaubt Auswertungen, die sich mit
+	 * den Standardfiltern nicht abbilden lassen — etwa "alle Personen mit
+	 * abgelaufenen Lizenzen", was eine Bedingung auf der Kindtabelle verlangt.
+	 *
+	 * @param DataContainer $dc Der Data Container der Übersicht
+	 *
+	 * @return string Der HTML-Code des Filterfeldes. In der Detailansicht einer
+	 *                Person (Parameter id gesetzt) bleibt er leer, weil dort
+	 *                nicht gefiltert wird.
+	 */
+	public function generateAdvancedFilter(DataContainer $dc): string
 	{
-
-		$session = \Session::getInstance()->getData();
-
-		// Filterwerte in der Sitzung speichern
-		foreach($_POST as $k => $v)
+		if (Input::get('id') > 0)
 		{
-			if(substr($k, 0, 4) != 'tli_')
-			{
-				continue;
-			}
-
-			// Filter zurücksetzen
-			if($k == \Input::post($k))
-			{
-				unset($session['filter']['tl_lizenzverwaltungFilter'][$k]);
-			}
-			// Filter zuweisen
-			else
-			{
-				$session['filter']['tl_lizenzverwaltungFilter'][$k] = \Input::post($k);
-			}
+			return '';
 		}
 
-		$this->Session->setData($session);
+		$gewaehlt = $this->getFilterValue();
 
-		if(\Input::get('id') > 0 || !isset($session['filter']['tl_lizenzverwaltungFilter']))
+		$optionen = array
+		(
+			'1'   => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_active_licenses'] ?? 'Gültige Lizenzen',
+			'2'   => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_inactive_licenses'] ?? 'Ungültige Lizenzen',
+			'3'   => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_marked_licenses'] ?? 'Markierte Lizenzen',
+			'4'   => $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_unsentmails'] ?? 'Ungesendete E-Mails',
+		);
+
+		// Je Verband ein Eintrag; das Kennzeichen steht hinter dem "V"
+		foreach (array('S', '1', '2', '3', 'D', 'B', '4', '5', 'E', '7', '6', '8', '9', 'F', 'G', 'A', 'H', 'C') as $kennzeichen)
+		{
+			$optionen['V'.$kennzeichen] = $GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_verband_'.$kennzeichen] ?? Helper::getVerband($kennzeichen);
+		}
+
+		$strOptions = '
+  <option value="tli_filter">'.($GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter_extended'] ?? 'Spezialfilter').'</option>
+  <option value="tli_filter">---</option>'."\n";
+
+		foreach ($optionen as $k => $v)
+		{
+			$strOptions .= '  <option value="'.StringUtil::specialchars((string) $k).'"'.($gewaehlt === (string) $k ? ' selected' : '').'>'.StringUtil::specialchars((string) $v).'</option>'."\n";
+		}
+
+		return '
+<div class="tl_filter tli_filter tl_subpanel">
+<strong>'.($GLOBALS['TL_LANG']['tl_lizenzverwaltung']['filter'] ?? 'Filter').':</strong> '."\n"
+.'<select name="tli_filter" id="tli_filter" class="tl_select'.($gewaehlt ? ' active' : '').'">
+'.$strOptions.'
+</select>'."\n".'</div>';
+	}
+
+	/**
+	 * Wendet den Spezialfilter auf die Übersicht an.
+	 *
+	 * Der gewählte Wert wird zunächst aus dem abgeschickten Formular in den
+	 * Sitzungsspeicher übernommen (ein erneutes Absenden desselben Wertes
+	 * setzt den Filter zurück, wie bei Contaos eigenen Filtern). Anschließend
+	 * werden die passenden Datensatz-IDs ermittelt und als `root` gesetzt —
+	 * das ist der einzige Weg, die Übersicht einer Elterntabelle über eine
+	 * Bedingung auf der Kindtabelle einzuschränken.
+	 *
+	 * @return void Trifft der Filter auf nichts zu, wird `root` auf array(0)
+	 *              gesetzt, damit die Liste leer bleibt statt alles zu zeigen
+	 */
+	public function applyAdvancedFilter(): void
+	{
+		$bag = Helper::getBackendSessionBag();
+
+		if (null === $bag)
 		{
 			return;
 		}
 
-		$arrPlayers = null;
+		$session = $bag->get('filter') ?? array();
 
-		switch($session['filter']['tl_lizenzverwaltungFilter']['tli_filter'])
+		foreach (array_keys($_POST) as $k)
 		{
-			case '1': // Alle Personen mit gültigen Lizenzen
-				$objPlayers = \Database::getInstance()->prepare("SELECT tl_lizenzverwaltung.id FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.gueltigkeit >= ? AND tl_lizenzverwaltung_items.published = ?")
-				                                      ->execute(time(), 1);
-				$arrPlayers = is_array($arrPlayers) ? array_intersect($arrPlayers, $objPlayers->fetchEach('id')) : $objPlayers->fetchEach('id');
-				break;
-
-			case '2': // Alle Personen mit ungültigen Lizenzen
-				$objPlayers = \Database::getInstance()->prepare("SELECT tl_lizenzverwaltung.id FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.gueltigkeit < ? AND tl_lizenzverwaltung_items.published = ?")
-				                                      ->execute(time(), 1);
-				$arrPlayers = is_array($arrPlayers) ? array_intersect($arrPlayers, $objPlayers->fetchEach('id')) : $objPlayers->fetchEach('id');
-				break;
-
-			case '3': // Alle Personen mit markierten Lizenzen
-				$objPlayers = \Database::getInstance()->prepare("SELECT tl_lizenzverwaltung.id FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.marker = ?")
-				                                      ->execute(1);
-				$arrPlayers = is_array($arrPlayers) ? array_intersect($arrPlayers, $objPlayers->fetchEach('id')) : $objPlayers->fetchEach('id');
-				break;
-
-			case '4': // Alle Personen mit ungesendeten E-Mails
-				$objPlayers = \Database::getInstance()->prepare("SELECT tl_lizenzverwaltung.id FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung.id = tl_lizenzverwaltung_items.pid LEFT JOIN tl_lizenzverwaltung_mails ON tl_lizenzverwaltung_items.id = tl_lizenzverwaltung_mails.pid WHERE tl_lizenzverwaltung_mails.sent_state = ? AND tl_lizenzverwaltung_items.published = ?")
-				                                      ->execute('', 1);
-				$arrPlayers = is_array($arrPlayers) ? array_intersect($arrPlayers, $objPlayers->fetchEach('id')) : $objPlayers->fetchEach('id');
-				break;
-
-			case 'VS': // Lizenzen Deutscher Schachbund
-			case 'V1': // Lizenzen Baden
-			case 'V2': // Lizenzen Bayern
-			case 'V3': // Lizenzen Berlin
-			case 'VD': // Lizenzen Brandenburg
-			case 'VB': // Lizenzen Bremen
-			case 'V4': // Lizenzen Hamburg
-			case 'V5': // Lizenzen Hessen
-			case 'VE': // Lizenzen Mecklenburg-Vorpommern
-			case 'V7': // Lizenzen Niedersachsen
-			case 'V6': // Lizenzen Nordrhein-Westfalen
-			case 'V8': // Lizenzen Rheinland-Pfalz
-			case 'V9': // Lizenzen Saarland
-			case 'VF': // Lizenzen Sachsen
-			case 'VG': // Lizenzen Sachsen-Anhalt
-			case 'VA': // Lizenzen Schleswig-Holstein
-			case 'VH': // Lizenzen Thüringen
-			case 'VC': // Lizenzen Württemberg
-				$objPlayers = \Database::getInstance()->prepare("SELECT tl_lizenzverwaltung.id FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.verband = ?")
-				                                      ->execute(substr($session['filter']['tl_lizenzverwaltungFilter']['tli_filter'],1,1));
-				$arrPlayers = is_array($arrPlayers) ? array_intersect($arrPlayers, $objPlayers->fetchEach('id')) : $objPlayers->fetchEach('id');
-				break;
-
-			default:
-
-		}
-
-		if(is_array($arrPlayers) && empty($arrPlayers))
-		{
-			$arrPlayers = array(0);
-		}
-
-		$log = print_r($arrPlayers, true);
-		log_message($log, 'lizenzverwaltung.log');
-
-		$GLOBALS['TL_DCA']['tl_lizenzverwaltung']['list']['sorting']['root'] = $arrPlayers;
-
-	}
-
-	public function viewEnclosureInfo(DataContainer $dc)
-	{
-		// Zurücklink generieren, ab C4 ist das ein symbolischer Link zu "contao"
-		if (version_compare(VERSION, '4.0', '>='))
-		{
-			$link = \System::getContainer()->get('router')->generate('contao_backend');
-		}
-		else
-		{
-			$link = 'contao/main.php';
-		}
-		$link .= '?do=trainerlizenzen&amp;key=getLizenz&amp;id=' . $dc->activeRecord->id . '&amp;rt=' . REQUEST_TOKEN;
-
-		// Letzter Lizenzabruf und Rückgabecode
-		if($dc->activeRecord->enclosure)
-		{
-			$info = unserialize($dc->activeRecord->enclosure);
-			if(is_array($info))
+			if (!\is_string($k) || 'tli_' !== substr($k, 0, 4))
 			{
-				$content = '<ul>';
-				foreach($info as $item)
-				{
-					$content .= '<li style="clear:both;">';
-					// Suche nach UUID
-					$objFile = \FilesModel::findByUuid($item); // FilesModel Objekt
-					$arrMeta = $objFile ? deserialize($objFile->meta) : array(); // Metadaten extrahieren
-					// Dateityp feststellen und Vorschauausgabe vorbereiten
-					switch($objFile->extension)
-					{
-						case 'jpg':
-						case 'png':
-						case 'gif':
-							$lightbox = "onclick=\"Backend.openModalIframe({'width':735,'height':405,'title':'Großansicht','url':".$objFile->path."})\"";
-							$content .= '<a href="'.$objFile->path.'" '.$lightbox.'><img src="'.\Image::get($objFile->path, 80, 80, 'crop').'" style="float:left; margin-right:5px; margin-bottom:5px;"></a> ';
-							break;
-						default:
-							$content .= '';
-					}
-					$content .= $objFile->path.'<br>';
-					$content .= '<i>'.$arrMeta['de']['title'].'</i>';
-					$content .= '</li>';
-					//$antwort .= print_r($objFile, true);
-				}
-				$content .= '<li style="clear:both;"></li>';
-				$content .= '</ul>';
-				$antwort .= $content;
+				continue;
 			}
+
+			// Wird der Name des Feldes als Wert geschickt, ist "---" gewählt: Filter aus
+			if ($k === Input::post($k))
+			{
+				unset($session['tl_lizenzverwaltungFilter'][$k]);
+			}
+			else
+			{
+				$session['tl_lizenzverwaltungFilter'][$k] = Input::post($k);
+			}
+
+			$bag->set('filter', $session);
 		}
-		else $antwort = '';
 
-		$string = '
-<div class="clr widget">
-	<h3><label for="ctrl_enclosureInfo">'.$GLOBALS['TL_LANG']['tl_trainerlizenzen']['enclosureInfo'][0].'</label></h3>
-	'.$antwort.'
-	<p class="tl_help tl_tip" title="" style="margin-top:3px;">'.$GLOBALS['TL_LANG']['tl_trainerlizenzen']['enclosureInfo'][1].'</p>
-</div>';
+		$filter = $session['tl_lizenzverwaltungFilter']['tli_filter'] ?? null;
 
-		return $string;
+		if (Input::get('id') > 0 || !$filter)
+		{
+			return;
+		}
+
+		$arrPlayers = $this->findPlayers((string) $filter);
+
+		if (null === $arrPlayers)
+		{
+			return;
+		}
+
+		$GLOBALS['TL_DCA']['tl_lizenzverwaltung']['list']['sorting']['root'] = $arrPlayers ?: array(0);
 	}
 
 	/**
-	 * Zeigt zu einem Datensatz die eingetragenen Lizenzen an
+	 * Ermittelt die Personen-IDs zu einem Spezialfilterwert.
 	 *
-	 * @param array                $row
-	 * @param string               $label
-	 * @param Contao\DataContainer $dc
-	 * @param array                $args        Index 6 ist das Feld lizenzen
+	 * @param string $filter Der gewählte Wert, etwa "1" oder "V3"
 	 *
-	 * @return array
+	 * @return array<int,string>|null Die IDs, oder null bei einem unbekannten
+	 *                                Wert — dann bleibt die Übersicht ungefiltert
 	 */
-	public function viewLabels($row, $label, Contao\DataContainer $dc, $args)
+	private function findPlayers(string $filter): ?array
 	{
+		$db = Database::getInstance();
 
-		// Lizenzen der Person laden
-		$objLizenzen = \Database::getInstance()->prepare("SELECT * FROM tl_lizenzverwaltung_items WHERE pid = ?")
-		                                       ->execute($row['id']);
-
-		$lizenzen = array();
-		$verbaende = array();
-		if($objLizenzen->numRows)
+		switch ($filter)
 		{
-			while($objLizenzen->next())
-			{
-				$gueltig = date('d.m.Y', $objLizenzen->gueltigkeit);
-				if($objLizenzen->gueltigkeit < time())
-				{
-					// abgelaufene Lizenz
-					$str = '<span style="color: red;" title="abgelaufen am '.$gueltig.'">';
-				}
-				else
-				{
-					// gültige Lizenz
-					$str = '<span style="color: green;" title="gültig bis '.$gueltig.'">';
-				}
-				$marker = $objLizenzen->marker ? '<img src="bundles/contaolizenzverwaltung/images/marker.png" title="Lizenz ist markiert">' : '';
-				$lizenzen[] = $str.$objLizenzen->lizenz.$marker.'</span>';
-				$verbaende[] = \Schachbulle\ContaoLizenzverwaltungBundle\Classes\Helper::getVerband($objLizenzen->verband);
-			}
-			$verbaende = array_unique($verbaende); // Doppelte Verbände entfernen
-			$args[4] = implode(', ', $lizenzen);
-			$args[5] = implode(', ', $verbaende);
+			case '1': // Alle Personen mit gültigen Lizenzen
+				return $db->prepare("SELECT tl_lizenzverwaltung.id FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.gueltigkeit >= ? AND tl_lizenzverwaltung_items.published = ?")
+				          ->execute(time(), 1)
+				          ->fetchEach('id');
+
+			case '2': // Alle Personen mit ungültigen Lizenzen
+				return $db->prepare("SELECT tl_lizenzverwaltung.id FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.gueltigkeit < ? AND tl_lizenzverwaltung_items.published = ?")
+				          ->execute(time(), 1)
+				          ->fetchEach('id');
+
+			case '3': // Alle Personen mit markierten Lizenzen
+				return $db->prepare("SELECT tl_lizenzverwaltung.id FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.marker = ?")
+				          ->execute(1)
+				          ->fetchEach('id');
+
+			case '4': // Alle Personen mit ungesendeten E-Mails
+				return $db->prepare("SELECT tl_lizenzverwaltung.id FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung.id = tl_lizenzverwaltung_items.pid LEFT JOIN tl_lizenzverwaltung_mails ON tl_lizenzverwaltung_items.id = tl_lizenzverwaltung_mails.pid WHERE tl_lizenzverwaltung_mails.sent_state = ? AND tl_lizenzverwaltung_items.published = ?")
+				          ->execute('', 1)
+				          ->fetchEach('id');
 		}
 
-		// Datensatz komplett zurückgeben
+		// Verbandsfilter: "V" gefolgt vom Verbandskennzeichen
+		if ('V' === substr($filter, 0, 1) && 2 === \strlen($filter))
+		{
+			return $db->prepare("SELECT tl_lizenzverwaltung.id FROM tl_lizenzverwaltung LEFT JOIN tl_lizenzverwaltung_items ON tl_lizenzverwaltung_items.pid = tl_lizenzverwaltung.id WHERE tl_lizenzverwaltung_items.verband = ?")
+			          ->execute(substr($filter, 1, 1))
+			          ->fetchEach('id');
+		}
+
+		return null;
+	}
+
+	/**
+	 * Liest den gewählten Wert des Spezialfilters aus der Sitzung.
+	 *
+	 * @return string Der Wert, oder eine leere Zeichenkette wenn nicht gefiltert wird
+	 */
+	private function getFilterValue(): string
+	{
+		$bag = Helper::getBackendSessionBag();
+
+		if (null === $bag)
+		{
+			return '';
+		}
+
+		return (string) (($bag->get('filter') ?? array())['tl_lizenzverwaltungFilter']['tli_filter'] ?? '');
+	}
+
+	/**
+	 * Zeigt die dem Datensatz angehängten Dateien an.
+	 *
+	 * @param DataContainer $dc Der Data Container; ausgewertet wird das Feld enclosure
+	 *
+	 * @return string Der HTML-Code des Anzeigefeldes; ohne Anhänge nur die
+	 *                Beschriftung samt Hilfetext
+	 */
+	public function viewEnclosureInfo(DataContainer $dc): string
+	{
+		$antwort = $this->renderEnclosures($dc);
+
+		return '
+<div class="clr widget">
+	<h3><label for="ctrl_enclosureInfo">'.($GLOBALS['TL_LANG']['tl_lizenzverwaltung']['enclosureInfo'][0] ?? 'Angehängte Dateien').'</label></h3>
+	'.$antwort.'
+	<p class="tl_help tl_tip" title="" style="margin-top:3px;">'.($GLOBALS['TL_LANG']['tl_lizenzverwaltung']['enclosureInfo'][1] ?? '').'</p>
+</div>';
+	}
+
+	/**
+	 * Baut die Liste der angehängten Dateien mit Vorschaubildern.
+	 *
+	 * @param DataContainer $dc Der Data Container
+	 *
+	 * @return string Der HTML-Code der Liste, oder eine leere Zeichenkette wenn
+	 *                keine Dateien angehängt sind
+	 */
+	private function renderEnclosures(DataContainer $dc): string
+	{
+		$record = Database::getInstance()->prepare("SELECT enclosure FROM tl_lizenzverwaltung WHERE id = ?")
+		                                 ->limit(1)
+		                                 ->execute($dc->id);
+
+		$dateien = StringUtil::deserialize($record->enclosure, true);
+
+		if (!$dateien)
+		{
+			return '';
+		}
+
+		$content = '<ul>';
+
+		foreach ($dateien as $item)
+		{
+			$objFile = FilesModel::findByUuid($item);
+
+			if (null === $objFile)
+			{
+				continue;
+			}
+
+			$arrMeta = StringUtil::deserialize($objFile->meta, true);
+
+			$content .= '<li style="clear:both;">';
+
+			if (\in_array($objFile->extension, array('jpg', 'jpeg', 'png', 'gif', 'webp'), true))
+			{
+				$vorschau = $this->getThumbnail($objFile->path);
+
+				if ('' !== $vorschau)
+				{
+					$content .= '<a href="'.StringUtil::specialchars($objFile->path).'"><img src="'.StringUtil::specialchars($vorschau).'" alt="" style="float:left; margin-right:5px; margin-bottom:5px;"></a> ';
+				}
+			}
+
+			$content .= StringUtil::specialchars($objFile->path).'<br>';
+			$content .= '<i>'.StringUtil::specialchars((string) ($arrMeta['de']['title'] ?? '')).'</i>';
+			$content .= '</li>';
+		}
+
+		return $content.'<li style="clear:both;"></li></ul>';
+	}
+
+	/**
+	 * Erzeugt ein Vorschaubild zu einer Datei.
+	 *
+	 * `Image::get()` gibt es unter Contao 5 nicht mehr; der Bilddienst
+	 * `contao.image.factory` heißt dagegen in beiden Fassungen gleich.
+	 *
+	 * @param string $path Pfad der Datei, relativ zum Projektverzeichnis
+	 *
+	 * @return string Die Adresse des Vorschaubildes, oder eine leere
+	 *                Zeichenkette wenn es sich nicht erzeugen ließ
+	 */
+	private function getThumbnail(string $path): string
+	{
+		try
+		{
+			$projectDir = Helper::getProjectDir();
+
+			return System::getContainer()->get('contao.image.factory')
+			             ->create($projectDir.'/'.$path, array(80, 80, 'crop'))
+			             ->getUrl($projectDir);
+		}
+		catch (\Throwable $e)
+		{
+			return '';
+		}
+	}
+
+	/**
+	 * Ergänzt die Übersichtszeile um Lizenzen und Verbände der Person.
+	 *
+	 * Die Felder `lizenzen` und `verbaende` haben keine Datenbankspalte; sie
+	 * stehen nur als Platzhalter in `list.label.fields` und werden hier
+	 * gefüllt.
+	 *
+	 * @param array<string,mixed> $row   Der Datensatz der Person
+	 * @param string              $label Der bereits erzeugte Beschriftungstext
+	 * @param DataContainer       $dc    Der Data Container
+	 * @param array<int,string>   $args  Die sichtbaren Spaltenwerte; Index 4 ist
+	 *                                   das Feld lizenzen, Index 5 das Feld verbaende
+	 *
+	 * @return array<int,string> Die ergänzten Spaltenwerte
+	 */
+	public function viewLabels($row, $label, DataContainer $dc, $args)
+	{
+		$objLizenzen = Database::getInstance()->prepare("SELECT lizenz, marker, verband, gueltigkeit FROM tl_lizenzverwaltung_items WHERE pid = ?")
+		                                      ->execute($row['id']);
+
+		$lizenzen  = array();
+		$verbaende = array();
+
+		while ($objLizenzen->next())
+		{
+			$gueltig = date('d.m.Y', (int) $objLizenzen->gueltigkeit);
+
+			// Abgelaufene Lizenzen rot, gültige grün
+			$str = $objLizenzen->gueltigkeit < time()
+				? '<span style="color: red;" title="abgelaufen am '.$gueltig.'">'
+				: '<span style="color: green;" title="gültig bis '.$gueltig.'">';
+
+			$marker = $objLizenzen->marker ? '<img src="bundles/contaolizenzverwaltung/images/marker.png" alt="" title="Lizenz ist markiert">' : '';
+
+			$lizenzen[]  = $str.StringUtil::specialchars((string) $objLizenzen->lizenz).$marker.'</span>';
+			$verbaende[] = Helper::getVerband((string) $objLizenzen->verband);
+		}
+
+		if ($lizenzen)
+		{
+			$args[4] = implode(', ', $lizenzen);
+			$args[5] = implode(', ', array_unique($verbaende));
+		}
+
 		return $args;
 	}
 
 	/**
-	 * Generiert automatisch ein Alias aus Vorname und Nachname
-	 * @param mixed
-	 * @param \DataContainer
-	 * @return string
-	 * @throws \Exception
+	 * Erzeugt beim Speichern den Alias aus Nachname und Vorname.
+	 *
+	 * Der Alias wird per eigenem UPDATE geschrieben, weil er kein Feld der
+	 * Palette ist. Der `onsubmit_callback` ist dafür die richtige Stelle: Er
+	 * läuft in beiden Contao-Fassungen nach dem Schreiben der Palettenfelder,
+	 * ein UPDATE aus einem `save_callback` heraus würde unter Contao 5 vom
+	 * gesammelten UPDATE des Data Containers überschrieben.
+	 *
+	 * @param DataContainer $dc Der Data Container mit der ID des Datensatzes
+	 *
+	 * @return void Ohne Datensatz-ID passiert nichts
 	 */
-	public function generateAlias(DataContainer $dc)
+	public function generateAlias(DataContainer $dc): void
 	{
-		$temp = $dc->activeRecord->name.'-'.$dc->activeRecord->vorname;
+		if (!$dc->id)
+		{
+			return;
+		}
 
-		$myAlias = \Schachbulle\ContaoHelperBundle\Classes\Helper::generateAlias($temp); 
-		\Database::getInstance()->prepare("UPDATE tl_lizenzverwaltung SET alias = ? WHERE id = ?")
-		                        ->execute($myAlias, $dc->id);
+		$record = Database::getInstance()->prepare("SELECT name, vorname FROM tl_lizenzverwaltung WHERE id = ?")
+		                                 ->limit(1)
+		                                 ->execute($dc->id);
+
+		if (!$record->numRows)
+		{
+			return;
+		}
+
+		$myAlias = ContaoHelper::generateAlias($record->name.'-'.$record->vorname);
+
+		Database::getInstance()->prepare("UPDATE tl_lizenzverwaltung SET alias = ? WHERE id = ?")
+		                       ->execute($myAlias, $dc->id);
 	}
-
 }

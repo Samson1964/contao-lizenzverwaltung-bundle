@@ -1,9 +1,41 @@
-services:
-    _instanceof:
-        Contao\CoreBundle\Framework\FrameworkAwareInterface:
-            calls:
-                - ["setFramework", ["@contao.framework"]]
+# Dienste der Lizenzverwaltung
+#
+# Registriert wird nur der Controller. Die Klassen unter `Classes/` sind
+# bewusst keine Dienste: Sie werden aus DCA-Rückrufen und aus dem
+# Backend-Modul heraus über `System::importStatic()` beziehungsweise direkt
+# erzeugt und hätten als Dienst keinen Nutzen.
+#
+# Der frühere `_instanceof`-Block auf `ContainerAwareInterface` ist entfallen —
+# die Schnittstelle wurde in Symfony 7 entfernt und der Eintrag war unter
+# Contao 5.7 damit gegenstandslos. Keine Klasse des Bundles hat sie je
+# implementiert.
 
-        Symfony\Component\DependencyInjection\ContainerAwareInterface:
-            calls:
-                - ["setContainer", ["@service_container"]]
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    # Ohne den Tag bliebe der Dienst privat, Symfony fiele auf `new
+    # LimsController()` zurück und bräche mit einem ArgumentCountError ab.
+    Schachbulle\ContaoLizenzverwaltungBundle\Controller\LimsController:
+        tags:
+            - { name: controller.service_arguments }
+
+    # Ersetzt das frühere Skript Resources/public/Trainerliste.php
+    Schachbulle\ContaoLizenzverwaltungBundle\Command\TrainerlisteCommand:
+        tags:
+            - { name: console.command }
+
+    Schachbulle\ContaoLizenzverwaltungBundle\Classes\LimsClient: ~
+
+    # Öffentlich, weil das klassische Frontend-Modul keine Dependency
+    # Injection kennt und den Dienst über System::getContainer() holt
+    Schachbulle\ContaoLizenzverwaltungBundle\Classes\LimsTrainerliste:
+        public: true
+        arguments:
+            $cache: '@cache.app'
+
+    Schachbulle\ContaoLizenzverwaltungBundle\Command\LimsTrainerlisteCommand:
+        tags:
+            - { name: console.command }

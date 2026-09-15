@@ -5,7 +5,7 @@
 de:
     title: Lizenzverwaltung
     description: >
-        Lizenzverwaltung des Deutschen Schachbundes für Contao 4. Mit Schnittstelle zum Lizenzmanagement (LiMS) des DOSB.
+        Lizenzverwaltung des Deutschen Schachbundes für Contao 4 und Contao 5. Mit Schnittstelle zum Lizenzmanagement (LiMS) des DOSB.
     keywords:
         - Lizenzen
         - DSB

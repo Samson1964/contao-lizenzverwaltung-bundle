@@ -75,4 +75,3 @@ $GLOBALS['TL_LANG']['tl_lizenzverwaltung_referenten']['funktionen'] = array
 	'frau'                => 'Frauenreferent',
 	'sons'                => '- Sonstige Funktion -',
 );
-

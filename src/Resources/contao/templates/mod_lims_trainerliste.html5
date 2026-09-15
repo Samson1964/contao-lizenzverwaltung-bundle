@@ -1,0 +1,35 @@
+<?php $this->extend('block_unsearchable'); ?>
+
+<?php $this->block('content'); ?>
+
+  <?php if (!$this->eintraege): ?>
+    <p class="empty">Die Liste ist derzeit nicht verfügbar.</p>
+  <?php else: ?>
+    <table class="lims_trainerliste">
+      <thead>
+        <tr>
+          <th scope="col" class="col_first">Nachname</th>
+          <th scope="col">Vorname</th>
+          <th scope="col">Verband</th>
+          <th scope="col" class="col_last">Lizenz gültig bis</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach ($this->eintraege as $i => $eintrag): ?>
+          <tr class="<?= $i % 2 ? 'even' : 'odd' ?>">
+            <?php /* Die Namen kommen ungefiltert aus einer fremden Schnittstelle, deshalb maskieren */ ?>
+            <td class="col_first"><?= Contao\StringUtil::specialchars($eintrag['nachname']) ?></td>
+            <td><?= Contao\StringUtil::specialchars($eintrag['vorname']) ?></td>
+            <td><?= Contao\StringUtil::specialchars($eintrag['verband']) ?></td>
+            <td class="col_last"><?php if ($eintrag['gueltig_bis']): ?><?= $this->endofyear ? '31.12.'.date('Y', $eintrag['gueltig_bis']) : date('d.m.Y', $eintrag['gueltig_bis']) ?><?php endif; ?></td>
+          </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  <?php endif; ?>
+
+  <?php if ($this->stand): ?>
+    <p class="info">Zuletzt aktualisiert: <?= date('d.m.Y', $this->stand) ?></p>
+  <?php endif; ?>
+
+<?php $this->endblock(); ?>

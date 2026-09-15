@@ -1,0 +1,30 @@
+# Routen der Lizenzverwaltung
+#
+# Beide Routen laufen im Backend-Bereich (`_scope: backend`). Das ist keine
+# Kosmetik: Contaos Backend-Firewall greift nicht anhand des Pfades, sondern
+# genau anhand dieses Attributs (`contao.routing.backend_matcher`). Ohne
+# `_scope: backend` wäre in der Anfrage kein Backend-Benutzer angemeldet und
+# die Berechtigungsprüfung im Controller schlüge immer fehl.
+#
+# `_store_referrer: false` verhindert, dass diese Ajax-Aufrufe als letzte
+# besuchte Seite gemerkt werden und der Zurück-Knopf im Backend ins Leere führt.
+
+contao_lizenzverwaltung_lims_export:
+    path: /_lizenzverwaltung/lims/export/{id}
+    defaults:
+        _scope: backend
+        _store_referrer: false
+        _controller: 'Schachbulle\ContaoLizenzverwaltungBundle\Controller\LimsController::export'
+    requirements:
+        id: \d+
+    methods: [GET]
+
+contao_lizenzverwaltung_lims_umzug:
+    path: /_lizenzverwaltung/lims/umzug/{id}
+    defaults:
+        _scope: backend
+        _store_referrer: false
+        _controller: 'Schachbulle\ContaoLizenzverwaltungBundle\Controller\LimsController::umzug'
+    requirements:
+        id: \d+
+    methods: [GET]

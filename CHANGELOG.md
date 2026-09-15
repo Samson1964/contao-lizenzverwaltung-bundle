@@ -1,5 +1,14 @@
 # Lizenzverwaltung Changelog
 
+## Version 5.1.0 (2026-09-15)
+
+* Add: Täglicher Cronjob `LimsTrainerlisteCron`, der die Trainerlisten über Contaos
+  eigenen Cron neu aus dem LiMS abruft. Der Vollabruf dauert rund 16 Sekunden; ohne den
+  Job musste nach Ablauf des Wochen-Caches der erste Besucher so lange warten. Ein
+  eigener Eintrag in der Crontab des Servers ist damit nicht mehr nötig. Der Job läuft
+  auch über den Web-Cron — Contao startet ihn erst, nachdem die Antwort an den Besucher
+  gesendet ist. Schlägt der Abruf fehl, bleibt die bisherige Liste stehen.
+
 ## Version 5.0.2 (2026-09-15)
 
 * Fix: `lizenzverwaltung:lims-trainerliste` und das Modul „Trainerliste aus dem LiMS“

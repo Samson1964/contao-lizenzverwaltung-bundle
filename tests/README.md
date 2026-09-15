@@ -78,7 +78,9 @@ Template gerendert.
 php <pfad-zum-bundle>/tests/pruefstand-lims.php
 ```
 
-Erwartet: 21 Prüfungen bestanden, keine Meldungen.
+Erwartet: 23 Prüfungen bestanden, keine Meldungen. Darunter der tägliche Cronjob: Er
+muss in beiden Scopes („web“ und „cli“) frisch abrufen, `null` zurückgeben (Contao 5
+verlangt null oder ein Promise) und einen fehlgeschlagenen Abruf überstehen.
 
 Die nachgebildeten Antworten folgen dem Aufbau, den das echte LiMS am 2026-09-15
 lieferte: Lizenzen unter `licenses`, Organisationen unter `organisations` mit `name`,

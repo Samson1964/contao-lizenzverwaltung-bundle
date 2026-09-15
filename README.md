@@ -92,8 +92,16 @@ Voraussetzung sind die LiMS-Zugangsdaten in den Einstellungen.
 
 **Cache:** Alle Lizenzen werden in einem Zug abgerufen und eine Woche lang im
 Contao-Cache gehalten; die vier Listen teilen sich diesen Abruf. Schlägt ein Abruf fehl,
-bleibt die letzte erfolgreiche Fassung sichtbar. Wer nicht auf den ersten Besucher warten
-will, füllt den Cache per Zeitplan vorab:
+bleibt die letzte erfolgreiche Fassung sichtbar.
+
+**Täglicher Neuabruf:** Ein Cronjob des Bundles ruft die Listen einmal täglich über
+Contaos eigenen Cron neu ab. Der Vollabruf dauert rund 16 Sekunden; dank des Jobs wartet
+kein Besucher darauf. Eine eigene Zeile in der Crontab des Servers ist nicht nötig.
+Contao startet seinen Cron entweder über Seitenaufrufe — dann erst, nachdem die Antwort
+an den Besucher gesendet ist — oder, falls eingerichtet, über den Systemcron
+`vendor/bin/contao-console contao:cron`.
+
+Von Hand lässt sich der Abruf jederzeit anstoßen:
 
 ```
 vendor/bin/contao-console lizenzverwaltung:lims-trainerliste --frisch

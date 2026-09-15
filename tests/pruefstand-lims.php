@@ -208,6 +208,43 @@ pruefe('Fehlschlag ohne Reserve: leer, kein Absturz', static function () {
 	gleich($l['veraltet'], true, 'veraltet');
 });
 
+pruefe('Cronjob ruft frisch ab, im Scope web und cli', static function () {
+	$c = new FakeLimsClient();
+	$d = new LimsTrainerliste($c, new ArrayAdapter());
+	$d->getListe('A');
+	$vorher = \count($c->aufrufe);
+
+	$job = new Schachbulle\ContaoLizenzverwaltungBundle\Cron\LimsTrainerlisteCron($d);
+
+	foreach (array('web', 'cli') as $scope) {
+		$zuvor = \count($c->aufrufe);
+		$ergebnis = $job($scope);
+
+		// Contao 5 verlangt null oder ein Promise als Rückgabe
+		gleich($ergebnis, null, 'Rückgabe im Scope '.$scope);
+
+		if (\count($c->aufrufe) <= $zuvor) {
+			throw new \RuntimeException('kein Neuabruf im Scope '.$scope);
+		}
+	}
+
+	if (\count($c->aufrufe) <= $vorher) {
+		throw new \RuntimeException('kein Neuabruf');
+	}
+});
+
+pruefe('Cronjob übersteht fehlgeschlagenen Abruf', static function () {
+	$c = new FakeLimsClient();
+	$d = new LimsTrainerliste($c, new ArrayAdapter());
+	$d->getListe('A');
+	$c->kaputt = true;
+
+	(new Schachbulle\ContaoLizenzverwaltungBundle\Cron\LimsTrainerlisteCron($d))('web');
+
+	$c->kaputt = false;
+	gleich(\count($d->getListe('A')['eintraege']), 3, 'Reserve nach Fehlschlag');
+});
+
 pruefe('findeListe: Liste unter unbekanntem Schlüssel', static fn () => gleich(LimsTrainerliste::findeListe(array('size' => 1, 'total' => 1, 'eintraege_xy' => array(array('a' => 1))), array('licenses')), array(array('a' => 1)), 'Liste'));
 pruefe('findeListe: Antwort selbst ist Liste', static fn () => gleich(LimsTrainerliste::findeListe(array(array('a' => 1)), array()), array(array('a' => 1)), 'Liste'));
 pruefe('findeListe: leere Antwort', static fn () => gleich(LimsTrainerliste::findeListe(array('size' => 0, 'total' => 0), array('licenses')), array(), 'Liste'));

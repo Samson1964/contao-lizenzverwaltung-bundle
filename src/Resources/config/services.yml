@@ -39,3 +39,9 @@ services:
     Schachbulle\ContaoLizenzverwaltungBundle\Command\LimsTrainerlisteCommand:
         tags:
             - { name: console.command }
+
+    # Täglicher Neuabruf der Trainerlisten über Contaos Cron. Als Service-Tag
+    # statt #[AsCronJob], damit 4.13 und 5 dieselbe Schreibweise lesen.
+    Schachbulle\ContaoLizenzverwaltungBundle\Cron\LimsTrainerlisteCron:
+        tags:
+            - { name: contao.cronjob, interval: daily }
